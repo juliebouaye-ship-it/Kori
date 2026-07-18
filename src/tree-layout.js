@@ -53,8 +53,18 @@ export function computeTreeLayout(skills) {
     });
   }
 
+  // Un SEUL lien par compétence (vers son prérequis « principal » = le plus
+  // profond, celui qui la place dans l'arbre) → arbre lisible plutôt qu'un
+  // entrelacs. Les prérequis multiples restent listés dans la fiche détail.
   const edges = [];
-  for (const s of skills) for (const p of s.prereqs ?? []) edges.push([p, s.id]);
+  for (const s of skills) {
+    const prereqs = s.prereqs ?? [];
+    if (!prereqs.length) continue;
+    const primary = prereqs.reduce((best, p) =>
+      (depthById[p] ?? 0) > (depthById[best] ?? 0) ? p : best
+    );
+    edges.push([primary, s.id]);
+  }
 
   return { rows, edges, depthById };
 }

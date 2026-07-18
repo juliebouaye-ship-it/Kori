@@ -30,9 +30,14 @@ for (const s of SKILLS) {
   }
 }
 
-// 4. un lien par relation de prérequis
-const edgeCount = SKILLS.reduce((n, s) => n + (s.prereqs ?? []).length, 0);
-ok(edges.length === edgeCount, 'un lien par prérequis');
+// 4. un seul lien par compétence non-racine (vers son prérequis principal)
+const nonRoot = SKILLS.filter((s) => (s.prereqs ?? []).length > 0).length;
+ok(edges.length === nonRoot, 'un lien par compétence non-racine');
+ok(edges.every(([, to]) => SKILLS.filter((s) => s.id === to).length === 1), 'pas de doublon de cible');
+// chaque compétence non-racine a exactement un lien entrant
+const incoming = {};
+for (const [, to] of edges) incoming[to] = (incoming[to] || 0) + 1;
+ok(Object.values(incoming).every((n) => n === 1), 'au plus un lien entrant par nœud');
 
 // 5. cas synthétique : chaîne A -> B -> C
 const chain = [
