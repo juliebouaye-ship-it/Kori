@@ -39,8 +39,8 @@ const DEFAULT_STATE = {
   onboarded: false,
   wallet: 12, // portefeuille dépensable (🦴) — baisse quand on débloque
   lifetime: 0, // total cumulé à vie — fait monter le niveau, ne baisse jamais
-  skillStatus: {}, // skillId -> 'known' | 'learning' | 'mastered'
-  paliersDone: {}, // palierId -> date ISO
+  skillProgress: [], // { id, skillId, status: 'known'|'learning'|'mastered' }
+  palierDone: [], // { id, palierId, skillId, doneAt }
   sessions: [], // { id, date, skillId, palierId, rating, xp }
   walks: [], // { id, date, ts, level: 'vert'|'jaune'|'rouge', location, triggers: [], note }
   cues: {}, // skillId -> { word, gesture } — antisèche partagée, éditable
@@ -132,6 +132,12 @@ function skillUiStatus(state, skill) {
   if (st) return st; // known | learning | mastered
   return prereqsMet(state, skill) ? 'available' : 'locked';
 }
+
+// Progression rangée en lignes (table skillProgress) : upsert par compétence.
+const upsertProgress = (arr, skillId, status) =>
+  arr.some((r) => r.skillId === skillId)
+    ? arr.map((r) => (r.skillId === skillId ? { ...r, status } : r))
+    : [...arr, { id: newId(), skillId, status }];
 
 const STATUS_LABELS = {
   locked: '🔒 Verrouillé',
@@ -1482,6 +1488,17 @@ export default function App() {
     removeReminder,
   };
 
+  // Progression rangée en tables : on reconstruit à la volée les annuaires
+  // (skillStatus/paliersDone) attendus par les composants, pour ne pas les
+  // réécrire. `viewState` est un sur-ensemble de `state` passé aux onglets.
+  const statusById = Object.fromEntries(
+    (state.skillProgress || []).map((r) => [r.skillId, r.status])
+  );
+  const paliersDoneById = Object.fromEntries(
+    (state.palierDone || []).map((r) => [r.palierId, r.doneAt])
+  );
+  const viewState = { ...state, skillStatus: statusById, paliersDone: paliersDoneById };
+
   // Le bilan de départ s'affiche soit sur réouverture manuelle, soit
   // automatiquement au tout premier lancement — mais seulement une fois le
   // carnet distant chargé, pour ne pas le faire clignoter pendant le chargement.
@@ -1513,7 +1530,7 @@ export default function App() {
 
       {tab === 'train' && (
         <TrainTab
-          state={state}
+          state={viewState}
           onLogSession={logSession}
           onPalierDone={markPalierDone}
           goToTree={() => setTab('tree')}

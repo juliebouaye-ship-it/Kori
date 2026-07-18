@@ -19,6 +19,7 @@ import {
   seedPlan,
   migrateIds,
   hasData,
+  uuid,
 } from './sync-core.js';
 
 const PUSH_DEBOUNCE_MS = 800;
@@ -32,6 +33,8 @@ const QUERY = {
   care: {},
   reminders: {},
   firsts: {},
+  skillProgress: {},
+  palierDone: {},
   carnet: {},
 };
 
@@ -97,7 +100,48 @@ export function useKoriSync(state, setState, normalize = (s) => s) {
     }
 
     seeded.current = true;
-    const assembled = assemble(data, normalize);
+    let assembled = assemble(data, normalize);
+
+    // Migration (une fois) : progression héritée des maps `meta` (skillStatus /
+    // paliersDone) → lignes dans les tables dédiées, puis on efface les maps.
+    const metaRow = (data.meta || [])[0] || {};
+    const legacyStatus = metaRow.skillStatus || {};
+    const legacyPaliers = metaRow.paliersDone || {};
+    const tablesEmpty =
+      !(assembled.skillProgress || []).length && !(assembled.palierDone || []).length;
+    const hasLegacy = Object.keys(legacyStatus).length || Object.keys(legacyPaliers).length;
+    if (tablesEmpty && hasLegacy) {
+      const skillProgress = Object.entries(legacyStatus).map(([skillId, status]) => ({
+        id: uuid(),
+        skillId,
+        status,
+      }));
+      const palierDone = Object.entries(legacyPaliers).map(([palierId, doneAt]) => ({
+        id: uuid(),
+        palierId,
+        skillId: '',
+        doneAt,
+      }));
+      assembled = normalize({ ...assembled, skillProgress, palierDone });
+      applyPlan({
+        upserts: [
+          ...skillProgress.map((r) => ({
+            coll: 'skillProgress',
+            id: r.id,
+            attrs: { skillId: r.skillId, status: r.status },
+          })),
+          ...palierDone.map((r) => ({
+            coll: 'palierDone',
+            id: r.id,
+            attrs: { palierId: r.palierId, skillId: r.skillId, doneAt: r.doneAt },
+          })),
+        ],
+        deletes: [],
+      });
+      // on retire les maps héritées de la ligne meta (elles ne sont plus lues).
+      db.transact(db.tx.meta[META_ID].update({ skillStatus: null, paliersDone: null }));
+    }
+
     const canon = canonical(assembled);
     if (canon !== lastCanon.current) {
       lastCanon.current = canon;
@@ -107,8 +151,6 @@ export function useKoriSync(state, setState, normalize = (s) => s) {
     setReady(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data]);
-
-  return ready;
 
   // ---- local -> distant (diff debouncé) ----
   useEffect(() => {
@@ -122,4 +164,6 @@ export function useKoriSync(state, setState, normalize = (s) => s) {
     }, PUSH_DEBOUNCE_MS);
     return () => clearTimeout(t);
   }, [state]);
+
+  return ready;
 }

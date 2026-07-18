@@ -10,8 +10,8 @@
 //   - `walks` / `sessions` / `care` / `reminders` / `firsts` : une ligne par
 //     élément → Explorer lisible + fusion sûre à deux (pas d'écrasement global).
 
-export const COLLECTIONS = ['walks', 'sessions', 'care', 'reminders', 'firsts'];
-export const META_FIELDS = ['onboarded', 'wallet', 'lifetime', 'skillStatus', 'paliersDone', 'cues'];
+export const COLLECTIONS = ['walks', 'sessions', 'care', 'reminders', 'firsts', 'skillProgress', 'palierDone'];
+export const META_FIELDS = ['onboarded', 'wallet', 'lifetime', 'cues'];
 
 // Forme canonique de chaque type d'élément (+ valeurs par défaut). Garantit que
 // local et distant convergent vers exactement les mêmes clés, quelle que soit la
@@ -22,6 +22,8 @@ export const COLLECTION_FIELDS = {
   care: { date: '', ts: 0, kind: '', label: '', grams: null, treatId: null },
   reminders: { type: '', label: '', dueDate: '', note: '' },
   firsts: { date: '', title: '', note: '' },
+  skillProgress: { skillId: '', status: '' }, // status: 'known' | 'learning' | 'mastered'
+  palierDone: { palierId: '', skillId: '', doneAt: '' },
 };
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -85,7 +87,7 @@ export function hasData(state) {
   if (!state) return false;
   if (state.onboarded) return true;
   if ((state.lifetime || 0) > 0) return true;
-  if (state.skillStatus && Object.keys(state.skillStatus).length) return true;
+  // skillProgress/palierDone font partie de COLLECTIONS → couverts par la ligne suivante.
   return COLLECTIONS.some((c) => (state[c] || []).length > 0);
 }
 
