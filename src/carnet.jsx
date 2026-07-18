@@ -9,12 +9,7 @@ import {
   reminderStatus,
 } from './health-data.js';
 import { SectionTitle } from './ui.jsx';
-
-const localDate = (d = new Date()) =>
-  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-
-const frDate = (iso, opts = { weekday: 'short', day: 'numeric', month: 'short' }) =>
-  new Date(iso + 'T00:00').toLocaleDateString('fr-FR', opts);
+import { localDate, frDate } from './date-utils.js';
 
 // ============================================================
 // Repas & friandises du jour (monté dans l'onglet Journal)

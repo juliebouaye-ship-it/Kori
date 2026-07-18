@@ -5,10 +5,7 @@
 // Fonctions pures (aucune dépendance React) → testables au Node.
 // ============================================================
 
-const localDate = (d = new Date()) =>
-  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-const daysBetween = (a, b) =>
-  Math.round((new Date(a + 'T00:00') - new Date(b + 'T00:00')) / 86400000);
+import { localDate, daysBetween } from './date-utils.js';
 
 // Nb de balades 🟢 consécutives les plus récentes (par sortie notée, en
 // tolérant les jours non notés — ne pas noter ≠ ne pas avoir promené).

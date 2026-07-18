@@ -66,7 +66,6 @@ export const CUP_LEVELS = [
     label: 'Verre presque vide',
     short: 'Sereine',
     color: '#7C8F5E',
-    help: 'Sortie tranquille : Kori est restée sous son seuil, elle a pu renifler, répondre, se poser.',
   },
   {
     id: 'jaune',
@@ -74,7 +73,6 @@ export const CUP_LEVELS = [
     label: 'Verre à moitié plein',
     short: 'Chargée',
     color: '#D9A441',
-    help: 'Un ou deux déclencheurs, un peu d’excitation, mais elle a réussi à redescendre en cours de route.',
   },
   {
     id: 'rouge',
@@ -82,7 +80,6 @@ export const CUP_LEVELS = [
     label: 'Verre débordé',
     short: 'Stackée',
     color: '#B6482F',
-    help: 'Les déclencheurs se sont accumulés sans récupération (trigger stacking). Le cortisol met 48-72 h à partir : les 1-2 jours suivants gagnent à rester calmes.',
   },
 ];
 

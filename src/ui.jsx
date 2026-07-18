@@ -74,3 +74,38 @@ export function SectionTitle({ title, info, right }) {
     </div>
   );
 }
+
+// Pluie d'emojis de célébration. `burst` = clé qui change à chaque déclenchement.
+export function Confetti({ burst }) {
+  if (!burst) return null;
+  const EMOJIS = ['🦴', '🎉', '✨', '🐾', '💛'];
+  const pieces = Array.from({ length: 26 }, (_, i) => ({
+    id: i,
+    left: Math.random() * 100,
+    delay: Math.random() * 0.4,
+    emoji: EMOJIS[i % EMOJIS.length],
+    size: 16 + Math.random() * 14,
+  }));
+  return (
+    <div className="confetti-layer" key={burst}>
+      {pieces.map((p) => (
+        <span
+          className="confetti"
+          key={p.id}
+          style={{ left: `${p.left}%`, animationDelay: `${p.delay}s`, fontSize: p.size }}
+        >
+          {p.emoji}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+// Barre de progression simple (ratio 0..1).
+export function ProgressBar({ ratio }) {
+  return (
+    <div className="progress-track">
+      <div className="progress-fill" style={{ width: `${Math.min(100, ratio * 100)}%` }} />
+    </div>
+  );
+}
