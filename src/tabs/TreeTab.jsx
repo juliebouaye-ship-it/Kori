@@ -1,6 +1,5 @@
-import { useMemo, useState } from 'react';
-import { SKILLS } from '../skills-data.js';
-import { computeTreeLayout } from '../tree-layout.js';
+import { useState } from 'react';
+import { SKILLS, CATEGORIES } from '../skills-data.js';
 import {
   SKILL_BY_ID,
   CAT_BY_ID,
@@ -113,71 +112,47 @@ function SkillCard({ state, skill, wallet, onUnlock }) {
   );
 }
 
-// Arbre visuel : nœuds reliés par leurs prérequis (disposition calculée dans
-// tree-layout.js). Tap sur un nœud → détail via la fiche `SkillCard` existante.
-function SkillTreeGraph({ state, onSelect }) {
-  const { rows, edges, xById } = useMemo(() => computeTreeLayout(SKILLS), []);
-  const NODE = 74;
-  const stepX = NODE + 16;
-  const stepY = NODE + 42;
-  const maxX = Math.max(0, ...Object.values(xById));
-  const canvasW = (maxX + 1) * stepX - 16;
-  const canvasH = Math.max(NODE, rows.length * stepY - 42);
-
-  // position absolue : chaque nœud sous son parent (colonne = xById) → traits
-  // courts et verticaux plutôt que de longues diagonales.
-  const pos = {};
-  rows.forEach((row, r) => {
-    row.forEach((id) => {
-      const x = xById[id] * stepX;
-      const y = r * stepY;
-      pos[id] = { x, y, cx: x + NODE / 2 };
-    });
-  });
-
+// Grille de pictos par catégorie (remplace l'arbre visuel, jugé peu lisible).
+// On garde les jolies tuiles-pictos ; tap sur une tuile → détail (SkillCard).
+function SkillPictoGrid({ state, onSelect }) {
   return (
-    <div className="tree-scroll">
-      <div className="tree-canvas" style={{ width: canvasW, height: canvasH }}>
-        <svg className="tree-edges" width={canvasW} height={canvasH}>
-          {edges.map(([from, to]) => {
-            const a = pos[from];
-            const b = pos[to];
-            if (!a || !b) return null;
-            const y1 = a.y + NODE;
-            const y2 = b.y;
-            const mid = (y1 + y2) / 2;
-            return (
-              <path
-                key={from + '>' + to}
-                className="tree-edge"
-                fill="none"
-                d={`M ${a.cx} ${y1} C ${a.cx} ${mid} ${b.cx} ${mid} ${b.cx} ${y2}`}
-              />
-            );
-          })}
-        </svg>
-        {rows.flat().map((id) => {
-          const skill = SKILL_BY_ID[id];
-          const status = skillUiStatus(state, skill);
-          const cat = CAT_BY_ID[skill.category];
-          const p = pos[id];
-          return (
-            <button
-              key={id}
-              className={`tree-node status-${status}`}
-              style={{ left: p.x, top: p.y, width: NODE, height: NODE, '--cat-color': cat.color }}
-              onClick={() => onSelect(skill)}
-            >
-              <span className="tree-node-cat" />
-              <span className="tree-node-icon">{skill.icon}</span>
-              <span className="tree-node-name">{skill.name}</span>
-              {status === 'locked' && <span className="tree-node-mark">🔒</span>}
-              {status === 'mastered' && <span className="tree-node-mark">🏆</span>}
-            </button>
-          );
-        })}
-      </div>
-    </div>
+    <>
+      {CATEGORIES.map((cat) => {
+        const catSkills = SKILLS.filter((s) => s.category === cat.id);
+        if (!catSkills.length) return null;
+        const acquired = catSkills.filter((s) => isAcquired(state, s.id)).length;
+        return (
+          <section key={cat.id} className="picto-cat">
+            <header className="picto-cat-head" style={{ '--cat-color': cat.color }}>
+              <span>
+                {cat.icon} {cat.name}
+              </span>
+              <span className="picto-cat-count">
+                {acquired}/{catSkills.length}
+              </span>
+            </header>
+            <div className="picto-grid">
+              {catSkills.map((skill) => {
+                const status = skillUiStatus(state, skill);
+                return (
+                  <button
+                    key={skill.id}
+                    type="button"
+                    className={`picto-tile status-${status}`}
+                    onClick={() => onSelect(skill)}
+                  >
+                    <span className="picto-tile-icon">{skill.icon}</span>
+                    <span className="picto-tile-name">{skill.name}</span>
+                    {status === 'locked' && <span className="tree-node-mark">🔒</span>}
+                    {status === 'mastered' && <span className="tree-node-mark">🏆</span>}
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+        );
+      })}
+    </>
   );
 }
 
@@ -218,7 +193,7 @@ export function TreeTab({ state, onUnlock, reopenOnboarding }) {
           ))
         )
       ) : (
-        <SkillTreeGraph state={state} onSelect={setSelected} />
+        <SkillPictoGrid state={state} onSelect={setSelected} />
       )}
 
       {selected && (

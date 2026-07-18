@@ -999,3 +999,52 @@ button {
   padding-left: 7px;
   margin: 4px 0 2px;
 }
+
+/* ---------- Onglet Arbre : grille de pictos ---------- */
+.picto-cat { margin-bottom: 18px; }
+.picto-cat-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--font-head);
+  font-weight: 700;
+  font-size: 15px;
+  padding: 2px 2px 7px;
+  margin-bottom: 10px;
+  border-bottom: 2px solid var(--cat-color, var(--line));
+}
+.picto-cat-count { font-family: var(--font-body); font-size: 12px; color: var(--ink-soft); font-weight: 600; }
+.picto-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 10px; }
+.picto-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  aspect-ratio: 1 / 1;
+  border: 2.5px solid var(--line);
+  border-radius: 16px;
+  background: var(--card);
+  box-shadow: var(--shadow);
+  padding: 6px 4px;
+  text-align: center;
+  transition: transform 0.1s ease;
+}
+.picto-tile:active { transform: scale(0.94); }
+.picto-tile-icon { font-size: 26px; line-height: 1; }
+.picto-tile-name {
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.05;
+  color: var(--ink);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.picto-tile.status-locked { opacity: 0.5; }
+.picto-tile.status-available { border-color: var(--gold); }
+.picto-tile.status-learning { border-color: var(--terra); }
+.picto-tile.status-known { border-color: #8a8ad0; }
+.picto-tile.status-mastered { border-color: var(--sage); background: var(--sage-bg); }
