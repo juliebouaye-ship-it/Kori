@@ -1424,18 +1424,24 @@ export default function App() {
 
   const markPalierDone = (skill, palier) => {
     setState((prev) => {
-      const paliersDone = { ...prev.paliersDone, [palier.id]: localDate() };
-      const allDone = skill.paliers.every((p) => paliersDone[p.id]);
-      const next = { ...prev, paliersDone };
-      if (allDone && prev.skillStatus[skill.id] !== 'mastered') {
-        next.skillStatus = { ...prev.skillStatus, [skill.id]: 'mastered' };
+      if (prev.palierDone.some((r) => r.palierId === palier.id)) return prev; // déjà validé
+      const palierDone = [
+        ...prev.palierDone,
+        { id: newId(), palierId: palier.id, skillId: skill.id, doneAt: localDate() },
+      ];
+      const doneIds = new Set(palierDone.map((r) => r.palierId));
+      const allDone = skill.paliers.every((p) => doneIds.has(p.id));
+      const next = { ...prev, palierDone };
+      const current = prev.skillProgress.find((r) => r.skillId === skill.id);
+      if (allDone && current?.status !== 'mastered') {
+        next.skillProgress = upsertProgress(prev.skillProgress, skill.id, 'mastered');
         next.wallet = prev.wallet + skill.bonus;
         next.lifetime = prev.lifetime + skill.bonus;
       }
       return next;
     });
     const willMaster = skill.paliers.every(
-      (p) => p.id === palier.id || state.paliersDone[p.id]
+      (p) => p.id === palier.id || state.palierDone.some((r) => r.palierId === p.id)
     );
     if (willMaster) {
       showToast(`🏆 ${skill.name} maîtrisée · +${skill.bonus} 🦴`);
@@ -1450,22 +1456,23 @@ export default function App() {
     setState((prev) => ({
       ...prev,
       wallet: prev.wallet - skill.cost,
-      skillStatus: { ...prev.skillStatus, [skill.id]: 'learning' },
+      skillProgress: upsertProgress(prev.skillProgress, skill.id, 'learning'),
     }));
     showToast(`🌱 ${skill.name} débloquée`);
   };
 
   const validateOnboarding = (choices) => {
     setState((prev) => {
-      const skillStatus = { ...prev.skillStatus };
+      let skillProgress = prev.skillProgress;
       for (const s of SKILLS) {
-        if (skillStatus[s.id] === 'mastered') continue; // une maîtrise gagnée reste gagnée
+        const cur = skillProgress.find((r) => r.skillId === s.id);
+        if (cur?.status === 'mastered') continue; // une maîtrise gagnée reste gagnée
         const c = choices[s.id] ?? 'non';
-        if (c === 'acquis') skillStatus[s.id] = 'known';
-        else if (c === 'partiel') skillStatus[s.id] = 'learning';
-        else delete skillStatus[s.id];
+        if (c === 'acquis') skillProgress = upsertProgress(skillProgress, s.id, 'known');
+        else if (c === 'partiel') skillProgress = upsertProgress(skillProgress, s.id, 'learning');
+        else skillProgress = skillProgress.filter((r) => r.skillId !== s.id);
       }
-      return { ...prev, skillStatus, onboarded: true };
+      return { ...prev, skillProgress, onboarded: true };
     });
     setManualOnboarding(false);
     const hasPartial = Object.values(choices).includes('partiel');
@@ -1541,7 +1548,7 @@ export default function App() {
       )}
       {tab === 'balade' && (
         <BaladeTab
-          state={state}
+          state={viewState}
           onLogWalk={logWalk}
           onUpdateWalk={updateWalk}
           onDeleteWalk={deleteWalk}
@@ -1551,13 +1558,13 @@ export default function App() {
       )}
       {tab === 'tree' && (
         <TreeTab
-          state={state}
+          state={viewState}
           onUnlock={unlockSkill}
           reopenOnboarding={() => setManualOnboarding(true)}
         />
       )}
-      {tab === 'stats' && <StatsTab state={state} onAddFirst={addFirst} />}
-      {tab === 'help' && <HelpTab state={state} onSetCue={setCue} />}
+      {tab === 'stats' && <StatsTab state={viewState} onAddFirst={addFirst} />}
+      {tab === 'help' && <HelpTab state={viewState} onSetCue={setCue} />}
 
       <nav className="bottom-nav">
         {TABS.map((t) => (
@@ -1572,7 +1579,7 @@ export default function App() {
         ))}
       </nav>
 
-      {showOnboarding && <OnboardingSheet state={state} onValidate={validateOnboarding} />}
+      {showOnboarding && <OnboardingSheet state={viewState} onValidate={validateOnboarding} />}
       {toast && <div className="toast">{toast}</div>}
       <Confetti burst={burst} />
     </div>
