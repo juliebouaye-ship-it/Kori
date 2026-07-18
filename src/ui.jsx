@@ -25,6 +25,30 @@ export function InfoTip({ text }) {
   );
 }
 
+// Accordéon de catégorie réutilisable (bilan de départ, antisèche…). L'en-tête
+// affiche un résumé optionnel pour qu'un bloc replié reste parlant.
+// Même patron que InfoTip : useState + aria-expanded.
+export function CollapsibleCategory({ icon, name, color, summary, defaultOpen = true, children }) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className="cat-group" style={{ '--cat-color': color }}>
+      <button
+        type="button"
+        className="cat-toggle"
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+      >
+        <span className="cat-toggle-name">
+          {icon} {name}
+        </span>
+        {summary && <span className="cat-toggle-summary">{summary}</span>}
+        <span className="cat-toggle-chevron">{open ? '▲' : '▼'}</span>
+      </button>
+      {open && <div className="cat-group-body">{children}</div>}
+    </div>
+  );
+}
+
 // Titre de carte + ⓘ optionnel. L'explication s'affiche sous le titre.
 // `right` : contenu aligné à droite du titre (badge, compteur…).
 export function SectionTitle({ title, info, right }) {

@@ -14,8 +14,9 @@ import {
 import { useKoriSync } from './store.js';
 import { deriveInsights } from './insights.js';
 import { MealsSection, RemindersSection, FirstsTimeline } from './carnet.jsx';
-import { InfoTip, SectionTitle } from './ui.jsx';
+import { InfoTip, SectionTitle, CollapsibleCategory } from './ui.jsx';
 import { computeTreeLayout } from './tree-layout.js';
+import { localDate, daysBetween, frDate } from './date-utils.js';
 import {
   DEFAULT_MEAL,
   DEFAULT_MEALS_PER_DAY,
@@ -31,9 +32,6 @@ const CAT_BY_ID = Object.fromEntries(CATEGORIES.map((c) => [c.id, c]));
 const LOC_BY_ID = Object.fromEntries(LOCATIONS.map((l) => [l.id, l]));
 const TRIGGER_BY_ID = Object.fromEntries(WALK_TRIGGERS.map((t) => [t.id, t]));
 const CUP_BY_ID = Object.fromEntries(CUP_LEVELS.map((c) => [c.id, c]));
-
-const localDate = (d = new Date()) =>
-  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
 const DEFAULT_STATE = {
   onboarded: false,
@@ -65,10 +63,6 @@ const cueFor = (state, skill) => ({
   word: state.cues?.[skill.id]?.word ?? skill.cue ?? '',
   gesture: state.cues?.[skill.id]?.gesture ?? skill.signal ?? '',
 });
-
-// nb de jours calendaires entre deux dates AAAA-MM-JJ (a - b, positif si a après b)
-const daysBetween = (a, b) =>
-  Math.round((new Date(a + 'T00:00') - new Date(b + 'T00:00')) / 86400000);
 
 // une séance en catégorie « balade » comptée un jour où une balade a débordé (🔴)
 // = gestion (on protège, on n'entraîne pas) → exclue de la progression de compétence.
@@ -239,18 +233,39 @@ function TrainTab({ state, onLogSession, onPalierDone, goToTree, goToHelp, goToW
             <InfoTip text="Balade débordée aujourd’hui : les séances de rappel et laisse comptent comme gestion, pas dans la progression. Elles rapportent quand même des 🦴." />
           </div>
         )}
-        <div className="skill-chips">
-          {trainable.map((s) => (
-            <button
-              key={s.id}
-              className={`chip ${s.id === skill.id ? 'active' : ''}`}
-              onClick={() => setSelectedId(s.id)}
-            >
-              {s.icon} {s.name}
-              {state.skillStatus[s.id] === 'mastered' && <span className="chip-tag">entretien</span>}
-            </button>
-          ))}
-        </div>
+        {(() => {
+          // Regroupe les chips par catégorie (ordre de CATEGORIES) : le label
+          // n'apparaît que si plusieurs catégories sont en cours, pour garder le
+          // sélecteur lisible quand les compétences se multiplient.
+          const groups = CATEGORIES.map((cat) => ({
+            cat,
+            skills: trainable.filter((s) => s.category === cat.id),
+          })).filter((g) => g.skills.length > 0);
+          const showLabels = groups.length > 1;
+          return groups.map(({ cat, skills }) => (
+            <div className="chips-group" key={cat.id}>
+              {showLabels && (
+                <div className="chips-cat-label" style={{ '--cat-color': cat.color }}>
+                  {cat.icon} {cat.name}
+                </div>
+              )}
+              <div className="skill-chips">
+                {skills.map((s) => (
+                  <button
+                    key={s.id}
+                    className={`chip ${s.id === skill.id ? 'active' : ''}`}
+                    onClick={() => setSelectedId(s.id)}
+                  >
+                    {s.icon} {s.name}
+                    {state.skillStatus[s.id] === 'mastered' && (
+                      <span className="chip-tag">entretien</span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ));
+        })()}
 
         <div className="palier-box">
           <div className="palier-step">
@@ -792,41 +807,52 @@ function AntisecheSection({ state, onSetCue }) {
         </button>
       ) : (
         <>
-          {CATEGORIES.map((cat) => (
-            <div key={cat.id}>
-              <div className="sheet-cat">
-                {cat.icon} {cat.name}
-              </div>
-              {SKILLS.filter((s) => s.category === cat.id).map((s) => {
-                const c = cueFor(state, s);
-                return (
-                  <div className="cue-row" key={s.id} style={{ '--cat-color': cat.color }}>
-                    <div className="cue-skill">
-                      {s.icon} {s.name}
+          {CATEGORIES.map((cat) => {
+            const catSkills = SKILLS.filter((s) => s.category === cat.id);
+            const filled = catSkills.filter((s) => {
+              const c = cueFor(state, s);
+              return c.word.trim() || c.gesture.trim();
+            }).length;
+            return (
+              <CollapsibleCategory
+                key={cat.id}
+                icon={cat.icon}
+                name={cat.name}
+                color={cat.color}
+                summary={`${filled}/${catSkills.length} renseignés`}
+                defaultOpen={false}
+              >
+                {catSkills.map((s) => {
+                  const c = cueFor(state, s);
+                  return (
+                    <div className="cue-row" key={s.id} style={{ '--cat-color': cat.color }}>
+                      <div className="cue-skill">
+                        {s.icon} {s.name}
+                      </div>
+                      <label className="cue-field">
+                        <span>Mot</span>
+                        <input
+                          className="cue-input"
+                          value={c.word}
+                          placeholder="ex. Ici"
+                          onChange={(e) => onSetCue(s.id, { word: e.target.value })}
+                        />
+                      </label>
+                      <label className="cue-field">
+                        <span>Geste</span>
+                        <input
+                          className="cue-input"
+                          value={c.gesture}
+                          placeholder="à définir ensemble"
+                          onChange={(e) => onSetCue(s.id, { gesture: e.target.value })}
+                        />
+                      </label>
                     </div>
-                    <label className="cue-field">
-                      <span>Mot</span>
-                      <input
-                        className="cue-input"
-                        value={c.word}
-                        placeholder="ex. Ici"
-                        onChange={(e) => onSetCue(s.id, { word: e.target.value })}
-                      />
-                    </label>
-                    <label className="cue-field">
-                      <span>Geste</span>
-                      <input
-                        className="cue-input"
-                        value={c.gesture}
-                        placeholder="à définir ensemble"
-                        onChange={(e) => onSetCue(s.id, { gesture: e.target.value })}
-                      />
-                    </label>
-                  </div>
-                );
-              })}
-            </div>
-          ))}
+                  );
+                })}
+              </CollapsibleCategory>
+            );
+          })}
           <button className="back-link" onClick={() => setOpen(false)}>
             Replier
           </button>
@@ -1039,13 +1065,10 @@ function WalkCard({ walk, onUpdate, onDelete }) {
 
 function PastWalkRow({ walk }) {
   const cup = CUP_BY_ID[walk.level];
-  const d = new Date(walk.date + 'T00:00');
   return (
     <div className="past-walk">
       <span className="pw-cup">{cup.emoji}</span>
-      <span className="pw-date">
-        {d.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })}
-      </span>
+      <span className="pw-date">{frDate(walk.date)}</span>
       <span className="pw-loc">{walk.location ? LOC_BY_ID[walk.location].label : '—'}</span>
       <span className="pw-tags">
         {walk.triggers.map((t) => TRIGGER_BY_ID[t]?.icon).join(' ')}
@@ -1218,26 +1241,38 @@ function OnboardingSheet({ state, onValidate }) {
           Appuie sur chaque ligne : ⬜ pas encore · 🌓 en partie · ✅ acquis.
           <InfoTip text="✅ Acquis = elle le fait sur demande au calme (compté acquis, ni coût ni bonus). 🌓 En partie = ça craque dehors ou en excitation : la compétence passe « en cours » gratuitement, tu valideras toi-même les paliers déjà solides." />
         </div>
-        {CATEGORIES.map((cat) => (
-          <div key={cat.id}>
-            <div className="sheet-cat">
-              {cat.icon} {cat.name}
-            </div>
-            {SKILLS.filter((s) => s.category === cat.id).map((s) => (
-              <button
-                key={s.id}
-                className={`check-row ${choices[s.id] === 'acquis' ? 'checked' : ''} ${choices[s.id] === 'partiel' ? 'partial' : ''}`}
-                onClick={() => cycle(s.id)}
-              >
-                <span className="cr-box">{BILAN_ICONS[choices[s.id]]}</span>
-                <span>
-                  {s.icon} {s.name}
-                </span>
-                {choices[s.id] === 'partiel' && <span className="cr-tag">en partie</span>}
-              </button>
-            ))}
-          </div>
-        ))}
+        {CATEGORIES.map((cat) => {
+          const catSkills = SKILLS.filter((s) => s.category === cat.id);
+          const acquis = catSkills.filter((s) => choices[s.id] === 'acquis').length;
+          const partiel = catSkills.filter((s) => choices[s.id] === 'partiel').length;
+          const summary =
+            acquis || partiel
+              ? [acquis && `${acquis} ✅`, partiel && `${partiel} 🌓`].filter(Boolean).join(' · ')
+              : null;
+          return (
+            <CollapsibleCategory
+              key={cat.id}
+              icon={cat.icon}
+              name={cat.name}
+              color={cat.color}
+              summary={summary}
+            >
+              {catSkills.map((s) => (
+                <button
+                  key={s.id}
+                  className={`check-row ${choices[s.id] === 'acquis' ? 'checked' : ''} ${choices[s.id] === 'partiel' ? 'partial' : ''}`}
+                  onClick={() => cycle(s.id)}
+                >
+                  <span className="cr-box">{BILAN_ICONS[choices[s.id]]}</span>
+                  <span>
+                    {s.icon} {s.name}
+                  </span>
+                  {choices[s.id] === 'partiel' && <span className="cr-tag">en partie</span>}
+                </button>
+              ))}
+            </CollapsibleCategory>
+          );
+        })}
         <button className="btn btn-primary btn-block" onClick={() => onValidate(choices)}>
           C’est parti ! 🎾
         </button>
