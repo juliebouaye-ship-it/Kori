@@ -879,7 +879,7 @@ button {
 .tree-scroll { overflow-x: auto; overflow-y: hidden; padding: 6px 0 14px; -webkit-overflow-scrolling: touch; }
 .tree-canvas { position: relative; margin: 0 auto; }
 .tree-edges { position: absolute; inset: 0; pointer-events: none; overflow: visible; }
-.tree-edge { stroke: var(--line); stroke-width: 2.5; }
+.tree-edge { stroke: var(--line); stroke-width: 2; }
 
 .tree-node {
   position: absolute;

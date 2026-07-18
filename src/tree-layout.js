@@ -53,9 +53,10 @@ export function computeTreeLayout(skills) {
     });
   }
 
-  // Un SEUL lien par compétence (vers son prérequis « principal » = le plus
-  // profond, celui qui la place dans l'arbre) → arbre lisible plutôt qu'un
-  // entrelacs. Les prérequis multiples restent listés dans la fiche détail.
+  // Un SEUL lien par compétence, vers son prérequis « principal » = le plus
+  // profond (celui qui la place dans l'arbre). Les prérequis multiples restent
+  // listés dans la fiche détail au tap.
+  const parentById = {};
   const edges = [];
   for (const s of skills) {
     const prereqs = s.prereqs ?? [];
@@ -63,8 +64,32 @@ export function computeTreeLayout(skills) {
     const primary = prereqs.reduce((best, p) =>
       (depthById[p] ?? 0) > (depthById[best] ?? 0) ? p : best
     );
+    parentById[s.id] = primary;
     edges.push([primary, s.id]);
   }
 
-  return { rows, edges, depthById };
+  // Position horizontale (en colonnes) : chaque compétence vise la colonne de
+  // son parent, puis on décale vers la droite pour éviter les chevauchements.
+  // Résultat : les enfants sont groupés SOUS leur parent → traits courts et
+  // presque verticaux, au lieu de longues diagonales qui se croisent.
+  const xById = {};
+  rows.forEach((row, r) => {
+    if (r === 0) {
+      row.forEach((id, i) => {
+        xById[id] = i;
+      });
+      return;
+    }
+    const want = row
+      .map((id) => ({ id, at: xById[parentById[id]] ?? 0 }))
+      .sort((a, b) => a.at - b.at);
+    let last = -Infinity;
+    for (const { id, at } of want) {
+      const x = Math.max(at, last + 1);
+      xById[id] = x;
+      last = x;
+    }
+  });
+
+  return { rows, edges, depthById, xById };
 }

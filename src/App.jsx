@@ -414,21 +414,20 @@ function SkillCard({ state, skill, wallet, onUnlock }) {
 // Arbre visuel : nœuds reliés par leurs prérequis (disposition calculée dans
 // tree-layout.js). Tap sur un nœud → détail via la fiche `SkillCard` existante.
 function SkillTreeGraph({ state, onSelect }) {
-  const { rows, edges } = useMemo(() => computeTreeLayout(SKILLS), []);
+  const { rows, edges, xById } = useMemo(() => computeTreeLayout(SKILLS), []);
   const NODE = 74;
   const stepX = NODE + 16;
   const stepY = NODE + 42;
-  const maxCols = Math.max(1, ...rows.map((r) => r.length));
-  const canvasW = maxCols * stepX - 16;
+  const maxX = Math.max(0, ...Object.values(xById));
+  const canvasW = (maxX + 1) * stepX - 16;
   const canvasH = Math.max(NODE, rows.length * stepY - 42);
 
-  // position absolue de chaque nœud (rangées centrées pour un rendu en arbre)
+  // position absolue : chaque nœud sous son parent (colonne = xById) → traits
+  // courts et verticaux plutôt que de longues diagonales.
   const pos = {};
   rows.forEach((row, r) => {
-    const rowW = row.length * stepX - 16;
-    const offX = (canvasW - rowW) / 2;
-    row.forEach((id, c) => {
-      const x = offX + c * stepX;
+    row.forEach((id) => {
+      const x = xById[id] * stepX;
       const y = r * stepY;
       pos[id] = { x, y, cx: x + NODE / 2 };
     });
