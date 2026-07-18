@@ -9,7 +9,7 @@
 // La logique pure (assemblage, diff, migration) est dans sync-core.js ; ici on
 // se contente d'orchestrer les transactions InstantDB et de gérer le cycle React.
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { db, META_ID, KORI_ID, syncEnabled } from './db.js';
 import {
   COLLECTIONS,
@@ -50,9 +50,13 @@ function applyPlan(plan) {
  * @param {object} state       l'état courant de l'app
  * @param {function} setState  le setter React de l'état
  * @param {function} normalize (remoteState) => état complet (fusion des défauts)
+ * @returns {boolean} ready — true une fois le carnet distant chargé (ou si la
+ *   synchro est désactivée). Tant que c'est false, l'app ne doit pas encore
+ *   décider quoi afficher (ex. le bilan de départ) pour éviter tout clignotement.
  */
 export function useKoriSync(state, setState, normalize = (s) => s) {
   const { data } = db.useQuery(syncEnabled ? QUERY : null);
+  const [ready, setReady] = useState(!syncEnabled);
 
   const seeded = useRef(false);
   const lastCanon = useRef(null); // empreinte du dernier état « d'accord »
@@ -88,6 +92,7 @@ export function useKoriSync(state, setState, normalize = (s) => s) {
       applyPlan(seedPlan(migrated));
       // ménage : on retire l'ancienne ligne unique désormais migrée.
       if (oldBlob) db.transact(db.tx.carnet[KORI_ID].delete());
+      setReady(true);
       return;
     }
 
@@ -99,8 +104,11 @@ export function useKoriSync(state, setState, normalize = (s) => s) {
       lastState.current = assembled;
       setState(assembled);
     }
+    setReady(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data]);
+
+  return ready;
 
   // ---- local -> distant (diff debouncé) ----
   useEffect(() => {

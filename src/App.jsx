@@ -29,7 +29,6 @@ const CAT_BY_ID = Object.fromEntries(CATEGORIES.map((c) => [c.id, c]));
 const LOC_BY_ID = Object.fromEntries(LOCATIONS.map((l) => [l.id, l]));
 const TRIGGER_BY_ID = Object.fromEntries(WALK_TRIGGERS.map((t) => [t.id, t]));
 const CUP_BY_ID = Object.fromEntries(CUP_LEVELS.map((c) => [c.id, c]));
-const STORAGE_KEY = 'kori-carnet-v1';
 
 const localDate = (d = new Date()) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -93,15 +92,6 @@ function decompressionInfo(walks, today = localDate()) {
   return { active: true, since: last, dayOffset: daysBetween(today, last) };
 }
 
-function loadState() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return { ...DEFAULT_STATE, ...JSON.parse(raw) };
-  } catch (e) {
-    console.error('Lecture du stockage impossible', e);
-  }
-  return DEFAULT_STATE;
-}
 
 // Métrique positive du mois (entraînement uniquement, hors gestion) — remplace
 // la série 🔥 : on encourage sans pénaliser les jours sautés (anti-lassitude).
@@ -1192,11 +1182,14 @@ const TABS = [
 ];
 
 export default function App() {
-  const [state, setState] = useState(loadState);
+  const [state, setState] = useState(() => ({ ...DEFAULT_STATE }));
   const [tab, setTab] = useState('train');
   const [toast, setToast] = useState(null);
   const [burst, setBurst] = useState(null);
-  const [showOnboarding, setShowOnboarding] = useState(!loadState().onboarded);
+  // Réouverture manuelle du bilan (depuis l'arbre). L'affichage AUTOMATIQUE au
+  // tout premier lancement se décide, lui, à partir de `state.onboarded` — donc
+  // du carnet InstantDB — une fois celui-ci chargé (voir `showOnboarding`).
+  const [manualOnboarding, setManualOnboarding] = useState(false);
 
   // garde-fou dev : le graphe de prérequis doit être un DAG valide
   useEffect(() => {
@@ -1204,15 +1197,10 @@ export default function App() {
     if (errors.length) console.error('⚠️ skills-data invalide :', errors);
   }, []);
 
-  // persistance locale : cache instantané + fonctionnement hors-ligne
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  }, [state]);
-
-  // synchro temps réel du carnet partagé (InstantDB) entre les 2 téléphones.
-  // On normalise l'état distant avec DEFAULT_STATE pour tolérer d'éventuelles
-  // clés manquantes, comme le fait loadState().
-  useKoriSync(state, setState, (remote) => ({ ...DEFAULT_STATE, ...remote }));
+  // synchro temps réel du carnet partagé (InstantDB) — unique source de vérité
+  // (plus de localStorage : InstantDB garde lui-même un cache local hors-ligne).
+  // `ready` passe à true une fois le carnet distant chargé.
+  const ready = useKoriSync(state, setState, (remote) => ({ ...DEFAULT_STATE, ...remote }));
 
   const showToast = (msg) => {
     setToast(msg);
@@ -1406,7 +1394,7 @@ export default function App() {
       }
       return { ...prev, skillStatus, onboarded: true };
     });
-    setShowOnboarding(false);
+    setManualOnboarding(false);
     const hasPartial = Object.values(choices).includes('partiel');
     showToast(
       hasPartial
@@ -1429,6 +1417,22 @@ export default function App() {
   const tierRatio = nextTier
     ? (state.lifetime - tier.min) / (nextTier.min - tier.min)
     : 1;
+
+  // Le bilan de départ s'affiche soit sur réouverture manuelle, soit
+  // automatiquement au tout premier lancement — mais seulement une fois le
+  // carnet distant chargé, pour ne pas le faire clignoter pendant le chargement.
+  const showOnboarding = manualOnboarding || (ready && !state.onboarded);
+
+  // Tant que le carnet en ligne n'est pas chargé, on n'affiche encore rien de
+  // décisif (évite un flash du bilan de départ à chaque ouverture).
+  if (!ready) {
+    return (
+      <div className="app app-loading">
+        <div className="loading-paw">🐾</div>
+        <p className="muted">Chargement du carnet…</p>
+      </div>
+    );
+  }
 
   return (
     <div className="app">
@@ -1483,7 +1487,7 @@ export default function App() {
         <TreeTab
           state={state}
           onUnlock={unlockSkill}
-          reopenOnboarding={() => setShowOnboarding(true)}
+          reopenOnboarding={() => setManualOnboarding(true)}
         />
       )}
       {tab === 'stats' && <StatsTab state={state} onAddFirst={addFirst} />}
