@@ -104,6 +104,31 @@ button {
 }
 .tier-next { margin-top: 5px; font-size: 11.5px; color: var(--ink-soft); }
 
+/* ---------- Bande de statut compacte (en-tête léger) ---------- */
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 2px 12px;
+  margin-bottom: 4px;
+}
+.topbar-name {
+  font-family: var(--font-head);
+  font-weight: 800;
+  font-size: 18px;
+  letter-spacing: -0.01em;
+}
+.topbar-tier { font-size: 18px; }
+.topbar-metrics {
+  margin-left: auto;
+  display: flex;
+  gap: 12px;
+  font-weight: 700;
+  font-size: 13.5px;
+  color: var(--ink);
+}
+.topbar-metrics span { white-space: nowrap; }
+
 /* ---------- Cartes génériques ---------- */
 .card {
   background: var(--card);
@@ -115,6 +140,84 @@ button {
 }
 .card h2 { font-size: 17px; font-weight: 700; margin-bottom: 8px; }
 .muted { color: var(--ink-soft); font-size: 13px; }
+
+/* ---------- Titre de section + ⓘ à la demande ---------- */
+.section-head { margin-bottom: 8px; }
+.section-head-row { display: flex; align-items: center; gap: 7px; }
+.section-head-row h2 { margin-bottom: 0; }
+.section-head-right { margin-left: auto; font-size: 12.5px; color: var(--ink-soft); font-weight: 600; }
+.info-dot {
+  width: 18px;
+  height: 18px;
+  line-height: 1;
+  font-size: 13px;
+  color: var(--ink-soft);
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+.info-dot:hover { opacity: 1; color: var(--terra-dark); }
+.info-text {
+  margin: 7px 0 0;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--ink-soft);
+  background: var(--cream);
+  border-left: 2px solid var(--line);
+  border-radius: 0 8px 8px 0;
+  padding: 7px 10px;
+}
+
+/* ---------- Carte compétence repliable (Arbre) ---------- */
+.skill-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+}
+.skill-row .s-icon { font-size: 19px; }
+.skill-row .s-name { font-family: var(--font-head); font-weight: 700; font-size: 15px; flex: 1; }
+.skill-row .s-chevron { color: var(--ink-soft); font-size: 11px; margin-left: 2px; }
+.skill-mini {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+  font-size: 11.5px;
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+.skill-details { margin-top: 10px; }
+
+/* petit tag inline (ex. « gestion » sur l'accueil) */
+.tag-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11.5px;
+  font-weight: 700;
+  background: var(--sage-bg);
+  color: var(--sage-dark);
+  border-radius: 99px;
+  padding: 3px 9px;
+  margin-top: 8px;
+}
+
+/* ligne « gestion » sur l'accueil (tag + ⓘ) */
+.gestion-line { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 4px; }
+.gestion-line .tag-inline { margin-top: 0; }
+
+/* décompression en version compacte (accueil) */
+.decomp-banner.compact { padding: 10px 13px; }
+.decomp-banner.compact .decomp-title { font-size: 14px; }
+.decomp-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  text-align: left;
+  gap: 8px;
+}
+.decomp-toggle { color: var(--ink-soft); font-size: 11px; flex-shrink: 0; }
 
 /* ---------- Onglet Entraîner ---------- */
 .skill-chips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 6px; }
@@ -771,3 +874,84 @@ button {
   0% { transform: translateY(0) rotate(0deg); opacity: 1; }
   100% { transform: translateY(105vh) rotate(340deg); opacity: 0.6; }
 }
+
+/* ---------- Arbre visuel (nœuds reliés) ---------- */
+.tree-scroll { overflow-x: auto; overflow-y: hidden; padding: 6px 0 14px; -webkit-overflow-scrolling: touch; }
+.tree-canvas { position: relative; margin: 0 auto; }
+.tree-edges { position: absolute; inset: 0; pointer-events: none; overflow: visible; }
+.tree-edge { stroke: var(--line); stroke-width: 2.5; }
+
+.tree-node {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  border: 2.5px solid var(--line);
+  border-radius: 16px;
+  background: var(--card);
+  box-shadow: var(--shadow);
+  padding: 4px;
+  text-align: center;
+  transition: transform 0.1s ease;
+}
+.tree-node:active { transform: scale(0.94); }
+.tree-node-cat { position: absolute; top: 5px; left: 5px; width: 7px; height: 7px; border-radius: 99px; background: var(--cat-color); }
+.tree-node-icon { font-size: 24px; line-height: 1; }
+.tree-node-name {
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 1.05;
+  color: var(--ink);
+  max-width: 66px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.tree-node-mark { position: absolute; top: -7px; right: -6px; font-size: 13px; }
+
+/* contour selon le statut (mêmes codes couleur que les status-chip) */
+.tree-node.status-locked { opacity: 0.5; }
+.tree-node.status-available { border-color: var(--gold); }
+.tree-node.status-learning { border-color: var(--terra); }
+.tree-node.status-known { border-color: #8a8ad0; }
+.tree-node.status-mastered { border-color: var(--sage); background: var(--sage-bg); }
+
+/* feuille de détail (bottom sheet) au tap d'un nœud */
+.tree-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(51, 41, 31, 0.4);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 50;
+  animation: tree-fade 0.15s ease;
+}
+.tree-sheet {
+  background: var(--cream);
+  width: 100%;
+  max-width: 480px;
+  border-radius: 20px 20px 0 0;
+  padding: 16px 14px 26px;
+  max-height: 85vh;
+  overflow-y: auto;
+  position: relative;
+  animation: tree-up 0.2s ease;
+}
+.tree-sheet-close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  width: 30px;
+  height: 30px;
+  border-radius: 99px;
+  background: var(--card);
+  color: var(--ink-soft);
+  font-size: 16px;
+  z-index: 1;
+}
+@keyframes tree-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes tree-up { from { transform: translateY(24px); } to { transform: translateY(0); } }

@@ -8,6 +8,7 @@ import {
   DEFAULT_MEALS_PER_DAY,
   reminderStatus,
 } from './health-data.js';
+import { SectionTitle } from './ui.jsx';
 
 const localDate = (d = new Date()) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -29,11 +30,10 @@ export function MealsSection({ state, onAddCare, onLogDefaultMeals, onRemoveCare
 
   return (
     <div className="card">
-      <h2>Repas &amp; friandises 🍽️</h2>
-      <p className="muted">
-        Pratique à deux : un coup d’œil pour voir ce que Kori a déjà eu aujourd’hui. Rien
-        d’obligatoire.
-      </p>
+      <SectionTitle
+        title="Repas & friandises 🍽️"
+        info="Un coup d’œil, à deux, pour voir ce que Kori a déjà eu aujourd’hui. Rien d’obligatoire."
+      />
 
       <div className="care-summary">
         {todayCare.length === 0 ? (
@@ -190,7 +190,7 @@ export function RemindersSection({ state, onAddReminder, onCompleteReminder, onR
           </div>
           <input
             className="walk-note"
-            placeholder="Précision (optionnel, ex. rappel CHPPiL)…"
+            placeholder="Précision (optionnel)…"
             value={note}
             onChange={(e) => setNote(e.target.value)}
           />
@@ -237,11 +237,10 @@ export function FirstsTimeline({ state, onAddFirst }) {
 
   return (
     <div className="card">
-      <h2>Premières fois ⭐</h2>
-      <p className="muted">
-        Les vrais jalons de sa nouvelle vie, au-delà des paliers : première rencontre chat
-        sereine, première sortie en ville…
-      </p>
+      <SectionTitle
+        title="Premières fois ⭐"
+        info="Les jalons de sa nouvelle vie, au-delà des paliers : première rencontre chat sereine, première sortie en ville…"
+      />
 
       {firsts.length > 0 && (
         <ul className="firsts-list">
