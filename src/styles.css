@@ -485,6 +485,20 @@ button {
 .cup-emoji { display: block; font-size: 26px; }
 .cup-label { display: block; font-family: var(--font-head); font-weight: 700; font-size: 14px; margin-top: 3px; }
 .cup-sub { display: block; font-size: 10.5px; color: var(--ink-soft); margin-top: 1px; }
+.cup-btn.selected {
+  border-color: var(--cup-color);
+  background: color-mix(in srgb, var(--cup-color) 12%, var(--card));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--cup-color) 22%, transparent);
+}
+
+/* brouillon de balade : options facultatives avant validation */
+.walk-draft {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--line);
+}
+.cup-row + .btn-block,
+.walk-draft + .btn-block { margin-top: 14px; }
 
 .walk-card {
   border: 1px solid var(--line);

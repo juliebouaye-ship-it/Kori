@@ -66,6 +66,41 @@ Puis crée un repo **privé** sur GitHub et pousse-le (GitHub te donne les 2 lig
 > Netlify (« Deploy manually »). Il faudra refaire ce geste à chaque mise à jour,
 > et renseigner l'App ID en dur — GitHub reste plus simple.
 
+## 4 bis. Tester en « preview » sans consommer de crédits
+
+Ce qui consomme les minutes de build Netlify, c'est **construire sur leurs serveurs**
+(push git ou build distant). En **construisant en local** et en envoyant le dossier
+`dist` déjà prêt via la CLI, on ne consomme **aucune minute de build**. Et un déploiement
+avec alias `preview` **ne touche jamais la prod** : c'est une URL séparée et stable.
+
+**Réglage une fois** (commandes interactives à lancer toi-même, elles ouvrent le navigateur) :
+```
+npx netlify login    # connexion à ton compte Netlify
+npx netlify link     # relie ce dossier à ton site Netlify (choisis-le dans la liste)
+```
+
+**Ensuite, au quotidien :**
+```
+npm run deploy:preview
+```
+- build en local (avec ton `.env`, donc l'App ID InstantDB est déjà inclus) ;
+- envoie sur une URL de preview **stable** : `https://preview--<ton-site>.netlify.app` ;
+- 0 minute de build consommée, prod intacte.
+
+Tu installes cette URL de preview **une seule fois** sur ton tél (« Ajouter à l'écran
+d'accueil ») et chaque `npm run deploy:preview` la met à jour. Idéal pour tester souvent.
+
+Quand tout est finalisé, tu publies en prod (aussi en build local, sans minutes) :
+```
+npm run deploy:prod
+```
+
+> ⚠️ La preview et la prod utilisent le **même App ID InstantDB** → **même carnet Kori**.
+> Tester en preview écrit donc dans tes vraies données (pratique pour valider la vraie
+> synchro, mais tu peux supprimer les balades de test dans l'appli ou l'Explorer). Si tu
+> préfères des données de test isolées, crée une 2ᵉ app InstantDB « Kori (test)» et mets
+> son App ID dans un `.env` le temps des tests.
+
 ## 5. Installer sur les téléphones
 
 1. Ouvre l'URL Netlify dans **Chrome** (Android) ou **Safari** (iPhone).

@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "deploy:preview": "vite build && netlify deploy --dir=dist --alias=preview",
+    "deploy:prod": "vite build && netlify deploy --dir=dist --prod"
   },
   "dependencies": {
     "@instantdb/react": "^1.0.49",
@@ -15,6 +17,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.4",
+    "netlify-cli": "^26.2.0",
     "playwright": "^1.61.1",
     "vite": "^6.3.5",
     "vite-plugin-pwa": "^1.3.0"

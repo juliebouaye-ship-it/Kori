@@ -48,7 +48,16 @@ const DEFAULT_STATE = {
   firsts: [], // { id, date, title, note } — « premières fois » à célébrer
 };
 
-const newId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+// Les éléments (balades, séances, repas…) deviennent chacun une ligne InstantDB :
+// leur id doit être un UUID valide. crypto.randomUUID est dispo en https/localhost.
+const newId = () => {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
+  // repli UUID v4 (contextes anciens / non sécurisés)
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16);
+  });
+};
 
 // Antisèche : mot + geste effectifs (override utilisateur, sinon défaut du skill).
 const cueFor = (state, skill) => ({
@@ -977,6 +986,24 @@ function BaladeTab({ state, onLogWalk, onUpdateWalk, onDeleteWalk, decomp, care 
     .sort((a, b) => b.date.localeCompare(a.date) || (b.ts || 0) - (a.ts || 0))
     .slice(0, 14);
 
+  // brouillon de balade : rien n'est enregistré tant qu'on ne valide pas.
+  const [draft, setDraft] = useState({ level: null, location: null, triggers: [], note: '' });
+  const canSave = Boolean(draft.level);
+  const setLevel = (id) => setDraft((d) => ({ ...d, level: d.level === id ? null : id }));
+  const setLocation = (id) => setDraft((d) => ({ ...d, location: d.location === id ? null : id }));
+  const toggleTrigger = (id) =>
+    setDraft((d) => ({
+      ...d,
+      triggers: d.triggers.includes(id)
+        ? d.triggers.filter((x) => x !== id)
+        : [...d.triggers, id],
+    }));
+  const saveWalk = () => {
+    if (!canSave) return;
+    onLogWalk(draft);
+    setDraft({ level: null, location: null, triggers: [], note: '' });
+  };
+
   return (
     <>
       {decomp.active && <DecompBanner decomp={decomp} />}
@@ -985,16 +1012,16 @@ function BaladeTab({ state, onLogWalk, onUpdateWalk, onDeleteWalk, decomp, care 
       <div className="card">
         <h2>Comment s’est passée la sortie ? 🚶</h2>
         <p className="muted">
-          Un seul geste : tape le niveau du « verre » de Kori. Le lieu et les déclencheurs
-          sont facultatifs, à préciser seulement si tu veux suivre les patterns.
+          Tape le niveau du « verre » de Kori — c’est le seul geste vraiment utile. Le lieu
+          et les déclencheurs restent facultatifs, puis <strong>enregistre</strong>.
         </p>
         <div className="cup-row">
           {CUP_LEVELS.map((c) => (
             <button
               key={c.id}
-              className="cup-btn"
+              className={`cup-btn ${draft.level === c.id ? 'selected' : ''}`}
               style={{ '--cup-color': c.color }}
-              onClick={() => onLogWalk(c.id)}
+              onClick={() => setLevel(c.id)}
             >
               <span className="cup-emoji">{c.emoji}</span>
               <span className="cup-label">{c.short}</span>
@@ -1002,6 +1029,48 @@ function BaladeTab({ state, onLogWalk, onUpdateWalk, onDeleteWalk, decomp, care 
             </button>
           ))}
         </div>
+
+        {draft.level && (
+          <div className="walk-draft">
+            <div className="walk-field-label">Lieu (optionnel)</div>
+            <div className="chip-wrap">
+              {LOCATIONS.map((l) => (
+                <button
+                  key={l.id}
+                  className={`mini-chip ${draft.location === l.id ? 'on' : ''}`}
+                  onClick={() => setLocation(l.id)}
+                >
+                  {l.icon} {l.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="walk-field-label">Déclencheurs croisés (optionnel)</div>
+            <div className="chip-wrap">
+              {WALK_TRIGGERS.map((t) => (
+                <button
+                  key={t.id}
+                  className={`mini-chip ${draft.triggers.includes(t.id) ? 'on' : ''}`}
+                  onClick={() => toggleTrigger(t.id)}
+                >
+                  {t.icon} {t.label}
+                </button>
+              ))}
+            </div>
+
+            <input
+              className="walk-note"
+              placeholder="Note (optionnel)…"
+              value={draft.note}
+              onChange={(e) => setDraft((d) => ({ ...d, note: e.target.value }))}
+            />
+          </div>
+        )}
+
+        <button className="btn btn-primary btn-block" disabled={!canSave} onClick={saveWalk}>
+          {canSave ? '🐾 Enregistrer la balade' : '↑ Choisis d’abord un niveau'}
+        </button>
+
         <p className="muted" style={{ marginTop: 8, fontSize: 12 }}>
           🟢 sous le seuil · 🟡 un ou deux déclencheurs · 🔴 débordée (les déclencheurs se
           sont empilés sans récupération).
@@ -1166,7 +1235,7 @@ export default function App() {
       sessions: [
         ...prev.sessions,
         {
-          id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+          id: newId(),
           date: localDate(),
           skillId: skill.id,
           palierId: palier.id,
@@ -1183,28 +1252,34 @@ export default function App() {
     if (rating.id === 'top') fireConfetti();
   };
 
-  const logWalk = (level) => {
+  // Enregistre une balade à partir du brouillon composé dans l'onglet
+  // (niveau obligatoire ; lieu, déclencheurs et note facultatifs).
+  const logWalk = (draft) => {
+    const level = draft.level;
+    if (!level) return;
     setState((prev) => ({
       ...prev,
       walks: [
         ...prev.walks,
         {
-          id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+          id: newId(),
           date: localDate(),
           ts: Date.now(),
           level,
-          location: null,
-          triggers: [],
-          note: '',
+          location: draft.location ?? null,
+          triggers: draft.triggers ?? [],
+          note: (draft.note ?? '').trim(),
         },
       ],
     }));
     const cup = CUP_BY_ID[level];
     showToast(
       level === 'rouge'
-        ? '🔴 Sortie notée — mode décompression activé 🟢'
-        : `${cup.emoji} Sortie notée — ${cup.short}`
+        ? '🔴 Balade enregistrée — mode décompression activé 🟢'
+        : `${cup.emoji} Balade enregistrée ✓ — ${cup.short}`
     );
+    // petite fête uniquement pour une sortie sereine (jamais pour une 🔴)
+    if (level === 'vert') fireConfetti();
   };
 
   const updateWalk = (id, patch) =>
@@ -1237,7 +1312,7 @@ export default function App() {
       const toAdd = Math.max(0, DEFAULT_MEALS_PER_DAY - already);
       if (toAdd === 0) return prev;
       const meals = Array.from({ length: toAdd }, (_, i) => ({
-        id: `${Date.now()}-${i}-${Math.random().toString(36).slice(2, 6)}`,
+        id: newId(),
         date,
         ts: Date.now() + i,
         kind: 'repas',

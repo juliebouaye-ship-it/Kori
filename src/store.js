@@ -1,72 +1,116 @@
 // ============================================================
 // Synchro du carnet de Kori entre appareils (InstantDB)
 // ============================================================
-// Stratégie : on garde l'architecture existante (un seul objet `state` dans
-// App). Ce hook fait le pont avec InstantDB dans les deux sens :
-//   - distant -> local : le temps réel pousse toute modif de l'autre téléphone,
-//     on l'applique via setState.
-//   - local -> distant : à chaque changement de `state`, on pousse (debouncé)
-//     l'état complet dans l'unique enregistrement `carnet`.
-// Un garde-fou (`lastSynced`) mémorise le dernier état « d'accord » sérialisé
-// pour éviter la boucle (une modif reçue ne repart pas, et notre propre écho ne
-// se ré-applique pas).
-// Conflit : last-write-wins sur le blob entier ; le temps réel garde les deux
-// téléphones alignés, donc les écrasements sont rares.
+// Chaque type d'élément a sa propre table (balades, séances, repas/soins,
+// rappels, premières fois) → Explorer InstantDB lisible + fusion sûre à deux
+// (deux ajouts simultanés coexistent au lieu de s'écraser). Les compteurs et la
+// config restent dans un enregistrement `meta` unique.
+//
+// La logique pure (assemblage, diff, migration) est dans sync-core.js ; ici on
+// se contente d'orchestrer les transactions InstantDB et de gérer le cycle React.
 
 import { useEffect, useRef } from 'react';
-import { db, KORI_ID, syncEnabled } from './db.js';
+import { db, META_ID, KORI_ID, syncEnabled } from './db.js';
+import {
+  COLLECTIONS,
+  assemble,
+  canonical,
+  diffPlan,
+  seedPlan,
+  migrateIds,
+  hasData,
+} from './sync-core.js';
 
-const serialize = (s) => JSON.stringify(s);
 const PUSH_DEBOUNCE_MS = 800;
+
+// On interroge toutes les tables + l'ancien `carnet` (mono-bloc) pour pouvoir
+// migrer les données héritées lors du tout premier lancement du nouveau modèle.
+const QUERY = {
+  meta: {},
+  walks: {},
+  sessions: {},
+  care: {},
+  reminders: {},
+  firsts: {},
+  carnet: {},
+};
+
+// Traduit un plan (meta + upserts + deletes) en une transaction InstantDB.
+function applyPlan(plan) {
+  const txs = [];
+  if (plan.metaUpdate) {
+    txs.push(db.tx.meta[META_ID].update({ ...plan.metaUpdate, updatedAt: Date.now() }));
+  }
+  for (const u of plan.upserts || []) txs.push(db.tx[u.coll][u.id].update(u.attrs));
+  for (const d of plan.deletes || []) txs.push(db.tx[d.coll][d.id].delete());
+  if (txs.length) db.transact(txs);
+}
 
 /**
  * @param {object} state       l'état courant de l'app
  * @param {function} setState  le setter React de l'état
- * @param {function} normalize (remoteState) => state complet (fusion des défauts)
+ * @param {function} normalize (remoteState) => état complet (fusion des défauts)
  */
 export function useKoriSync(state, setState, normalize = (s) => s) {
-  // useQuery(null) => le hook est bien appelé mais aucune requête n'est faite
-  // tant que la synchro n'est pas activée (pas d'App ID configuré).
-  const { data } = db.useQuery(syncEnabled ? { carnet: {} } : null);
+  const { data } = db.useQuery(syncEnabled ? QUERY : null);
 
-  const lastSynced = useRef(null);
   const seeded = useRef(false);
+  const lastCanon = useRef(null); // empreinte du dernier état « d'accord »
+  const lastState = useRef(null); // dernier état poussé/reçu (base du prochain diff)
+  const currentState = useRef(state);
+  currentState.current = state; // toujours la dernière valeur pour l'amorçage
 
-  // ---- distant -> local (+ amorçage du carnet s'il est vide) ----
+  // ---- distant -> local (+ migration/amorçage) ----
   useEffect(() => {
     if (!syncEnabled || !data) return;
-    const rows = data.carnet || [];
 
-    if (rows.length === 0) {
-      // Aucun carnet distant encore : on l'amorce (une seule fois) avec
-      // l'état local actuel — ne perd rien des données déjà saisies.
-      if (seeded.current) return;
+    const isEmpty =
+      (data.meta || []).length === 0 && COLLECTIONS.every((c) => (data[c] || []).length === 0);
+
+    if (isEmpty) {
+      if (seeded.current) return; // on n'amorce qu'une fois
       seeded.current = true;
-      lastSynced.current = serialize(state);
-      db.transact(db.tx.carnet[KORI_ID].update({ state, updatedAt: Date.now() }));
+
+      // Source des données : l'état local s'il contient déjà quelque chose
+      // (cas normal : ce téléphone a du localStorage), sinon l'ancien carnet
+      // mono-bloc distant s'il existe (cas d'un appareil neuf).
+      const oldBlob = (data.carnet || [])[0]?.state;
+      const source = hasData(currentState.current)
+        ? currentState.current
+        : oldBlob
+          ? normalize(oldBlob)
+          : currentState.current;
+
+      const migrated = normalize(migrateIds(source));
+      lastState.current = migrated;
+      lastCanon.current = canonical(migrated);
+      setState(migrated);
+      applyPlan(seedPlan(migrated));
+      // ménage : on retire l'ancienne ligne unique désormais migrée.
+      if (oldBlob) db.transact(db.tx.carnet[KORI_ID].delete());
       return;
     }
 
     seeded.current = true;
-    const remoteRaw = rows[0].state;
-    if (!remoteRaw) return;
-    const remote = normalize(remoteRaw);
-    const rstr = serialize(remote);
-    if (rstr !== lastSynced.current) {
-      lastSynced.current = rstr;
-      setState(remote);
+    const assembled = assemble(data, normalize);
+    const canon = canonical(assembled);
+    if (canon !== lastCanon.current) {
+      lastCanon.current = canon;
+      lastState.current = assembled;
+      setState(assembled);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data]);
 
-  // ---- local -> distant (debouncé) ----
+  // ---- local -> distant (diff debouncé) ----
   useEffect(() => {
-    if (!syncEnabled) return;
-    const str = serialize(state);
-    if (str === lastSynced.current) return; // provient d'une synchro distante
+    if (!syncEnabled || !seeded.current) return;
+    const canon = canonical(state);
+    if (canon === lastCanon.current) return; // provient d'une synchro distante
     const t = setTimeout(() => {
-      lastSynced.current = str;
-      db.transact(db.tx.carnet[KORI_ID].update({ state, updatedAt: Date.now() }));
+      applyPlan(diffPlan(lastState.current, state));
+      lastState.current = state;
+      lastCanon.current = canon;
     }, PUSH_DEBOUNCE_MS);
     return () => clearTimeout(t);
   }, [state]);
