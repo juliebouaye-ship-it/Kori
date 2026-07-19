@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { SKILLS, CATEGORIES } from '../skills-data.js';
+import { SKILLS, CATEGORIES, GATES } from '../skills-data.js';
 import {
   SKILL_BY_ID,
   CAT_BY_ID,
@@ -69,6 +69,11 @@ function SkillCard({ state, skill, wallet, onUnlock }) {
           <p className="skill-desc">{skill.description}</p>
           <p className="skill-purpose">{skill.purpose}</p>
           {skill.note && <p className="skill-note">{skill.note}</p>}
+          {skill.gate && GATES[skill.gate] && (
+            <p className="skill-gate">
+              <strong>⚕️ {GATES[skill.gate].label}</strong> {GATES[skill.gate].detail}
+            </p>
+          )}
           <div className="skill-meta">
             <span>Diff. {'⭐'.repeat(skill.difficulty)}</span>
             <span>Coût {skill.cost} 🦴</span>
@@ -100,6 +105,9 @@ function SkillCard({ state, skill, wallet, onUnlock }) {
                     <span className="p-check">{done ? '✅' : '⬜'}</span>
                     <span className={done ? 'p-done' : ''}>
                       <strong>{p.label}</strong> — {p.criterion}
+                      {p.gate && GATES[p.gate] && (
+                        <span className="p-gate"> ⚕️ {GATES[p.gate].label}</span>
+                      )}
                     </span>
                   </li>
                 );

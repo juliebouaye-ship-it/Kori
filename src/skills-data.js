@@ -10,6 +10,7 @@ export const CATEGORIES = [
   { id: 'balade', name: 'Balade', icon: '🌿', color: '#7C8F5E' },
   { id: 'cerveau', name: 'Cerveau', icon: '🧠', color: '#5B7FA6' },
   { id: 'tours', name: 'Tours', icon: '🎪', color: '#B0648C' },
+  { id: 'sport', name: 'Sport', icon: '🎽', color: '#6E7B8B' },
 ];
 
 // rating d'une séance → friandises (🦴) gagnées
@@ -416,7 +417,185 @@ export const SKILLS = [
       { id: 'monte-3', label: 'Cibles variées', criterion: 'Monte sur 3 supports différents (banc, souche, marche…).' },
     ],
   },
+
+  // ---------- SPORT (cani-rando) ----------
+  // Kori est une Amstaff : muscle dense + museau court = mauvaise dissipation
+  // de la chaleur, donc pas de course d'endurance (avis véto). En revanche le
+  // bull-and-terrier est bâti pour la traction courte et puissante : la
+  // cani-rando (traction à allure de marche) lui va bien mieux que le canicross.
+  // Presque tout se travaille À VIDE : seuls les paliers qui chargent réellement
+  // les épaules portent un `gate` (feu vert véto, plaques de croissance).
+  {
+    id: 'harnais',
+    name: 'Le harnais de traction',
+    category: 'sport',
+    icon: '🦺',
+    cue: 'Harnais',
+    signal: '',
+    description: 'Kori se présente au harnais de traction et le porte sans gêne, détendue.',
+    purpose:
+      'Le harnais est le signal qui ouvre tout le reste : il dit « ici, tirer est autorisé ». Un chien qui le subit ne tirera jamais franchement.',
+    note:
+      'Harnais en X ou en Y avec attache dans l’axe du dos : il dégage les épaules. Un harnais de balade anti-traction ferait exactement l’inverse.',
+    difficulty: 1,
+    cost: 6,
+    bonus: 6,
+    prereqs: [],
+    paliers: [
+      { id: 'harnais-1', label: 'Le harnais est sympa', criterion: 'Met la tête dedans d’elle-même pour attraper une friandise, 5 fois.' },
+      { id: 'harnais-2', label: 'Porté sans gêne', criterion: 'Le porte 5 minutes à la maison sans se figer, se gratter ni le mordiller.' },
+      { id: 'harnais-3', label: 'Harnais = on y va', criterion: 'Vient se présenter au harnais quand tu le sors, et reste calme le temps de l’attacher.' },
+    ],
+  },
+  {
+    id: 'allez',
+    name: 'Allez (partir devant)',
+    category: 'sport',
+    icon: '➡️',
+    cue: 'Allez',
+    signal: '',
+    description: 'Au mot, Kori part devant toi et se met en tension légère dans la longe.',
+    purpose:
+      'Le cœur de la cani-rando : tirer devient un comportement demandé, pas une bagarre. C’est aussi ce qui protège la marche en laisse — le harnais autorise, le collier interdit.',
+    note:
+      'Discrimination par le matériel : harnais de traction = tirer autorisé, laisse ou collier = marche au pied. Ne mélange jamais les deux dans la même sortie tant que la distinction n’est pas nette.',
+    difficulty: 2,
+    cost: 10,
+    bonus: 10,
+    prereqs: ['harnais'],
+    paliers: [
+      { id: 'allez-1', label: 'Suivre une cible', criterion: 'Avance de 5 mètres devant toi pour rejoindre une personne ou une gamelle, en harnais.' },
+      { id: 'allez-2', label: 'Partir au mot', criterion: 'Part devant au mot « Allez » seul, sur 20 mètres, 8 fois sur 10.' },
+      {
+        id: 'allez-3',
+        label: 'Tension légère tenue',
+        criterion: 'Maintient une tension douce et régulière sur 100 mètres, sans se retourner.',
+        gate: 'traction',
+      },
+    ],
+  },
+  {
+    id: 'directions',
+    name: 'Droite / Gauche',
+    category: 'sport',
+    icon: '↔️',
+    cue: 'Droite / Gauche',
+    signal: '',
+    description: 'Kori change de direction au mot, sans que tu aies à la guider physiquement.',
+    purpose:
+      'Sur un sentier, c’est ce qui rend la rando fluide : bifurcation, contournement, se ranger sur le côté. Et ça évite de corriger à la longe.',
+    difficulty: 3,
+    cost: 12,
+    bonus: 12,
+    prereqs: ['allez'],
+    paliers: [
+      { id: 'directions-1', label: 'Un mot par côté', criterion: 'Suit un leurre à droite ou à gauche pendant que tu dis le mot, 10 fois par côté.' },
+      { id: 'directions-2', label: 'Bifurcation évidente', criterion: 'Prend le bon côté à un vrai embranchement en Y, 7 fois sur 10.' },
+      { id: 'directions-3', label: 'Au mot seul', criterion: 'Change de côté au mot seul, sans geste ni ralentissement, sur 3 sentiers différents.' },
+    ],
+  },
+  {
+    id: 'stop-traction',
+    name: 'Stop et Doucement',
+    category: 'sport',
+    icon: '🛑',
+    cue: 'Stop / Doucement',
+    signal: '',
+    description: 'Kori s’arrête net ou ralentit franchement au mot, même en tension.',
+    purpose:
+      'C’est le frein, et c’est la compétence de sécurité de la branche : descente, croisement, sentier étroit, obstacle surprise. À travailler avant d’allonger les distances.',
+    note:
+      'Le frein se travaille toujours avant la puissance. Un chien de 21 kg en tension qui n’a pas de « Stop » fiable, c’est toi qui décides de rien.',
+    difficulty: 2,
+    cost: 10,
+    bonus: 10,
+    prereqs: ['allez'],
+    paliers: [
+      { id: 'stop-traction-1', label: 'Stop à l’arrêt', criterion: 'S’arrête et attend au mot, en harnais, sans tension, 8 fois sur 10.' },
+      { id: 'stop-traction-2', label: 'Stop en mouvement', criterion: 'S’arrête au mot alors qu’elle avance devant toi, 8 fois sur 10.' },
+      { id: 'stop-traction-3', label: 'Doucement', criterion: 'Réduit visiblement l’allure au mot « Doucement » et tient le rythme 20 mètres.' },
+    ],
+  },
+  {
+    id: 'devant',
+    name: 'Rester devant',
+    category: 'sport',
+    icon: '🧭',
+    cue: 'Devant',
+    signal: '',
+    description: 'Kori tient sa place devant toi sans se retourner, s’emmêler ni partir renifler.',
+    purpose:
+      'Ce qui distingue une vraie cani-rando d’une promenade chaotique. C’est aussi ce qui évite qu’elle se prenne la longe dans les pattes.',
+    difficulty: 2,
+    cost: 10,
+    bonus: 10,
+    prereqs: ['allez'],
+    paliers: [
+      { id: 'devant-1', label: 'Ne pas se retourner', criterion: 'Reste orientée vers l’avant sur 50 mètres quand tu parles ou t’arrêtes.' },
+      { id: 'devant-2', label: 'Ignorer une odeur', criterion: 'Passe devant une zone odorante sans s’arrêter, au mot, 7 fois sur 10.' },
+      { id: 'devant-3', label: 'Sentier complet', criterion: 'Tient sa place sur un sentier entier, longe jamais emmêlée.', gate: 'traction' },
+    ],
+  },
+  {
+    id: 'croiser-traction',
+    name: 'Croiser en traction',
+    category: 'sport',
+    icon: '🐕‍🦺',
+    cue: '',
+    signal: '',
+    description: 'Kori croise un chien, un vélo ou un joggeur en restant dans son travail, sans dévier.',
+    purpose:
+      'Sans ça, chaque croisement transforme la rando en gestion. C’est ici que la branche Sport rejoint le travail de balade.',
+    note:
+      'En tension, une réaction est bien plus difficile à récupérer qu’en laisse. Tant que le croisement n’est pas net à vide, on se range et on laisse passer : c’est de la gestion, et c’est très bien.',
+    difficulty: 3,
+    cost: 14,
+    bonus: 14,
+    prereqs: ['devant', 'stop-traction', 'decrocher'],
+    paliers: [
+      { id: 'croiser-traction-1', label: 'À distance', criterion: 'Croise un chien à 30 mètres en gardant sa place, 5 fois.' },
+      { id: 'croiser-traction-2', label: 'Se ranger', criterion: 'Se range sur le côté et attend le passage au mot, 7 fois sur 10.' },
+      { id: 'croiser-traction-3', label: 'Croisement rapproché', criterion: 'Croise un vélo ou un joggeur à moins de 5 mètres sans dévier.' },
+    ],
+  },
+  {
+    id: 'rando-duree',
+    name: 'Endurance de rando',
+    category: 'sport',
+    icon: '⛰️',
+    cue: '',
+    signal: '',
+    description: 'Kori tire régulièrement sur une sortie longue, avec des pauses et une allure de marche.',
+    purpose:
+      'La finalité de la branche : partir en rando ensemble. Se construit très progressivement, en distance seulement — jamais en vitesse.',
+    note:
+      'Amstaff : la chaleur est le vrai facteur limitant, pas le souffle. Pas de sortie en pleine journée de juin à septembre — lever du jour ou après le coucher du soleil, et l’humidité compte double pour un museau court.',
+    difficulty: 3,
+    cost: 16,
+    bonus: 16,
+    prereqs: ['devant', 'stop-traction'],
+    gate: 'traction',
+    paliers: [
+      { id: 'rando-duree-1', label: 'Vingt minutes', criterion: 'Sortie de 20 minutes en traction douce, à l’aise, sans traîner au retour.', gate: 'traction' },
+      { id: 'rando-duree-2', label: 'Quarante minutes', criterion: 'Sortie de 40 minutes avec deux pauses, récupération rapide.', gate: 'traction' },
+      { id: 'rando-duree-3', label: 'Une vraie rando', criterion: 'Sortie d’une heure sur terrain varié, allure de marche, forme intacte le lendemain.', gate: 'traction' },
+    ],
+  },
 ];
+
+// ------------------------------------------------------------
+// Verrous non pédagogiques : un palier peut être prêt dans la tête du chien
+// mais pas dans son corps. Le `gate` s'affiche, il ne bloque rien — c'est un
+// avertissement, pas une punition. Aucune date n'est codée en dur : c'est le
+// véto qui tranche, pas l'appli.
+// ------------------------------------------------------------
+export const GATES = {
+  traction: {
+    label: 'Feu vert véto requis',
+    detail:
+      'Ce palier fait réellement tirer Kori. Tant que les plaques de croissance ne sont pas fermées, la traction répétée peut abîmer le cartilage de façon définitive. Chez un gabarit moyen à grand, la fermeture se situe entre 12 et 18 mois. À faire valider en visite, avec un contrôle des hanches, des genoux et de la démarche.',
+  },
+};
 
 // ------------------------------------------------------------
 // Diagnostics : une aide consultable à la demande.

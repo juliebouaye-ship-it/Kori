@@ -1017,3 +1017,10 @@ button {
 .picto-tile.status-learning { border-color: var(--terra); }
 .picto-tile.status-known { border-color: #8a8ad0; }
 .picto-tile.status-mastered { border-color: var(--sage); background: var(--sage-bg); }
+
+/* Verrou véto (gate) : avertissement de santé, jamais un blocage.
+   Ambre plutôt que rouge — on informe, on ne gronde pas. */
+.skill-gate { margin: 8px 0 0; padding: 7px 10px; font-size: 12.5px; line-height: 1.4; background: #FDF6E3; border-left: 3px solid #D9A441; border-radius: 6px; }
+.skill-gate strong { display: block; margin-bottom: 2px; }
+.p-gate { display: inline-block; margin-left: 4px; font-size: 11.5px; font-weight: 600; color: #A87A1E; white-space: nowrap; }
+.palier-gate { display: flex; align-items: center; gap: 4px; margin-top: 6px; font-size: 12px; font-weight: 600; color: #A87A1E; }

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { SKILLS, CATEGORIES, RATINGS } from '../skills-data.js';
+import { SKILLS, CATEGORIES, RATINGS, GATES } from '../skills-data.js';
 import { localDate } from '../date-utils.js';
 import { isBaladeSkill, dayHasRedWalk } from '../domain.js';
 import { InfoTip, SectionTitle } from '../ui.jsx';
@@ -103,6 +103,12 @@ export function TrainTab({ state, onLogSession, onPalierDone, goToTree, goToHelp
           </div>
           <div className="palier-label">{currentPalier.label}</div>
           <div className="palier-criterion">Acquis quand : {currentPalier.criterion}</div>
+          {currentPalier.gate && GATES[currentPalier.gate] && (
+            <div className="palier-gate">
+              ⚕️ {GATES[currentPalier.gate].label}
+              <InfoTip text={GATES[currentPalier.gate].detail} />
+            </div>
+          )}
         </div>
 
         <div className="rating-row">
