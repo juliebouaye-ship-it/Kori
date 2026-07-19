@@ -97,7 +97,7 @@ function PastWalkRow({ walk }) {
   );
 }
 
-export function BaladeTab({ state, onLogWalk, onUpdateWalk, onDeleteWalk, decomp, care }) {
+export function BaladeTab({ state, onLogWalk, onUpdateWalk, onDeleteWalk, decomp, care, onDismissDecomp }) {
   const today = localDate();
   const todayWalks = state.walks
     .filter((w) => w.date === today)
@@ -127,7 +127,7 @@ export function BaladeTab({ state, onLogWalk, onUpdateWalk, onDeleteWalk, decomp
 
   return (
     <>
-      {decomp.active && <DecompBanner decomp={decomp} />}
+      {decomp.active && <DecompBanner decomp={decomp} onDismiss={onDismissDecomp} />}
       <HealthDueBanner state={state} />
 
       <div className="card">

@@ -5,7 +5,7 @@
 // d'App.jsx. App.jsx n'est plus qu'un routeur qui consomme ce hook.
 
 import { useEffect, useState } from 'react';
-import { SKILLS, validateDag } from '../skills-data.js';
+import { SKILLS, QUICK_XP, validateDag } from '../skills-data.js';
 import { useKoriSync } from '../store.js';
 import { localDate } from '../date-utils.js';
 import {
@@ -78,6 +78,45 @@ export function useKoriState() {
     }));
     showToast(gestion ? `+${rating.xp} 🦴 · gestion 🛡️` : `+${rating.xp} 🦴 · séance notée`);
     if (rating.id === 'top') fireConfetti();
+  };
+
+  // Tour rapide : plusieurs compétences vérifiées en une fois, sans palier.
+  // Une ligne de séance par compétence (donc ça compte comme un jour
+  // d'entraînement dans le compteur mensuel), aucun palier validé.
+  const logQuickRound = (skillIds) => {
+    const ids = [...new Set(skillIds)].filter((id) => SKILLS.some((s) => s.id === id));
+    if (ids.length === 0) return;
+    const gain = ids.length * QUICK_XP;
+    const date = localDate();
+    setState((prev) => ({
+      ...prev,
+      wallet: prev.wallet + gain,
+      lifetime: prev.lifetime + gain,
+      sessions: [
+        ...prev.sessions,
+        ...ids.map((skillId) => ({
+          id: newId(),
+          date,
+          skillId,
+          palierId: '', // aucun palier visé : c'est une vérification, pas une étape
+          rating: 'quick',
+          xp: QUICK_XP,
+        })),
+      ],
+    }));
+    showToast(`+${gain} 🦴 · ${ids.length} compétence${ids.length > 1 ? 's' : ''} revue${ids.length > 1 ? 's' : ''}`);
+  };
+
+  // « Elle va bien » : coupe la suggestion de décompression pour aujourd'hui.
+  // Ce que Julie observe prime sur la règle des 48-72 h.
+  const dismissDecomp = () => {
+    const today = localDate();
+    setState((prev) => ({
+      ...prev,
+      decompOff: (prev.decompOff ?? []).includes(today)
+        ? prev.decompOff
+        : [...(prev.decompOff ?? []), today],
+    }));
   };
 
   // Enregistre une balade à partir du brouillon composé dans l'onglet
@@ -251,7 +290,7 @@ export function useKoriState() {
   };
 
   const { current: tier } = tierFor(state.lifetime);
-  const decomp = decompressionInfo(state.walks);
+  const decomp = decompressionInfo(state.walks, localDate(), state.decompOff ?? []);
   const monthStats = trainingMonthStats(state.sessions, state.walks);
   const care = {
     add: addCare,
@@ -293,6 +332,8 @@ export function useKoriState() {
     setManualOnboarding,
     care,
     logSession,
+    logQuickRound,
+    dismissDecomp,
     markPalierDone,
     logWalk,
     updateWalk,

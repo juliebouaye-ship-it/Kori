@@ -50,11 +50,13 @@ export default function App() {
         <TrainTab
           state={k.viewState}
           onLogSession={k.logSession}
+          onLogQuickRound={k.logQuickRound}
           onPalierDone={k.markPalierDone}
           goToTree={() => k.setTab('tree')}
           goToHelp={() => k.setTab('help')}
           goToWalk={() => k.setTab('balade')}
           decomp={k.decomp}
+          onDismissDecomp={k.dismissDecomp}
         />
       )}
       {k.tab === 'balade' && (
@@ -64,6 +66,7 @@ export default function App() {
           onUpdateWalk={k.updateWalk}
           onDeleteWalk={k.deleteWalk}
           decomp={k.decomp}
+          onDismissDecomp={k.dismissDecomp}
           care={k.care}
         />
       )}

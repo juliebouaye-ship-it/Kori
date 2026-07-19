@@ -38,6 +38,7 @@ export const DEFAULT_STATE = {
   sessions: [], // { id, date, skillId, palierId, rating, xp }
   walks: [], // { id, date, ts, level: 'vert'|'jaune'|'rouge', location, triggers: [], note }
   cues: {}, // skillId -> { word, gesture } — antisèche partagée, éditable
+  decompOff: [], // dates « elle va bien » : l'observation prime sur la règle
   care: [], // { id, date, ts, kind: 'repas'|'friandise', label, grams?, treatId? }
   reminders: [], // { id, type, label, dueDate, note }
   firsts: [], // { id, date, title, note } — « premières fois » à célébrer
@@ -60,7 +61,12 @@ export const sessionIsGestion = (walks, s) =>
 
 // jour de décompression : une balade 🔴 aujourd'hui ou dans les 2 jours précédents
 // (le cortisol met ~48-72 h à retomber).
-export function decompressionInfo(walks, today = localDate()) {
+// `decompOff` = dates où l'utilisatrice a explicitement dit « elle va bien ».
+// L'observation directe prime toujours sur la règle des 48-72 h : le bandeau
+// est une suggestion, pas un diagnostic. On ne réécrit pas l'historique des
+// balades pour autant — la sortie rouge reste enregistrée telle quelle.
+export function decompressionInfo(walks, today = localDate(), decompOff = []) {
+  if (decompOff.includes(today)) return { active: false };
   const reds = walks
     .filter((w) => w.level === 'rouge')
     .map((w) => w.date)

@@ -22,6 +22,15 @@ export const RATINGS = [
   { id: 'top', label: 'Au top', emoji: '🤩', xp: 6 },
 ];
 
+// Tour rapide : 3-4 ordres demandés en passant, pour voir si ça tient encore.
+// Ce n'est pas une séance au rabais — la pratique distribuée (séances courtes
+// et espacées) donne une meilleure acquisition et une meilleure rétention que
+// les séances longues et rapprochées (Meyer & Ladewig 2008 ; Demant et al.
+// 2011). Ça rapporte donc de vraies 🦴 et ça compte comme un jour
+// d'entraînement — mais ça ne valide aucun palier : vérifier que 4 ordres
+// passent encore ne teste pas un critère du type « 8 fois sur 10 ».
+export const QUICK_XP = 2;
+
 // Paliers globaux (niveau) — basés sur le total cumulé à vie, qui ne baisse jamais
 export const TIERS = [
   { min: 0, name: 'Chiot tout fou', emoji: '🐣' },
@@ -58,6 +67,12 @@ export const WALK_TRIGGERS = [
   { id: 'agility', label: 'Chiens / agility', icon: '🐾' },
   { id: 'velo', label: 'Vélo', icon: '🚲' },
   { id: 'bruit', label: 'Bruit', icon: '🔊' },
+  // Journée sociale (repas de famille, apéro chez des amis…). C'est un tag
+  // d'observation, jamais un déclencheur : une longue journée chez des gens
+  // n'est PAS un verre rouge en soi. Excitation n'est pas détresse, et un
+  // chien qui aime les gens peut passer 4 h en visite et rentrer serein.
+  // Le niveau reste ce que Julie a vu, jamais ce que l'appli déduit.
+  { id: 'monde', label: 'Monde / invités', icon: '🎉' },
   { id: 'autre', label: 'Autre', icon: '❓' },
 ];
 

@@ -11,7 +11,7 @@
 //     élément → Explorer lisible + fusion sûre à deux (pas d'écrasement global).
 
 export const COLLECTIONS = ['walks', 'sessions', 'care', 'reminders', 'firsts', 'skillProgress', 'palierDone'];
-export const META_FIELDS = ['onboarded', 'wallet', 'lifetime', 'cues'];
+export const META_FIELDS = ['onboarded', 'wallet', 'lifetime', 'cues', 'decompOff'];
 
 // Forme canonique de chaque type d'élément (+ valeurs par défaut). Garantit que
 // local et distant convergent vers exactement les mêmes clés, quelle que soit la

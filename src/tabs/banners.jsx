@@ -4,20 +4,23 @@ import { REMINDER_TYPE_BY_ID } from '../health-data.js';
 import { dueReminders } from '../domain.js';
 
 // Bandeau « jour de décompression » (partagé Entraîner + Journal).
-export function DecompBanner({ decomp, compact }) {
-  const [open, setOpen] = useState(!compact);
+// Replié par défaut partout : le rappel doit tenir en une ligne. Le détail
+// reste accessible d'un tap pour qui veut les idées d'activités calmes.
+export function DecompBanner({ decomp, compact, onDismiss }) {
+  const [open, setOpen] = useState(false);
   const when =
     decomp.dayOffset === 0 ? 'aujourd’hui' : decomp.dayOffset === 1 ? 'hier' : 'avant-hier';
   return (
     <div className={`decomp-banner ${compact ? 'compact' : ''}`}>
-      {compact ? (
-        <button type="button" className="decomp-title-row" onClick={() => setOpen((o) => !o)}>
-          <span className="decomp-title">🟢 Jour de décompression</span>
-          <span className="decomp-toggle">{open ? '▲' : '▼'}</span>
-        </button>
-      ) : (
-        <div className="decomp-title">🟢 Jour de décompression</div>
-      )}
+      <button
+        type="button"
+        className="decomp-title-row"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+      >
+        <span className="decomp-title">🟢 Jour de décompression</span>
+        <span className="decomp-toggle">{open ? '▲' : '▼'}</span>
+      </button>
       {open && (
         <>
           <p className="decomp-text">
@@ -28,6 +31,11 @@ export function DecompBanner({ decomp, compact }) {
               <li key={i}>{a}</li>
             ))}
           </ul>
+          {onDismiss && (
+            <button type="button" className="back-link" onClick={onDismiss}>
+              Elle va bien aujourd’hui — masquer
+            </button>
+          )}
         </>
       )}
     </div>

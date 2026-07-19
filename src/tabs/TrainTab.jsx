@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { SKILLS, CATEGORIES, RATINGS, GATES } from '../skills-data.js';
+import { SKILLS, CATEGORIES, RATINGS, GATES, QUICK_XP } from '../skills-data.js';
 import { localDate } from '../date-utils.js';
 import { isBaladeSkill, dayHasRedWalk } from '../domain.js';
 import { InfoTip, SectionTitle } from '../ui.jsx';
@@ -8,7 +8,75 @@ import { DecompBanner, HealthDueBanner } from './banners.jsx';
 // ============================================================
 // Onglet ENTRAÎNER 🎾
 // ============================================================
-export function TrainTab({ state, onLogSession, onPalierDone, goToTree, goToHelp, goToWalk, decomp }) {
+// Panneau « Tour rapide » : on coche les compétences vérifiées en passant,
+// on valide une fois. Replié par défaut pour ne pas alourdir l'écran.
+function QuickRound({ trainable, onLogQuickRound }) {
+  const [open, setOpen] = useState(false);
+  const [picked, setPicked] = useState([]);
+  const toggle = (id) =>
+    setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
+
+  if (!open) {
+    return (
+      <button className="btn btn-ghost btn-block quick-open" onClick={() => setOpen(true)}>
+        ⚡ Tour rapide
+      </button>
+    );
+  }
+  return (
+    <div className="quick-box">
+      <SectionTitle
+        title="Tour rapide ⚡"
+        info="Quelques ordres demandés en passant, juste pour voir si ça tient. Ça rapporte des 🦴 et ça compte comme un jour d’entraînement, mais ça ne valide aucun palier."
+      />
+      <div className="skill-chips">
+        {trainable.map((s) => (
+          <button
+            key={s.id}
+            className={`chip ${picked.includes(s.id) ? 'active' : ''}`}
+            onClick={() => toggle(s.id)}
+          >
+            {s.icon} {s.name}
+          </button>
+        ))}
+      </div>
+      <div className="quick-actions">
+        <button
+          className="btn btn-primary"
+          disabled={picked.length === 0}
+          onClick={() => {
+            onLogQuickRound(picked);
+            setPicked([]);
+            setOpen(false);
+          }}
+        >
+          Enregistrer{picked.length > 0 ? ` · +${picked.length * QUICK_XP} 🦴` : ''}
+        </button>
+        <button
+          className="back-link"
+          onClick={() => {
+            setPicked([]);
+            setOpen(false);
+          }}
+        >
+          Annuler
+        </button>
+      </div>
+    </div>
+  );
+}
+
+export function TrainTab({
+  state,
+  onLogSession,
+  onLogQuickRound,
+  onPalierDone,
+  goToTree,
+  goToHelp,
+  goToWalk,
+  decomp,
+  onDismissDecomp,
+}) {
   const trainable = SKILLS.filter((s) => {
     const st = state.skillStatus[s.id];
     return st === 'learning' || st === 'mastered';
@@ -21,7 +89,7 @@ export function TrainTab({ state, onLogSession, onPalierDone, goToTree, goToHelp
   if (trainable.length === 0) {
     return (
       <>
-        {decomp.active && <DecompBanner decomp={decomp} compact />}
+        {decomp.active && <DecompBanner decomp={decomp} compact onDismiss={onDismissDecomp} />}
       <div className="card empty-state">
         <div className="big">🌱</div>
         <h2>Aucune compétence en cours</h2>
@@ -48,7 +116,7 @@ export function TrainTab({ state, onLogSession, onPalierDone, goToTree, goToHelp
 
   return (
     <>
-      {decomp.active && <DecompBanner decomp={decomp} compact />}
+      {decomp.active && <DecompBanner decomp={decomp} compact onDismiss={onDismissDecomp} />}
       <HealthDueBanner state={state} goToWalk={goToWalk} />
       <div className="card">
         <SectionTitle
@@ -152,6 +220,7 @@ export function TrainTab({ state, onLogSession, onPalierDone, goToTree, goToHelp
           🚶 Noter la balade →
         </button>
       </div>
+      <QuickRound trainable={trainable} onLogQuickRound={onLogQuickRound} />
     </>
   );
 }
