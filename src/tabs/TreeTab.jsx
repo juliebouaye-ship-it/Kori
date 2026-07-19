@@ -143,8 +143,8 @@ function SkillPictoGrid({ state, onSelect }) {
                   >
                     <span className="picto-tile-icon">{skill.icon}</span>
                     <span className="picto-tile-name">{skill.name}</span>
-                    {status === 'locked' && <span className="tree-node-mark">🔒</span>}
-                    {status === 'mastered' && <span className="tree-node-mark">🏆</span>}
+                    {status === 'locked' && <span className="picto-tile-mark">🔒</span>}
+                    {status === 'mastered' && <span className="picto-tile-mark">🏆</span>}
                   </button>
                 );
               })}

@@ -1,12 +1,13 @@
 import { useMemo } from 'react';
 import { SKILLS, CATEGORIES } from '../skills-data.js';
-import { localDate, daysBetween } from '../date-utils.js';
+import { localDate, daysBetween, frDate } from '../date-utils.js';
 import { deriveInsights } from '../insights.js';
 import {
   SKILL_BY_ID,
   CAT_BY_ID,
   LOC_BY_ID,
   TRIGGER_BY_ID,
+  CUP_BY_ID,
   isAcquired,
   sessionIsGestion,
   trainingMonthStats,
@@ -25,8 +26,19 @@ export function StatsTab({ state, onAddFirst }) {
   const weekAgo = new Date();
   weekAgo.setDate(weekAgo.getDate() - 6);
   const weekStart = localDate(weekAgo);
-  const paliersDoneCount = Object.keys(state.paliersDone).length;
-  const totalPaliers = SKILLS.reduce((n, s) => n + s.paliers.length, 0);
+  // Paliers : on ne compte QUE les compétences réellement commencées (en cours
+  // ou maîtrisées). Si le total portait sur tout l'arbre, enrichir l'arbre
+  // gonflerait le dénominateur et ferait « reculer » la progression alors que
+  // rien n'est perdu — exactement l'effet démotivant qu'on veut éviter.
+  const startedSkills = SKILLS.filter((s) => {
+    const st = state.skillStatus[s.id];
+    return st === 'learning' || st === 'mastered';
+  });
+  const totalPaliers = startedSkills.reduce((n, s) => n + s.paliers.length, 0);
+  const paliersDoneCount = startedSkills.reduce(
+    (n, s) => n + s.paliers.filter((p) => state.paliersDone[p.id]).length,
+    0
+  );
 
   const insights = useMemo(
     () => deriveInsights(state, { SKILL_BY_ID, LOC_BY_ID, TRIGGER_BY_ID }),
@@ -52,7 +64,10 @@ export function StatsTab({ state, onAddFirst }) {
 
   const maxCount = Math.max(1, ...sessionsBySkill.map((e) => e.count));
 
-  // Balades sur 14 jours : un jour est classé par sa pire sortie.
+  // Balades sur 14 jours : un jour est classé par sa pire sortie. On renvoie la
+  // suite complète des 14 jours (du plus ancien à aujourd'hui) pour l'afficher
+  // en bande — une case sans niveau = jour non noté, ce qui ne veut pas dire
+  // qu'il n'y a pas eu de balade.
   const walkStats = useMemo(() => {
     const today = localDate();
     const byDay = {};
@@ -62,12 +77,20 @@ export function StatsTab({ state, onAddFirst }) {
       const rank = { vert: 1, jaune: 2, rouge: 3 };
       if (!byDay[w.date] || rank[w.level] > rank[byDay[w.date]]) byDay[w.date] = w.level;
     }
-    const days = Object.values(byDay);
+    const days = [];
+    for (let i = 13; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const date = localDate(d);
+      days.push({ date, level: byDay[date] ?? null });
+    }
+    const noted = days.filter((d) => d.level);
     return {
-      total: days.length,
-      vert: days.filter((l) => l === 'vert').length,
-      jaune: days.filter((l) => l === 'jaune').length,
-      rouge: days.filter((l) => l === 'rouge').length,
+      days,
+      total: noted.length,
+      vert: noted.filter((d) => d.level === 'vert').length,
+      jaune: noted.filter((d) => d.level === 'jaune').length,
+      rouge: noted.filter((d) => d.level === 'rouge').length,
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.walks]);
@@ -120,37 +143,38 @@ export function StatsTab({ state, onAddFirst }) {
         <div className="stat-tile">
           <div className="stat-value">
             {paliersDoneCount}
-            <span style={{ fontSize: 14, color: 'var(--ink-soft)' }}>/{totalPaliers}</span>
+            {totalPaliers > 0 && (
+              <span style={{ fontSize: 14, color: 'var(--ink-soft)' }}>/{totalPaliers}</span>
+            )}
           </div>
-          <div className="stat-label">paliers franchis</div>
+          <div className="stat-label">
+            paliers franchis{totalPaliers > 0 ? ' (compétences en cours)' : ''}
+          </div>
         </div>
       </div>
 
       <div className="card">
-        <h2>Balades sur 14 jours 🚶</h2>
+        <SectionTitle
+          title="Balades sur 14 jours 🚶"
+          info="Une case par jour, la plus ancienne à gauche. La couleur reprend la pire sortie du jour. Une case vide veut dire « rien de noté ce jour-là » — pas « pas de balade »."
+        />
         {walkStats.total === 0 ? (
           <p className="muted">Pas encore de balade notée.</p>
         ) : (
           <>
-            <div className="walk-stat-row">
-              <span className="ws-cell">
-                <span className="ws-num" style={{ color: '#5f7046' }}>
-                  {walkStats.vert}
-                </span>
-                <span className="ws-lbl">🟢 sereins</span>
-              </span>
-              <span className="ws-cell">
-                <span className="ws-num" style={{ color: '#a97e21' }}>
-                  {walkStats.jaune}
-                </span>
-                <span className="ws-lbl">🟡 chargés</span>
-              </span>
-              <span className="ws-cell">
-                <span className="ws-num" style={{ color: 'var(--danger)' }}>
-                  {walkStats.rouge}
-                </span>
-                <span className="ws-lbl">🔴 stackés</span>
-              </span>
+            <div className="walk-strip">
+              {walkStats.days.map((d) => (
+                <span
+                  key={d.date}
+                  className={`walk-cell walk-cell-${d.level ?? 'none'}`}
+                  title={`${frDate(d.date)} · ${d.level ? CUP_BY_ID[d.level].short : 'non noté'}`}
+                />
+              ))}
+            </div>
+            <div className="walk-strip-legend">
+              <span>🟢 {walkStats.vert}</span>
+              <span>🟡 {walkStats.jaune}</span>
+              <span>🔴 {walkStats.rouge}</span>
             </div>
             <p className="muted" style={{ marginTop: 6 }}>
               {walkStats.rouge === 0

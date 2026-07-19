@@ -681,17 +681,27 @@ button {
 .pw-loc { color: var(--ink-soft); flex: 1; }
 .pw-tags { font-size: 14px; letter-spacing: 2px; }
 
-.walk-stat-row { display: flex; gap: 8px; }
-.ws-cell {
+/* Bande des 14 derniers jours : une case par jour, la plus ancienne à gauche.
+   Case neutre = jour non noté (≠ « pas de balade »). */
+.walk-strip { display: flex; gap: 4px; margin-top: 4px; }
+.walk-cell {
   flex: 1;
-  text-align: center;
-  background: var(--cream);
+  height: 26px;
+  border-radius: 5px;
   border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  padding: 10px 4px;
+  background: var(--cream);
 }
-.ws-num { display: block; font-family: var(--font-head); font-weight: 800; font-size: 22px; }
-.ws-lbl { display: block; font-size: 11.5px; color: var(--ink-soft); margin-top: 2px; }
+.walk-cell-vert { background: var(--sage); border-color: var(--sage); }
+.walk-cell-jaune { background: var(--gold); border-color: var(--gold); }
+.walk-cell-rouge { background: var(--danger); border-color: var(--danger); }
+.walk-strip-legend {
+  display: flex;
+  gap: 12px;
+  margin-top: 7px;
+  font-size: 12px;
+  color: var(--ink-soft);
+  font-weight: 600;
+}
 
 /* ---------- Insights (Progrès) ---------- */
 .insight {
@@ -875,49 +885,8 @@ button {
   100% { transform: translateY(105vh) rotate(340deg); opacity: 0.6; }
 }
 
-/* ---------- Arbre visuel (nœuds reliés) ---------- */
-.tree-scroll { overflow-x: auto; overflow-y: hidden; padding: 6px 0 14px; -webkit-overflow-scrolling: touch; }
-.tree-canvas { position: relative; margin: 0 auto; }
-.tree-edges { position: absolute; inset: 0; pointer-events: none; overflow: visible; }
-.tree-edge { stroke: var(--line); stroke-width: 2; }
-
-.tree-node {
-  position: absolute;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 1px;
-  border: 2.5px solid var(--line);
-  border-radius: 16px;
-  background: var(--card);
-  box-shadow: var(--shadow);
-  padding: 4px;
-  text-align: center;
-  transition: transform 0.1s ease;
-}
-.tree-node:active { transform: scale(0.94); }
-.tree-node-cat { position: absolute; top: 5px; left: 5px; width: 7px; height: 7px; border-radius: 99px; background: var(--cat-color); }
-.tree-node-icon { font-size: 24px; line-height: 1; }
-.tree-node-name {
-  font-size: 9.5px;
-  font-weight: 700;
-  line-height: 1.05;
-  color: var(--ink);
-  max-width: 66px;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-.tree-node-mark { position: absolute; top: -7px; right: -6px; font-size: 13px; }
-
-/* contour selon le statut (mêmes codes couleur que les status-chip) */
-.tree-node.status-locked { opacity: 0.5; }
-.tree-node.status-available { border-color: var(--gold); }
-.tree-node.status-learning { border-color: var(--terra); }
-.tree-node.status-known { border-color: #8a8ad0; }
-.tree-node.status-mastered { border-color: var(--sage); background: var(--sage-bg); }
+/* Pastille 🔒 / 🏆 posée sur une tuile de la grille de pictos. */
+.picto-tile-mark { position: absolute; top: -7px; right: -6px; font-size: 13px; }
 
 /* feuille de détail (bottom sheet) au tap d'un nœud */
 .tree-sheet-backdrop {
