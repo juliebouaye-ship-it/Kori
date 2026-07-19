@@ -11,6 +11,8 @@ export const CATEGORIES = [
   { id: 'cerveau', name: 'Cerveau', icon: '🧠', color: '#5B7FA6' },
   { id: 'tours', name: 'Tours', icon: '🎪', color: '#B0648C' },
   { id: 'sport', name: 'Sport', icon: '🎽', color: '#6E7B8B' },
+  { id: 'soins', name: 'Soins', icon: '🩺', color: '#6FA098' },
+  { id: 'autonomie', name: 'Autonomie', icon: '🏠', color: '#A8845C' },
 ];
 
 // rating d'une séance → friandises (🦴) gagnées
@@ -579,6 +581,245 @@ export const SKILLS = [
       { id: 'rando-duree-1', label: 'Vingt minutes', criterion: 'Sortie de 20 minutes en traction douce, à l’aise, sans traîner au retour.', gate: 'traction' },
       { id: 'rando-duree-2', label: 'Quarante minutes', criterion: 'Sortie de 40 minutes avec deux pauses, récupération rapide.', gate: 'traction' },
       { id: 'rando-duree-3', label: 'Une vraie rando', criterion: 'Sortie d’une heure sur terrain varié, allure de marche, forme intacte le lendemain.', gate: 'traction' },
+    ],
+  },
+
+  // ---------- SOINS COOPÉRATIFS ----------
+  // Principe transversal de la branche : le chien garde un moyen de dire
+  // « pause ». On ne contient pas, on ne surprend pas, on ne va jamais
+  // jusqu'à la lutte. Le menton posé sert de bouton marche/arrêt : tant
+  // qu'il est posé on continue, s'il se lève on s'arrête vraiment — sinon
+  // le signal ne veut plus rien dire et le chien cesse de le donner.
+  {
+    id: 'menton',
+    name: 'Le menton posé',
+    category: 'soins',
+    icon: '🤝',
+    cue: 'Menton',
+    signal: '',
+    description: 'Kori pose son menton dans ta main ou sur ton genou et l’y laisse pendant qu’on la manipule.',
+    purpose:
+      'La brique de toute la branche Soins : c’est son « oui ». Elle pose le menton pour dire qu’on peut continuer, elle le lève pour demander une pause.',
+    note:
+      'Ça ne marche que si le lever de menton arrête vraiment le soin, à chaque fois. Un signal qu’on ignore une seule fois est un signal que le chien arrête de donner.',
+    difficulty: 1,
+    cost: 6,
+    bonus: 6,
+    prereqs: [],
+    paliers: [
+      { id: 'menton-1', label: 'Le menton dans la main', criterion: 'Pose le menton dans ta paume et l’y laisse 3 secondes, 8 fois sur 10.' },
+      { id: 'menton-2', label: 'Tenir pendant qu’on touche', criterion: 'Garde le menton posé 10 secondes pendant que tu lui touches la tête et les épaules.' },
+      { id: 'menton-3', label: 'Le signal de pause', criterion: 'Lève le menton quand c’est trop, le repose d’elle-même quand elle est prête — sur 3 soins différents.' },
+    ],
+  },
+  {
+    id: 'pattes-soin',
+    name: 'Les pattes manipulées',
+    category: 'soins',
+    icon: '🐾',
+    cue: '',
+    signal: '',
+    description: 'Kori laisse prendre, tenir et écarter ses doigts sans retirer la patte.',
+    purpose:
+      'La patte est la zone la plus refusée par les chiens, et celle dont on a le plus besoin : griffes, épines, coussinets, boue, examen véto.',
+    note:
+      'À ne pas confondre avec « Donne la patte », qui est un tour. Ici on ne demande rien : c’est elle qui accepte qu’on manipule.',
+    difficulty: 2,
+    cost: 8,
+    bonus: 8,
+    prereqs: ['menton'],
+    paliers: [
+      { id: 'pattes-soin-1', label: 'La patte touchée', criterion: 'Laisse toucher chaque patte 3 secondes sans la retirer, sur les 4 pattes.' },
+      { id: 'pattes-soin-2', label: 'La patte tenue', criterion: 'Laisse soulever et tenir la patte 10 secondes, menton posé.' },
+      { id: 'pattes-soin-3', label: 'Les doigts écartés', criterion: 'Laisse écarter les doigts et inspecter entre les coussinets, sur les 4 pattes.' },
+    ],
+  },
+  {
+    id: 'griffes',
+    name: 'Les griffes',
+    category: 'soins',
+    icon: '✂️',
+    cue: '',
+    signal: '',
+    description: 'Kori accepte la coupe ou la lime des griffes, une griffe à la fois, sans contention.',
+    purpose:
+      'Des griffes trop longues déforment la posture et font mal. C’est aussi le soin où tout se joue : une mauvaise expérience se paye pendant des années.',
+    note:
+      'Une griffe par séance suffit. Rien n’oblige à finir les quatre pattes le même jour — c’est la vitesse qui casse ce soin, jamais la lenteur.',
+    difficulty: 3,
+    cost: 12,
+    bonus: 12,
+    prereqs: ['pattes-soin'],
+    paliers: [
+      { id: 'griffes-1', label: 'L’outil est sympa', criterion: 'Renifle le coupe-griffes et reste détendue quand il approche de la patte, 10 fois.' },
+      { id: 'griffes-2', label: 'Le contact sans couper', criterion: 'Laisse poser l’outil sur la griffe sans couper, menton posé, sur les 4 pattes.' },
+      { id: 'griffes-3', label: 'Une griffe coupée', criterion: 'Laisse couper une griffe et revient d’elle-même pour la suivante.' },
+    ],
+  },
+  {
+    id: 'oreilles',
+    name: 'Oreilles et yeux',
+    category: 'soins',
+    icon: '👂',
+    cue: '',
+    signal: '',
+    description: 'Kori laisse inspecter et nettoyer ses oreilles et le tour de ses yeux.',
+    purpose:
+      'Ce sont les soins les plus fréquents en vrai : otites, gouttes, poussière. Un chien qui les accepte se soigne à la maison au lieu d’aller chez le véto.',
+    difficulty: 2,
+    cost: 8,
+    bonus: 8,
+    prereqs: ['menton'],
+    paliers: [
+      { id: 'oreilles-1', label: 'L’oreille soulevée', criterion: 'Laisse soulever et regarder l’intérieur de chaque oreille, menton posé.' },
+      { id: 'oreilles-2', label: 'Le produit', criterion: 'Reste en place pendant une instillation dans l’oreille, sans secouer avant la fin.' },
+      { id: 'oreilles-3', label: 'Le tour des yeux', criterion: 'Laisse essuyer le tour des yeux avec une compresse, sans reculer.' },
+    ],
+  },
+  {
+    id: 'brossage',
+    name: 'Le brossage',
+    category: 'soins',
+    icon: '🪮',
+    cue: 'Brossage',
+    signal: '',
+    description: 'Kori se pose pour être brossée et reste détendue pendant le passage de la brosse.',
+    purpose:
+      'Poil court ne veut pas dire zéro entretien : le gant ou la brosse douce enlèvent le poil mort et donnent un rendez-vous calme et régulier à deux.',
+    difficulty: 1,
+    cost: 6,
+    bonus: 6,
+    prereqs: ['menton'],
+    paliers: [
+      { id: 'brossage-1', label: 'La brosse posée', criterion: 'Reste en place pendant 5 passages de brosse sur le dos.' },
+      { id: 'brossage-2', label: 'Le corps entier', criterion: 'Accepte le brossage du dos, des flancs et du poitrail sur une séance.' },
+      { id: 'brossage-3', label: 'Les zones sensibles', criterion: 'Laisse brosser le ventre et l’arrière-train sans se lever.' },
+    ],
+  },
+  {
+    id: 'museliere',
+    name: 'La muselière',
+    category: 'soins',
+    icon: '😷',
+    cue: 'Muselière',
+    signal: '',
+    description: 'Kori met le museau dans sa muselière d’elle-même et la porte détendue, sans chercher à l’enlever.',
+    purpose:
+      'Pour une Amstaff en France, c’est l’équipement qui conditionne toutes les sorties. Autant qu’elle l’adore plutôt qu’elle la subisse — et une muselière bien vécue rend aussi le véto et l’imprévu beaucoup plus simples.',
+    note:
+      'Muselière panier uniquement, jamais un modèle en nylon qui ferme la gueule : Kori doit pouvoir haleter et boire. Pour une race qui dissipe mal la chaleur, ce détail est une question de sécurité, pas de confort.',
+    difficulty: 2,
+    cost: 10,
+    bonus: 10,
+    prereqs: ['menton'],
+    paliers: [
+      { id: 'museliere-1', label: 'Le museau dedans', criterion: 'Met le museau dans la muselière d’elle-même pour attraper une friandise, 10 fois.' },
+      { id: 'museliere-2', label: 'Attachée quelques minutes', criterion: 'Porte la muselière attachée 5 minutes à la maison sans la frotter ni la retirer.' },
+      { id: 'museliere-3', label: 'Portée dehors', criterion: 'Fait une sortie complète en muselière, détendue, en buvant sans difficulté.' },
+    ],
+  },
+  {
+    id: 'examen-veto',
+    name: 'L’examen vétérinaire',
+    category: 'soins',
+    icon: '🩺',
+    cue: '',
+    signal: '',
+    description: 'Kori accepte les gestes de l’examen : monter sur la table, se faire palper, ouvrir la gueule, la piqûre.',
+    purpose:
+      'Un chien qui se laisse examiner se fait mieux soigner et se fait dépister plus tôt. Et pour une race soumise à évaluation comportementale, c’est loin d’être un détail.',
+    difficulty: 3,
+    cost: 14,
+    bonus: 14,
+    prereqs: ['pattes-soin', 'monte'],
+    paliers: [
+      { id: 'examen-veto-1', label: 'La table', criterion: 'Monte sur une surface surélevée et y reste 30 secondes, détendue.' },
+      { id: 'examen-veto-2', label: 'La palpation', criterion: 'Laisse palper le ventre, les hanches et soulever les babines, menton posé.' },
+      { id: 'examen-veto-3', label: 'La piqûre pour de faux', criterion: 'Reste immobile pendant un pincement de peau au garrot, 8 fois sur 10.' },
+    ],
+  },
+
+  // ---------- AUTONOMIE ----------
+  {
+    id: 'autre-piece',
+    name: 'Rester dans une autre pièce',
+    category: 'autonomie',
+    icon: '🚪',
+    cue: '',
+    signal: '',
+    description: 'Kori reste posée quand tu passes dans une autre pièce, sans te suivre ni geindre.',
+    purpose:
+      'La première marche vers la solitude, et la plus souvent sautée. Un chien qui ne supporte pas une porte fermée ne supportera pas une absence.',
+    difficulty: 2,
+    cost: 8,
+    bonus: 8,
+    prereqs: ['calme-tapis'],
+    paliers: [
+      { id: 'autre-piece-1', label: 'Tu t’éloignes', criterion: 'Reste sur son tapis pendant que tu traverses la pièce, 10 fois.' },
+      { id: 'autre-piece-2', label: 'Hors de vue', criterion: 'Reste posée 30 secondes pendant que tu es dans une autre pièce.' },
+      { id: 'autre-piece-3', label: 'Porte fermée', criterion: 'Reste calme 5 minutes avec une porte fermée entre vous.' },
+    ],
+  },
+  {
+    id: 'solitude',
+    name: 'Rester seule',
+    category: 'autonomie',
+    icon: '🏠',
+    cue: '',
+    signal: '',
+    description: 'Kori reste seule à la maison sans détresse : elle se pose, dort, s’occupe.',
+    purpose:
+      'La compétence qui rend une vie normale possible pour vous trois. Elle se construit par paliers de durée, jamais en laissant « pleurer un bon coup ».',
+    note:
+      'Si elle panique, détruit ou vocalise dès les premières minutes, ce n’est plus de l’apprentissage : l’anxiété de séparation se travaille avec un pro, pas en allongeant les durées.',
+    difficulty: 3,
+    cost: 14,
+    bonus: 14,
+    prereqs: ['autre-piece'],
+    paliers: [
+      { id: 'solitude-1', label: 'Cinq minutes', criterion: 'Reste seule 5 minutes, calme, sans vocaliser (vérifié en vidéo).' },
+      { id: 'solitude-2', label: 'Une demi-heure', criterion: 'Reste seule 30 minutes et se couche d’elle-même après ton départ.' },
+      { id: 'solitude-3', label: 'Deux heures', criterion: 'Reste seule 2 heures, retrouvailles calmes, rien de détruit.' },
+    ],
+  },
+  {
+    id: 'voiture',
+    name: 'Le trajet en voiture',
+    category: 'autonomie',
+    icon: '🚗',
+    cue: '',
+    signal: '',
+    description: 'Kori monte en voiture d’elle-même, s’installe et reste posée pendant le trajet.',
+    purpose:
+      'Sans ça, pas de rando, pas de véto serein, pas de vacances. Et un chien qui a peur de la voiture arrive déjà stressé à destination.',
+    difficulty: 2,
+    cost: 10,
+    bonus: 10,
+    prereqs: [],
+    paliers: [
+      { id: 'voiture-1', label: 'Monter à vide', criterion: 'Monte d’elle-même dans le coffre moteur éteint et s’y couche.' },
+      { id: 'voiture-2', label: 'Le moteur tourne', criterion: 'Reste couchée 2 minutes moteur allumé, sans haleter ni baver.' },
+      { id: 'voiture-3', label: 'Un vrai trajet', criterion: 'Fait 20 minutes de route et sort détendue, sans salive excessive.' },
+    ],
+  },
+  {
+    id: 'visiteurs',
+    name: 'L’arrivée d’un visiteur',
+    category: 'autonomie',
+    icon: '🔔',
+    cue: '',
+    signal: '',
+    description: 'Kori va à sa place à la sonnette et attend d’être invitée pour aller dire bonjour.',
+    purpose:
+      'Le moment le plus explosif de la maison. Une routine claire vaut mieux que dix rappels à l’ordre — et pour une Amstaff, un accueil posé change le regard des gens.',
+    difficulty: 2,
+    cost: 10,
+    bonus: 10,
+    prereqs: ['panier', 'attends'],
+    paliers: [
+      { id: 'visiteurs-1', label: 'La sonnette annonce le panier', criterion: 'Part vers son panier au son de la sonnette, 8 fois sur 10 (à vide).' },
+      { id: 'visiteurs-2', label: 'Quelqu’un entre', criterion: 'Reste au panier pendant qu’une personne connue entre et s’assoit.' },
+      { id: 'visiteurs-3', label: 'Bonjour sur invitation', criterion: 'Attend l’autorisation pour aller saluer, et salue sans sauter.' },
     ],
   },
 ];
