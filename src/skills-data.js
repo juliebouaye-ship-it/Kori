@@ -31,6 +31,141 @@ export const RATINGS = [
 // passent encore ne teste pas un critère du type « 8 fois sur 10 ».
 export const QUICK_XP = 2;
 
+// ------------------------------------------------------------
+// Bibliothèque de méthodes — écrites UNE fois, réutilisées par les paliers.
+// Les mêmes dix façons de faire reviennent sur les 107 paliers : plutôt que
+// 107 recettes, chaque palier pointe une méthode + deux lignes sur mesure
+// (le décor, le piège). Objectif : que Julie et Kévin retiennent la méthode
+// et sachent inventer leurs propres exercices, pas qu'ils suivent une recette.
+// `name` en français courant ; `technical` garde le terme du métier pour qui
+// veut creuser. C'est ici que vit le sourcing de fond.
+// ------------------------------------------------------------
+export const METHODS = [
+  {
+    id: 'association',
+    name: 'L’association',
+    technical: 'conditionnement classique',
+    tagline: 'Une chose en annonce une autre. On ne demande rien.',
+    detail:
+      'Le mot, l’objet ou le bruit apparaît, et quelque chose d’excellent tombe — sans qu’elle ait rien à faire. On construit une émotion, pas un comportement. C’est ce qui donne un mot de rappel qui la fait décoller, un harnais qu’elle vient chercher, un coupe-griffes qui ne fait plus peur. Condition non négociable : l’association ne doit jamais être trahie, sinon elle se défait plus vite qu’elle ne s’est construite.',
+    sources: [
+      { label: 'ASPCA — désensibilisation et contre-conditionnement', url: 'https://www.aspca.org/pet-care/dog-care' },
+    ],
+  },
+  {
+    id: 'leurre',
+    name: 'Le leurre',
+    technical: 'luring',
+    tagline: 'Sa truffe suit la friandise, le corps suit la truffe.',
+    detail:
+      'Tu tiens une friandise contre sa truffe et tu la déplaces lentement : la position vient toute seule, sans contrainte et sans un mot. On ne nomme rien tant que le mouvement n’est pas fluide — sinon le mot s’associe à une hésitation.',
+    sources: [
+      { label: 'AVSAB — position sur les méthodes d’entraînement', url: 'https://avsab.org/resources/position-statements/' },
+    ],
+  },
+  {
+    id: 'effacer-leurre',
+    name: 'Effacer le leurre',
+    technical: 'fading',
+    tagline: 'La friandise quitte la main avant que le geste ne rétrécisse.',
+    detail:
+      'Étape que presque tout le monde saute, et c’est pour ça que tant de chiens n’obéissent que si on a quelque chose dans la main. On fait le même geste avec la main VIDE, on récompense depuis l’autre main, puis on réduit le geste petit à petit. Si elle décroche, c’est qu’on a réduit trop vite.',
+    sources: [
+      { label: 'AVSAB — position sur les méthodes d’entraînement', url: 'https://avsab.org/resources/position-statements/' },
+    ],
+  },
+  {
+    id: 'mot-avant-geste',
+    name: 'Le mot avant le geste',
+    technical: 'transfert de signal',
+    tagline: 'Le mot, une seconde de silence, puis le geste qu’elle connaît.',
+    detail:
+      'Pour qu’un mot prenne la place d’un geste, il doit le PRÉCÉDER, jamais l’accompagner. Mot, on attend une seconde, puis geste habituel, puis récompense. Au bout de quelques répétitions elle anticipe et répond au mot seul. Dit en même temps que le geste, le mot reste inutile — le chien regarde la main.',
+    sources: [
+      { label: 'AVSAB — position sur les méthodes d’entraînement', url: 'https://avsab.org/resources/position-statements/' },
+    ],
+  },
+  {
+    id: '3d',
+    name: 'Les 3 D',
+    technical: 'durée, distance, distraction',
+    tagline: 'On complique une seule chose à la fois.',
+    detail:
+      'Un exercice se durcit sur trois axes : la durée, la distance, la distraction. On n’en monte qu’un, et on redescend les deux autres au minimum quand on attaque le troisième. Presque tous les « il ne le fait plus » viennent d’avoir monté deux axes en même temps.',
+    sources: [
+      { label: 'RSPCA — comportement et apprentissage du chien', url: 'https://www.rspca.org.uk/adviceandwelfare/pets/dogs/behaviour' },
+    ],
+  },
+  {
+    id: 'faconnement',
+    name: 'Le façonnement',
+    technical: 'shaping',
+    tagline: 'On paye ce qui ressemble un peu, puis un peu plus.',
+    detail:
+      'Quand le comportement final est trop loin pour être leurré, on récompense les approximations : un regard vers l’objet, un pas vers lui, une patte dessus. On ne monte l’exigence que lorsque l’étape en cours tombe facilement. Si elle sèche trois fois de suite, c’est qu’on a sauté une marche : on redescend, ce n’est pas un échec.',
+    sources: [
+      { label: 'Meyer & Ladewig 2008 — fréquence des séances et apprentissage', url: 'https://www.sciencedirect.com/science/article/abs/pii/S0168159107001943' },
+    ],
+  },
+  {
+    id: 'capture',
+    name: 'La capture',
+    technical: 'capturing',
+    tagline: 'Elle le fait toute seule, tu le payes.',
+    detail:
+      'Rien à demander : on guette le comportement spontané (elle se couche, elle te regarde, elle se pose) et on le marque au moment exact où il arrive. C’est la méthode la moins fatigante des deux côtés, et la meilleure pour tout ce qui touche au calme — parce qu’on ne peut pas ordonner à un chien d’être détendu.',
+    sources: [
+      { label: 'Dr Karen Overall — Protocol for Relaxation', url: 'https://journeydogtraining.com/karen-overalls-relaxation-protocol/' },
+    ],
+  },
+  {
+    id: 'generaliser',
+    name: 'Généraliser',
+    technical: 'généralisation',
+    tagline: 'Un chien n’apprend pas « assis », il apprend « assis dans la cuisine ».',
+    detail:
+      'Le contexte fait partie de ce qu’elle a appris : nouvelle pièce, nouveau sol, toi debout au lieu d’assise, une autre personne qui demande. À chaque changement, on redescend l’exigence de deux crans et ça remonte très vite. Ce n’est pas de la désobéissance, c’est un exercice qu’elle n’a jamais fait.',
+    sources: [
+      { label: 'RSPCA — comportement et apprentissage du chien', url: 'https://www.rspca.org.uk/adviceandwelfare/pets/dogs/behaviour' },
+    ],
+  },
+  {
+    id: 'contre-conditionnement',
+    name: 'Changer l’émotion',
+    technical: 'contre-conditionnement / désensibilisation',
+    tagline: 'Le truc qui l’inquiète annonce le meilleur moment de la journée.',
+    detail:
+      'On ne demande RIEN. Le déclencheur apparaît à une intensité où elle le remarque sans se crisper, et le poulet tombe. Il disparaît, le poulet s’arrête. On travaille l’émotion, pas l’obéissance. Si elle est trop près pour manger, on est trop près : on recule, c’est tout.',
+    sources: [
+      { label: 'ASPCA — désensibilisation et contre-conditionnement', url: 'https://www.aspca.org/pet-care/dog-care' },
+    ],
+  },
+  {
+    id: 'premack',
+    name: 'La récompense de vie',
+    technical: 'principe de Premack',
+    tagline: 'La récompense, c’est l’accès à ce qu’elle voulait déjà.',
+    detail:
+      'Elle veut aller renifler, dire bonjour, retourner au soleil. Au lieu de lutter contre cette envie, on la vend : elle donne le comportement, et l’envie est exaucée. C’est ce qui rend un rappel fiable dehors — revenir doit rendre la balade meilleure, jamais l’interrompre.',
+    sources: [
+      { label: 'RSPCA — comportement et apprentissage du chien', url: 'https://www.rspca.org.uk/adviceandwelfare/pets/dogs/behaviour' },
+    ],
+  },
+  {
+    id: 'decoupage',
+    name: 'Découper',
+    technical: 'splitting',
+    tagline: 'Trop dur trois fois de suite : la marche est trop haute.',
+    detail:
+      'Le réflexe quand ça bloque est de répéter plus fort. Le bon geste est de couper l’exercice en deux et de payer la moitié. On perd cinq minutes, on gagne trois séances. C’est la réponse à peu près universelle à « elle ne comprend pas ».',
+    sources: [
+      { label: 'Demant et al. 2011 — durée des séances, acquisition et mémoire', url: 'https://www.sciencedirect.com/science/article/abs/pii/S016815911100181X' },
+    ],
+  },
+];
+
+export const METHOD_BY_ID = Object.fromEntries(METHODS.map((m) => [m.id, m]));
+
 // Paliers globaux (niveau) — basés sur le total cumulé à vie, qui ne baisse jamais
 export const TIERS = [
   { min: 0, name: 'Chiot tout fou', emoji: '🐣' },
@@ -130,9 +265,36 @@ export const SKILLS = [
     bonus: 4,
     prereqs: [],
     paliers: [
-      { id: 'assis-1', label: 'Assis avec leurre', criterion: 'S’assoit en suivant la friandise, 5 fois de suite.' },
-      { id: 'assis-2', label: 'Assis sur demande', criterion: 'S’assoit au mot seul, sans geste, 8 fois sur 10.' },
-      { id: 'assis-3', label: 'Assis partout', criterion: 'S’assoit dans 3 pièces différentes et dehors.' },
+      {
+        id: 'assis-1',
+        label: 'Assis avec leurre',
+        criterion: 'S’assoit en suivant la friandise, 5 fois de suite.',
+        how: {
+          method: 'leurre',
+          setup: 'Cuisine, 5 friandises, 2 minutes.',
+          pitfall: 'Lever la friandise trop haut : elle décolle les pattes avant au lieu de poser les fesses.',
+        },
+      },
+      {
+        id: 'assis-2',
+        label: 'Assis sur demande',
+        criterion: 'S’assoit au mot seul, sans geste, 8 fois sur 10.',
+        how: {
+          method: 'mot-avant-geste',
+          setup: 'Même endroit, main vide, 10 répétitions.',
+          pitfall: 'Dire « Assis » en même temps que le geste : le mot ne sert alors à rien.',
+        },
+      },
+      {
+        id: 'assis-3',
+        label: 'Assis partout',
+        criterion: 'S’assoit dans 3 pièces différentes et dehors.',
+        how: {
+          method: 'generaliser',
+          setup: 'Une pièce nouvelle par séance, 5 répétitions.',
+          pitfall: 'Attendre le même résultat qu’à la cuisine dès le premier essai.',
+        },
+      },
     ],
   },
   {
@@ -183,9 +345,36 @@ export const SKILLS = [
     bonus: 4,
     prereqs: [],
     paliers: [
-      { id: 'check-1', label: 'Regard capturé', criterion: 'Récompensée dès qu’elle croise ton regard, 10 fois.' },
-      { id: 'check-2', label: 'Check sur demande', criterion: 'Tourne la tête vers toi au mot, 8 fois sur 10 en intérieur.' },
-      { id: 'check-3', label: 'Check dehors', criterion: 'Répond au check en balade calme.' },
+      {
+        id: 'check-1',
+        label: 'Regard capturé',
+        criterion: 'Récompensée dès qu’elle croise ton regard, 10 fois.',
+        how: {
+          method: 'capture',
+          setup: 'N’importe où, friandises en poche, on guette sans rien demander.',
+          pitfall: 'Appeler son nom pour provoquer le regard : c’est elle qui doit l’offrir.',
+        },
+      },
+      {
+        id: 'check-2',
+        label: 'Check sur demande',
+        criterion: 'Tourne la tête vers toi au mot, 8 fois sur 10 en intérieur.',
+        how: {
+          method: 'mot-avant-geste',
+          setup: 'Salon au calme, 10 répétitions.',
+          pitfall: 'Répéter le mot quand elle ne répond pas : il perd sa valeur à chaque fois.',
+        },
+      },
+      {
+        id: 'check-3',
+        label: 'Check dehors',
+        criterion: 'Répond au check en balade calme.',
+        how: {
+          method: 'generaliser',
+          setup: 'Balade calme, 5 essais, rien d’autre au programme.',
+          pitfall: 'Le tenter au moment le plus excitant de la sortie.',
+        },
+      },
     ],
   },
   {
@@ -241,10 +430,46 @@ export const SKILLS = [
     bonus: 12,
     prereqs: ['check'],
     paliers: [
-      { id: 'rappel-1', label: 'Le mot magique', criterion: 'Le mot du rappel = fête assurée. 10 associations sans rien demander.' },
-      { id: 'rappel-2', label: 'Rappel intérieur', criterion: 'Vient au mot depuis une autre pièce, 8 fois sur 10.' },
-      { id: 'rappel-3', label: 'Rappel en longe', criterion: 'Vient en balade calme, en longe de 10 m.' },
-      { id: 'rappel-4', label: 'Distractions légères', criterion: 'Vient malgré une odeur intéressante ou un bruit.' },
+      {
+        id: 'rappel-1',
+        label: 'Le mot magique',
+        criterion: 'Le mot du rappel = fête assurée. 10 associations sans rien demander.',
+        how: {
+          method: 'association',
+          setup: 'Maison, 10 morceaux de poulet. Tu dis le mot, le poulet tombe. Elle n’a rien à faire.',
+          pitfall: 'Utiliser ce mot pour autre chose que la fête — le bain, la fin de la balade, une réprimande.',
+        },
+      },
+      {
+        id: 'rappel-2',
+        label: 'Rappel intérieur',
+        criterion: 'Vient au mot depuis une autre pièce, 8 fois sur 10.',
+        how: {
+          method: '3d',
+          setup: 'Cuisine vers salon. 10 friandises, 3 minutes. On ne monte que la distance.',
+          pitfall: 'L’appeler quand elle est déjà occupée à autre chose : c’est de la distraction, pas de la distance.',
+        },
+      },
+      {
+        id: 'rappel-3',
+        label: 'Rappel en longe',
+        criterion: 'Vient en balade calme, en longe de 10 m.',
+        how: {
+          method: 'generaliser',
+          setup: 'Longe de 10 m, endroit connu et calme, 5 rappels maximum sur la sortie.',
+          pitfall: 'Rappeler pour rentrer : le mot devient l’annonce que la balade s’arrête.',
+        },
+      },
+      {
+        id: 'rappel-4',
+        label: 'Distractions légères',
+        criterion: 'Vient malgré une odeur intéressante ou un bruit.',
+        how: {
+          method: '3d',
+          setup: 'Endroit déjà connu, une seule distraction choisie, distance courte.',
+          pitfall: 'Monter la distraction et la distance en même temps.',
+        },
+      },
     ],
   },
   {
@@ -259,9 +484,36 @@ export const SKILLS = [
     bonus: 15,
     prereqs: ['rappel', 'calme-tapis'],
     paliers: [
-      { id: 'rrepos-1', label: 'Debout payé', criterion: 'Se lève quand tu l’appelles depuis une position couchée, à la maison.' },
-      { id: 'rrepos-2', label: 'Depuis le confort', criterion: 'Vient alors qu’elle est posée au soleil dehors, en longe.' },
-      { id: 'rrepos-3', label: 'Retour au repos', criterion: 'Après le rappel, elle est renvoyée profiter de sa place (récompense de vie).' },
+      {
+        id: 'rrepos-1',
+        label: 'Debout payé',
+        criterion: 'Se lève quand tu l’appelles depuis une position couchée, à la maison.',
+        how: {
+          method: 'faconnement',
+          setup: 'Elle est couchée. Tu appelles. Tu payes le simple fait qu’elle se lève.',
+          pitfall: 'Attendre qu’elle arrive jusqu’à toi avant de payer : c’est le décollage qui est dur, pas le trajet.',
+        },
+      },
+      {
+        id: 'rrepos-2',
+        label: 'Depuis le confort',
+        criterion: 'Vient alors qu’elle est posée au soleil dehors, en longe.',
+        how: {
+          method: 'premack',
+          setup: 'Jardin, elle est installée au soleil, longe. 3 essais maximum.',
+          pitfall: 'Lui faire regretter d’être venue. Si revenir coûte sa place au soleil, elle arbitrera contre toi.',
+        },
+      },
+      {
+        id: 'rrepos-3',
+        label: 'Retour au repos',
+        criterion: 'Après le rappel, elle est renvoyée profiter de sa place (récompense de vie).',
+        how: {
+          method: 'premack',
+          setup: 'Tu rappelles, tu payes, et tu la renvoies aussitôt à son coin. Le rappel rend sa place meilleure.',
+          pitfall: 'La garder près de toi après le rappel : c’est exactement ce qu’elle cherchait à éviter.',
+        },
+      },
     ],
   },
   {
@@ -276,9 +528,36 @@ export const SKILLS = [
     bonus: 10,
     prereqs: ['check'],
     paliers: [
-      { id: 'laisse-1', label: 'Laisse détendue', criterion: '10 pas sans tension dans un endroit calme.' },
-      { id: 'laisse-2', label: 'Demi-tours', criterion: 'Suit tes changements de direction en gardant la laisse souple.' },
-      { id: 'laisse-3', label: 'Balade complète', criterion: 'Une balade courte entière avec la laisse détendue.' },
+      {
+        id: 'laisse-1',
+        label: 'Laisse détendue',
+        criterion: '10 pas sans tension dans un endroit calme.',
+        how: {
+          method: 'faconnement',
+          setup: 'Jardin ou couloir. 10 pas. Tu t’arrêtes net dès que ça tire, tu repars dès que ça se détend.',
+          pitfall: 'Avancer alors que la laisse est tendue : chaque pas dans ces conditions paye la traction.',
+        },
+      },
+      {
+        id: 'laisse-2',
+        label: 'Demi-tours',
+        criterion: 'Suit tes changements de direction en gardant la laisse souple.',
+        how: {
+          method: 'faconnement',
+          setup: 'Endroit calme, changements de direction fréquents et imprévisibles, sur 5 minutes.',
+          pitfall: 'Tirer sur la laisse pour la faire tourner au lieu de l’appeler et de payer le suivi.',
+        },
+      },
+      {
+        id: 'laisse-3',
+        label: 'Balade complète',
+        criterion: 'Une balade courte entière avec la laisse détendue.',
+        how: {
+          method: 'generaliser',
+          setup: 'La plus courte et la plus calme de vos balades, à une heure creuse.',
+          pitfall: 'Tester ça un jour chargé, ou sur un trajet plein de croisements.',
+        },
+      },
     ],
   },
   {
@@ -314,9 +593,36 @@ export const SKILLS = [
     bonus: 12,
     prereqs: ['check', 'tu-laisses'],
     paliers: [
-      { id: 'decro-1', label: 'Décroche facile', criterion: 'Détache son regard d’un objet peu tentant et revient vers toi sur signal, à la maison.' },
-      { id: 'decro-2', label: 'Demi-tour joyeux', criterion: 'Fait demi-tour avec toi de bon cœur sur signal, en balade calme (jeu, pas contrainte).' },
-      { id: 'decro-3', label: 'Décroche d’un déclencheur', criterion: 'Repère un chien/chat AU LOIN, décroche et revient, tout en restant sous son seuil (🟢/🟡).' },
+      {
+        id: 'decro-1',
+        label: 'Décroche facile',
+        criterion: 'Détache son regard d’un objet peu tentant et revient vers toi sur signal, à la maison.',
+        how: {
+          method: 'faconnement',
+          setup: 'Maison, un objet sans grand intérêt posé au sol. Tu payes le moment où elle s’en détourne, 10 essais.',
+          pitfall: 'Cacher l’objet ou la tirer quand elle le fixe : c’est elle qui doit choisir de décrocher.',
+        },
+      },
+      {
+        id: 'decro-2',
+        label: 'Demi-tour joyeux',
+        criterion: 'Fait demi-tour avec toi de bon cœur sur signal, en balade calme (jeu, pas contrainte).',
+        how: {
+          method: 'association',
+          setup: 'Balade calme, sans rien à éviter. Le signal du demi-tour annonce une course et une friandise.',
+          pitfall: 'Ne l’utiliser que lorsqu’il y a un problème : le signal devient l’annonce d’une mauvaise nouvelle.',
+        },
+      },
+      {
+        id: 'decro-3',
+        label: 'Décroche d’un déclencheur',
+        criterion: 'Repère un chien/chat AU LOIN, décroche et revient, tout en restant sous son seuil (🟢/🟡).',
+        how: {
+          method: 'contre-conditionnement',
+          setup: 'La distance où elle repère le déclencheur ET accepte encore de manger. Souvent bien plus loin qu’on ne croit.',
+          pitfall: 'Se rapprocher parce que « ça se passe bien ». Si elle refuse la friandise, on était déjà trop près.',
+        },
+      },
     ],
   },
 
@@ -429,9 +735,36 @@ export const SKILLS = [
     bonus: 8,
     prereqs: [],
     paliers: [
-      { id: 'monte-1', label: 'Deux pattes', criterion: 'Pose deux pattes sur la cible indiquée en suivant ta main.' },
-      { id: 'monte-2', label: 'Monte au mot', criterion: 'Monte entièrement sur la cible au mot + geste.' },
-      { id: 'monte-3', label: 'Cibles variées', criterion: 'Monte sur 3 supports différents (banc, souche, marche…).' },
+      {
+        id: 'monte-1',
+        label: 'Deux pattes',
+        criterion: 'Pose deux pattes sur la cible indiquée en suivant ta main.',
+        how: {
+          method: 'leurre',
+          setup: 'Une cible basse et stable (marche, caisse). Ta main guide, 5 essais.',
+          pitfall: 'Une cible qui bouge ou qui glisse : une seule mauvaise surprise et elle n’y remonte plus.',
+        },
+      },
+      {
+        id: 'monte-2',
+        label: 'Monte au mot',
+        criterion: 'Monte entièrement sur la cible au mot + geste.',
+        how: {
+          method: 'mot-avant-geste',
+          setup: 'Même cible, 10 répétitions. Le mot, une seconde, puis l’appui de la main.',
+          pitfall: 'Enchaîner les répétitions sans pause : monter et descendre fatigue plus que ça n’en a l’air.',
+        },
+      },
+      {
+        id: 'monte-3',
+        label: 'Cibles variées',
+        criterion: 'Monte sur 3 supports différents (banc, souche, marche…).',
+        how: {
+          method: 'generaliser',
+          setup: 'Un nouveau support par séance, en commençant par le plus bas et le plus stable.',
+          pitfall: 'Passer à une cible haute ou instable trop vite — on généralise la surface, pas la difficulté.',
+        },
+      },
     ],
   },
 

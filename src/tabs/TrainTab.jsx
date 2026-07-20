@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { SKILLS, CATEGORIES, RATINGS, GATES, QUICK_XP } from '../skills-data.js';
+import { SKILLS, CATEGORIES, RATINGS, GATES, QUICK_XP, METHOD_BY_ID } from '../skills-data.js';
 import { localDate } from '../date-utils.js';
 import { isBaladeSkill, dayHasRedWalk } from '../domain.js';
 import { InfoTip, SectionTitle } from '../ui.jsx';
@@ -171,6 +171,18 @@ export function TrainTab({
           </div>
           <div className="palier-label">{currentPalier.label}</div>
           <div className="palier-criterion">Acquis quand : {currentPalier.criterion}</div>
+          {currentPalier.how && METHOD_BY_ID[currentPalier.how.method] && (
+            <div className="how-box">
+              <div className="how-head">
+                <span className="how-label">Ce soir</span>
+                <span className="how-method">{METHOD_BY_ID[currentPalier.how.method].name}</span>
+                <InfoTip text={METHOD_BY_ID[currentPalier.how.method].detail} />
+              </div>
+              <div className="how-tagline">{METHOD_BY_ID[currentPalier.how.method].tagline}</div>
+              <div className="how-setup">{currentPalier.how.setup}</div>
+              <div className="how-pitfall">Le piège : {currentPalier.how.pitfall}</div>
+            </div>
+          )}
           {currentPalier.gate && GATES[currentPalier.gate] && (
             <div className="palier-gate">
               ⚕️ {GATES[currentPalier.gate].label}
