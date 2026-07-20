@@ -83,12 +83,14 @@ function WalkCard({ walk, onUpdate, onDelete }) {
   );
 }
 
-function PastWalkRow({ walk }) {
+function PastWalkRow({ walk, today }) {
   const cup = CUP_BY_ID[walk.level];
   return (
     <div className="past-walk">
       <span className="pw-cup">{cup.emoji}</span>
-      <span className="pw-date">{frDate(walk.date)}</span>
+      <span className="pw-date">
+        {walk.date === today ? 'Aujourd’hui' : frDate(walk.date)}
+      </span>
       <span className="pw-loc">{walk.location ? LOC_BY_ID[walk.location].label : '—'}</span>
       <span className="pw-tags">
         {walk.triggers.map((t) => TRIGGER_BY_ID[t]?.icon).join(' ')}
@@ -102,8 +104,11 @@ export function BaladeTab({ state, onLogWalk, onUpdateWalk, onDeleteWalk, decomp
   const todayWalks = state.walks
     .filter((w) => w.date === today)
     .sort((a, b) => (a.ts || 0) - (b.ts || 0));
-  const pastWalks = state.walks
-    .filter((w) => w.date !== today)
+  // Journal = TOUTES les sorties, aujourd'hui compris. Une balade qu'on vient
+  // d'enregistrer doit apparaître tout de suite dans le journal (avant, le
+  // filtre `date !== today` l'en excluait : elle n'y entrait que le lendemain).
+  // La carte « Sortie du jour » reste au-dessus : c'est la surface d'édition.
+  const journalWalks = [...state.walks]
     .sort((a, b) => b.date.localeCompare(a.date) || (b.ts || 0) - (a.ts || 0))
     .slice(0, 14);
 
@@ -201,11 +206,11 @@ export function BaladeTab({ state, onLogWalk, onUpdateWalk, onDeleteWalk, decomp
         </div>
       )}
 
-      {pastWalks.length > 0 && (
+      {journalWalks.length > 0 && (
         <div className="card">
           <h2>Journal des balades</h2>
-          {pastWalks.map((w) => (
-            <PastWalkRow key={w.id} walk={w} />
+          {journalWalks.map((w) => (
+            <PastWalkRow key={w.id} walk={w} today={today} />
           ))}
         </div>
       )}
