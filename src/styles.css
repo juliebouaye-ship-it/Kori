@@ -1178,3 +1178,10 @@ button {
   text-align: center;
 }
 .invite-hint { font-size: 12px; margin: 6px 0 0; }
+.auth-error-detail {
+  display: block;
+  margin-top: 3px;
+  font-size: 11px;
+  opacity: 0.75;
+  word-break: break-word;
+}

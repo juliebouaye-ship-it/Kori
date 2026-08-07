@@ -13,6 +13,18 @@
 import { useState } from 'react';
 import { db } from './db.js';
 
+// Message d'erreur : notre phrase, plus le détail brut du serveur. Masquer ce
+// détail rend un échec de connexion impossible à diagnostiquer à distance.
+function ErrorLine({ error }) {
+  if (!error) return null;
+  return (
+    <p className="auth-error">
+      {error.text}
+      {error.detail && <span className="auth-error-detail">{error.detail}</span>}
+    </p>
+  );
+}
+
 function Screen({ children }) {
   return (
     <div className="app auth-screen">
@@ -31,10 +43,12 @@ function SignIn() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
 
-  // InstantDB renvoie ses messages en anglais : on ne les affiche pas tels quels.
+  // InstantDB renvoie ses messages en anglais : on affiche une phrase à nous,
+  // mais on garde la sienne en dessous — sans elle, un échec est indébogable.
   const fail = (err, fallback) => {
     console.error(err);
-    setError(err?.body?.message ? fallback : fallback);
+    const detail = err?.body?.message || err?.message || null;
+    setError({ text: fallback, detail });
     setBusy(false);
   };
 
@@ -55,6 +69,9 @@ function SignIn() {
 
   const verify = async (e) => {
     e.preventDefault();
+    // On se contente d'enlever les espaces autour. Toute autre « correction »
+    // (filtrer les non-chiffres, tronquer) risque d'altérer un code parfaitement
+    // valide : c'est au serveur de juger, pas à ce champ.
     const c = code.trim();
     if (!c) return;
     setBusy(true);
@@ -63,8 +80,19 @@ function SignIn() {
       await db.auth.signInWithMagicCode({ email: sentTo, code: c });
       // succès : db.useAuth() bascule, le composant est démonté.
     } catch (err) {
-      fail(err, 'Ce code ne correspond pas. Vérifie-le ou demande-en un nouveau.');
-      setCode('');
+      fail(err, 'Ce code n’a pas été accepté.');
+    }
+  };
+
+  const resend = async () => {
+    setBusy(true);
+    setError(null);
+    setCode('');
+    try {
+      await db.auth.sendMagicCode({ email: sentTo });
+      setBusy(false);
+    } catch (err) {
+      fail(err, "L'envoi a échoué.");
     }
   };
 
@@ -84,7 +112,7 @@ function SignIn() {
             onChange={(e) => setEmail(e.target.value)}
             autoFocus
           />
-          {error && <p className="auth-error">{error}</p>}
+          <ErrorLine error={error} />
           <button className="btn btn-primary btn-block" disabled={busy || !email.trim()}>
             {busy ? 'Envoi…' : 'Recevoir un code'}
           </button>
@@ -103,18 +131,20 @@ function SignIn() {
         <input
           className="auth-input auth-code"
           type="text"
-          inputMode="numeric"
           autoComplete="one-time-code"
-          placeholder="123456"
+          placeholder="Le code reçu"
           value={code}
-          onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+          onChange={(e) => setCode(e.target.value)}
           autoFocus
         />
-        {error && <p className="auth-error">{error}</p>}
-        <button className="btn btn-primary btn-block" disabled={busy || code.length < 6}>
+        <ErrorLine error={error} />
+        <button className="btn btn-primary btn-block" disabled={busy || !code.trim()}>
           {busy ? 'Vérification…' : 'Entrer'}
         </button>
       </form>
+      <button className="back-link" onClick={resend} disabled={busy}>
+        Renvoyer un code
+      </button>
       <button
         className="back-link"
         onClick={() => {
