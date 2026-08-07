@@ -23,6 +23,8 @@ import {
   trainingMonthStats,
   tierFor,
   upsertProgress,
+  ensurePlaces,
+  addPlace,
 } from '../domain.js';
 
 export function useKoriState() {
@@ -44,7 +46,11 @@ export function useKoriState() {
   // synchro temps réel du carnet partagé (InstantDB) — unique source de vérité
   // (plus de localStorage : InstantDB garde lui-même un cache local hors-ligne).
   // `ready` passe à true une fois le carnet distant chargé.
-  const ready = useKoriSync(state, setState, (remote) => ({ ...DEFAULT_STATE, ...remote }));
+  // `ensurePlaces` reconstitue une fois pour toutes la liste de lieux d'un carnet
+  // antérieur aux lieux dynamiques, à partir des balades déjà enregistrées.
+  const ready = useKoriSync(state, setState, (remote) =>
+    ensurePlaces({ ...DEFAULT_STATE, ...remote }),
+  );
 
   const showToast = (msg) => {
     setToast(msg);
@@ -70,7 +76,10 @@ export function useKoriState() {
           id: newId(),
           date: localDate(),
           skillId: skill.id,
-          palierId: palier.id,
+          // En entretien (compétence maîtrisée) il n'y a plus de palier courant :
+          // on enregistre la séance sans palier plutôt que de la rattacher au
+          // dernier, ce qui fausserait ses statistiques.
+          palierId: palier?.id ?? '',
           rating: rating.id,
           xp: rating.xp,
         },
@@ -134,6 +143,7 @@ export function useKoriState() {
           ts: Date.now(),
           level,
           location: draft.location ?? null,
+          duration: draft.duration ?? null,
           triggers: draft.triggers ?? [],
           note: (draft.note ?? '').trim(),
         },
@@ -157,6 +167,22 @@ export function useKoriState() {
 
   const deleteWalk = (id) =>
     setState((prev) => ({ ...prev, walks: prev.walks.filter((w) => w.id !== id) }));
+
+  // ---- Lieux de balade ----
+  // Crée le lieu s'il est nouveau, sinon retrouve celui qui porte déjà ce nom,
+  // et renvoie son slug pour que l'appelant puisse le sélectionner aussitôt.
+  const createPlace = (label) => {
+    const { slug } = addPlace(state.places, label);
+    if (!slug) return null;
+    setState((prev) => ({ ...prev, places: addPlace(prev.places, label).places }));
+    return slug;
+  };
+
+  // Retire un lieu du catalogue. Les balades déjà enregistrées gardent leur
+  // slug : `placeLabel` retombe alors sur le slug brut plutôt que de perdre
+  // l'information. On ne réécrit jamais l'historique.
+  const removePlace = (slug) =>
+    setState((prev) => ({ ...prev, places: prev.places.filter((p) => p.slug !== slug) }));
 
   // ---- Antisèche (mot + geste éditables) ----
   const setCue = (skillId, patch) =>
@@ -337,6 +363,8 @@ export function useKoriState() {
     markPalierDone,
     logWalk,
     updateWalk,
+    createPlace,
+    removePlace,
     deleteWalk,
     setCue,
     addFirst,

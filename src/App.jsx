@@ -65,6 +65,7 @@ export default function App() {
           onLogWalk={k.logWalk}
           onUpdateWalk={k.updateWalk}
           onDeleteWalk={k.deleteWalk}
+          onCreatePlace={k.createPlace}
           decomp={k.decomp}
           onDismissDecomp={k.dismissDecomp}
           care={k.care}

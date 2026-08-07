@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { CUP_LEVELS, LOCATIONS, WALK_TRIGGERS } from '../skills-data.js';
+import { CUP_LEVELS, WALK_TRIGGERS, WALK_DURATIONS } from '../skills-data.js';
 import { localDate, frDate } from '../date-utils.js';
-import { CUP_BY_ID, LOC_BY_ID, TRIGGER_BY_ID } from '../domain.js';
+import { CUP_BY_ID, TRIGGER_BY_ID, orderedPlaces, placeLabel } from '../domain.js';
 import { SectionTitle } from '../ui.jsx';
 import { MealsSection, RemindersSection } from '../carnet.jsx';
 import { DecompBanner, HealthDueBanner } from './banners.jsx';
@@ -9,7 +9,83 @@ import { DecompBanner, HealthDueBanner } from './banners.jsx';
 // ============================================================
 // Onglet BALADE 🚶 — journal ultra-léger + décompression
 // ============================================================
-function WalkCard({ walk, onUpdate, onDelete }) {
+
+// Sélecteur de lieu : les lieux connus en puces (les plus fréquents d'abord),
+// plus une puce « + autre » qui en crée un à la volée. La liste se construit
+// donc à l'usage — pas de saisie initiale à faire, et un carnet neuf démarre
+// vide au lieu d'hériter des habitudes de quelqu'un d'autre.
+function PlacePicker({ state, value, onPick, onCreate }) {
+  const [adding, setAdding] = useState(false);
+  const [label, setLabel] = useState('');
+  const places = orderedPlaces(state);
+
+  const submit = (e) => {
+    e.preventDefault();
+    const slug = onCreate(label);
+    if (slug) onPick(slug);
+    setLabel('');
+    setAdding(false);
+  };
+
+  return (
+    <div className="chip-wrap">
+      {places.map((p) => (
+        <button
+          key={p.slug}
+          className={`mini-chip ${value === p.slug ? 'on' : ''}`}
+          onClick={() => onPick(value === p.slug ? null : p.slug)}
+        >
+          {p.icon} {p.label}
+        </button>
+      ))}
+      {adding ? (
+        <form className="place-add" onSubmit={submit}>
+          <input
+            className="place-input"
+            autoFocus
+            placeholder="Nom du lieu…"
+            value={label}
+            onChange={(e) => setLabel(e.target.value)}
+            onBlur={() => !label.trim() && setAdding(false)}
+          />
+          <button type="submit" className="place-ok" disabled={!label.trim()}>
+            ✓
+          </button>
+        </form>
+      ) : (
+        <button className="mini-chip mini-chip-add" onClick={() => setAdding(true)}>
+          ＋ autre
+        </button>
+      )}
+    </div>
+  );
+}
+
+// Durée : facultative, en un tap, jamais de saisie de minutes.
+function DurationPicker({ value, onPick }) {
+  return (
+    <div className="chip-wrap">
+      {WALK_DURATIONS.map((d) => (
+        <button
+          key={d.min}
+          className={`mini-chip ${value === d.min ? 'on' : ''}`}
+          onClick={() => onPick(value === d.min ? null : d.min)}
+        >
+          {d.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// Affichage compact d'une durée enregistrée (90 → « 1 h 30 »).
+export const formatDuration = (min) => {
+  if (!min) return '';
+  const known = WALK_DURATIONS.find((d) => d.min === min);
+  if (known) return known.label;
+  return min < 60 ? `${min} min` : `${Math.floor(min / 60)} h ${min % 60 || ''}`.trim();
+};
+function WalkCard({ state, walk, onUpdate, onDelete, onCreatePlace }) {
   const [showNote, setShowNote] = useState(!!walk.note);
   return (
     <div className="walk-card">
@@ -33,17 +109,18 @@ function WalkCard({ walk, onUpdate, onDelete }) {
       </div>
 
       <div className="walk-field-label">Lieu</div>
-      <div className="chip-wrap">
-        {LOCATIONS.map((l) => (
-          <button
-            key={l.id}
-            className={`mini-chip ${walk.location === l.id ? 'on' : ''}`}
-            onClick={() => onUpdate(walk.id, { location: walk.location === l.id ? null : l.id })}
-          >
-            {l.icon} {l.label}
-          </button>
-        ))}
-      </div>
+      <PlacePicker
+        state={state}
+        value={walk.location}
+        onPick={(slug) => onUpdate(walk.id, { location: slug })}
+        onCreate={onCreatePlace}
+      />
+
+      <div className="walk-field-label">Durée (optionnel)</div>
+      <DurationPicker
+        value={walk.duration}
+        onPick={(min) => onUpdate(walk.id, { duration: min })}
+      />
 
       <div className="walk-field-label">Déclencheurs croisés (optionnel)</div>
       <div className="chip-wrap">
@@ -83,7 +160,7 @@ function WalkCard({ walk, onUpdate, onDelete }) {
   );
 }
 
-function PastWalkRow({ walk, today }) {
+function PastWalkRow({ state, walk, today }) {
   const cup = CUP_BY_ID[walk.level];
   return (
     <div className="past-walk">
@@ -91,7 +168,8 @@ function PastWalkRow({ walk, today }) {
       <span className="pw-date">
         {walk.date === today ? 'Aujourd’hui' : frDate(walk.date)}
       </span>
-      <span className="pw-loc">{walk.location ? LOC_BY_ID[walk.location].label : '—'}</span>
+      <span className="pw-loc">{walk.location ? placeLabel(state, walk.location) : '—'}</span>
+      <span className="pw-dur">{formatDuration(walk.duration)}</span>
       <span className="pw-tags">
         {walk.triggers.map((t) => TRIGGER_BY_ID[t]?.icon).join(' ')}
       </span>
@@ -99,7 +177,16 @@ function PastWalkRow({ walk, today }) {
   );
 }
 
-export function BaladeTab({ state, onLogWalk, onUpdateWalk, onDeleteWalk, decomp, care, onDismissDecomp }) {
+export function BaladeTab({
+  state,
+  onLogWalk,
+  onUpdateWalk,
+  onDeleteWalk,
+  onCreatePlace,
+  decomp,
+  care,
+  onDismissDecomp,
+}) {
   const today = localDate();
   const todayWalks = state.walks
     .filter((w) => w.date === today)
@@ -113,10 +200,17 @@ export function BaladeTab({ state, onLogWalk, onUpdateWalk, onDeleteWalk, decomp
     .slice(0, 14);
 
   // brouillon de balade : rien n'est enregistré tant qu'on ne valide pas.
-  const [draft, setDraft] = useState({ level: null, location: null, triggers: [], note: '' });
+  const [draft, setDraft] = useState({
+    level: null,
+    location: null,
+    duration: null,
+    triggers: [],
+    note: '',
+  });
   const canSave = Boolean(draft.level);
   const setLevel = (id) => setDraft((d) => ({ ...d, level: d.level === id ? null : id }));
-  const setLocation = (id) => setDraft((d) => ({ ...d, location: d.location === id ? null : id }));
+  const setLocation = (slug) => setDraft((d) => ({ ...d, location: slug }));
+  const setDuration = (min) => setDraft((d) => ({ ...d, duration: min }));
   const toggleTrigger = (id) =>
     setDraft((d) => ({
       ...d,
@@ -127,7 +221,7 @@ export function BaladeTab({ state, onLogWalk, onUpdateWalk, onDeleteWalk, decomp
   const saveWalk = () => {
     if (!canSave) return;
     onLogWalk(draft);
-    setDraft({ level: null, location: null, triggers: [], note: '' });
+    setDraft({ level: null, location: null, duration: null, triggers: [], note: '' });
   };
 
   return (
@@ -158,17 +252,15 @@ export function BaladeTab({ state, onLogWalk, onUpdateWalk, onDeleteWalk, decomp
         {draft.level && (
           <div className="walk-draft">
             <div className="walk-field-label">Lieu (optionnel)</div>
-            <div className="chip-wrap">
-              {LOCATIONS.map((l) => (
-                <button
-                  key={l.id}
-                  className={`mini-chip ${draft.location === l.id ? 'on' : ''}`}
-                  onClick={() => setLocation(l.id)}
-                >
-                  {l.icon} {l.label}
-                </button>
-              ))}
-            </div>
+            <PlacePicker
+              state={state}
+              value={draft.location}
+              onPick={setLocation}
+              onCreate={onCreatePlace}
+            />
+
+            <div className="walk-field-label">Durée (optionnel)</div>
+            <DurationPicker value={draft.duration} onPick={setDuration} />
 
             <div className="walk-field-label">Déclencheurs croisés (optionnel)</div>
             <div className="chip-wrap">
@@ -201,7 +293,14 @@ export function BaladeTab({ state, onLogWalk, onUpdateWalk, onDeleteWalk, decomp
         <div className="card">
           <h2>Sortie{todayWalks.length > 1 ? 's' : ''} du jour</h2>
           {todayWalks.map((w) => (
-            <WalkCard key={w.id} walk={w} onUpdate={onUpdateWalk} onDelete={onDeleteWalk} />
+            <WalkCard
+              key={w.id}
+              state={state}
+              walk={w}
+              onUpdate={onUpdateWalk}
+              onDelete={onDeleteWalk}
+              onCreatePlace={onCreatePlace}
+            />
           ))}
         </div>
       )}
@@ -210,7 +309,7 @@ export function BaladeTab({ state, onLogWalk, onUpdateWalk, onDeleteWalk, decomp
         <div className="card">
           <h2>Journal des balades</h2>
           {journalWalks.map((w) => (
-            <PastWalkRow key={w.id} walk={w} today={today} />
+            <PastWalkRow key={w.id} state={state} walk={w} today={today} />
           ))}
         </div>
       )}

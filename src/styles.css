@@ -235,7 +235,7 @@ button {
   background: var(--terra-bg);
   color: var(--terra-dark);
 }
-.chip .chip-tag { font-size: 10.5px; font-weight: 700; opacity: 0.7; margin-left: 4px; }
+.chip .chip-tag { font-size: 11px; margin-left: 4px; }
 
 .palier-box {
   background: var(--sage-bg);
@@ -246,6 +246,27 @@ button {
 .palier-box .palier-step { font-size: 11px; font-weight: 700; color: var(--sage-dark); text-transform: uppercase; letter-spacing: 0.05em; }
 .palier-box .palier-label { font-family: var(--font-head); font-weight: 700; font-size: 15.5px; margin: 2px 0; }
 .palier-box .palier-criterion { font-size: 13px; color: var(--ink-soft); }
+
+/* Entretien : une compétence maîtrisée n'a plus de palier en cours. Fond doré
+   (et non le vert « leçon »), pas de critère à atteindre, rien à valider — pour
+   qu'elle ne se lise plus comme un exercice inachevé. */
+.revision-box {
+  background: var(--gold-bg);
+  border: 1px solid var(--gold);
+  border-radius: var(--radius-sm);
+  padding: 11px 12px;
+  margin: 10px 0;
+}
+.revision-head { display: flex; align-items: center; gap: 6px; }
+.revision-badge {
+  font-size: 11px;
+  font-weight: 700;
+  color: #8a6620;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.revision-line { font-family: var(--font-head); font-weight: 700; font-size: 15.5px; margin: 2px 0; }
+.revision-hint { font-size: 13px; color: var(--ink-soft); }
 
 .rating-row { display: flex; gap: 8px; }
 .rating-btn {
@@ -362,7 +383,18 @@ button {
 .skill-note { margin: 8px 0 0; padding: 7px 10px; font-size: 12.5px; line-height: 1.4; background: #FBF3EC; border-left: 3px solid var(--cat-color, #C0653F); border-radius: 6px; }
 .skill-meta { display: flex; gap: 12px; margin-top: 8px; font-size: 12.5px; color: var(--ink-soft); font-weight: 600; }
 
-.prereq-row { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+/* Les prérequis conseillent, ils ne verrouillent pas (seul HARD_PREREQS bloque) :
+   le libellé et le ton restent donc informatifs. */
+.prereq-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--ink-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 9px;
+}
+.prereq-advice { font-size: 12px; color: var(--ink-soft); margin: 6px 0 0; }
+.prereq-row { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; }
 .prereq-chip {
   font-size: 11.5px;
   font-weight: 600;
@@ -654,6 +686,26 @@ button {
   transition: all 0.15s ease;
 }
 .mini-chip.on { border-color: var(--sage); background: var(--sage-bg); color: var(--sage-dark); }
+/* « + autre » : création d'un lieu à la volée — la liste s'alimente à l'usage. */
+.mini-chip-add { border-style: dashed; color: var(--ink-soft); }
+.place-add { display: flex; gap: 4px; align-items: center; }
+.place-input {
+  border: 1.5px solid var(--sage);
+  border-radius: 99px;
+  padding: 5px 11px;
+  font-family: var(--font-body);
+  font-size: 12.5px;
+  width: 140px;
+}
+.place-ok {
+  border: 1.5px solid var(--sage);
+  background: var(--sage-bg);
+  color: var(--sage-dark);
+  border-radius: 99px;
+  padding: 5px 10px;
+  font-weight: 700;
+}
+.place-ok:disabled { opacity: 0.4; }
 .walk-note {
   width: 100%;
   margin-top: 9px;
@@ -679,6 +731,7 @@ button {
 .pw-cup { font-size: 16px; }
 .pw-date { font-weight: 600; width: 92px; flex-shrink: 0; text-transform: capitalize; }
 .pw-loc { color: var(--ink-soft); flex: 1; }
+.pw-dur { color: var(--ink-soft); font-size: 12px; flex-shrink: 0; }
 .pw-tags { font-size: 14px; letter-spacing: 2px; }
 
 /* Bande des 14 derniers jours : une case par jour, la plus ancienne à gauche.

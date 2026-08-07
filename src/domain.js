@@ -8,10 +8,12 @@
 import {
   SKILLS,
   CATEGORIES,
-  LOCATIONS,
+  LEGACY_LOCATIONS,
+  PLACE_ICON,
   WALK_TRIGGERS,
   CUP_LEVELS,
   TIERS,
+  HARD_PREREQS,
 } from './skills-data.js';
 import { reminderStatus } from './health-data.js';
 import { localDate, daysBetween } from './date-utils.js';
@@ -24,7 +26,6 @@ export { uuid as newId };
 // ---- Annuaires (id -> objet de contenu statique) --------------------------
 export const SKILL_BY_ID = Object.fromEntries(SKILLS.map((s) => [s.id, s]));
 export const CAT_BY_ID = Object.fromEntries(CATEGORIES.map((c) => [c.id, c]));
-export const LOC_BY_ID = Object.fromEntries(LOCATIONS.map((l) => [l.id, l]));
 export const TRIGGER_BY_ID = Object.fromEntries(WALK_TRIGGERS.map((t) => [t.id, t]));
 export const CUP_BY_ID = Object.fromEntries(CUP_LEVELS.map((c) => [c.id, c]));
 
@@ -36,7 +37,8 @@ export const DEFAULT_STATE = {
   skillProgress: [], // { id, skillId, status: 'known'|'learning'|'mastered' }
   palierDone: [], // { id, palierId, skillId, doneAt }
   sessions: [], // { id, date, skillId, palierId, rating, xp }
-  walks: [], // { id, date, ts, level: 'vert'|'jaune'|'rouge', location, triggers: [], note }
+  walks: [], // { id, date, ts, level: 'vert'|'jaune'|'rouge', location, duration, triggers: [], note }
+  places: [], // { slug, label, icon } — lieux du carnet, alimentés au fil des balades
   cues: {}, // skillId -> { word, gesture } — antisèche partagée, éditable
   decompOff: [], // dates « elle va bien » : l'observation prime sur la règle
   care: [], // { id, date, ts, kind: 'repas'|'friandise', label, grams?, treatId? }
@@ -49,6 +51,78 @@ export const cueFor = (state, skill) => ({
   word: state.cues?.[skill.id]?.word ?? skill.cue ?? '',
   gesture: state.cues?.[skill.id]?.gesture ?? skill.signal ?? '',
 });
+
+// ---- Lieux de balade ------------------------------------------------------
+// Les lieux appartiennent au carnet, pas au code : la liste s'alimente au fil
+// des balades. On évite ainsi de demander une saisie initiale (fastidieuse, et
+// on ne connaît pas ses lieux avant de les avoir parcourus) tout en gardant des
+// puces à taper plutôt qu'un champ libre à chaque sortie.
+//
+// Une balade référence son lieu par `slug` (chaîne stable) et non par l'index de
+// ligne : renommer un lieu plus tard n'orphelinera pas l'historique.
+
+// Slug lisible et stable dérivé du libellé, suffixé si le nom est déjà pris.
+export function slugify(label, taken = []) {
+  const base =
+    label
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // marques diacritiques
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 24) || 'lieu';
+  if (!taken.includes(base)) return base;
+  let n = 2;
+  while (taken.includes(`${base}-${n}`)) n++;
+  return `${base}-${n}`;
+}
+
+// Migration one-shot : un carnet antérieur aux lieux dynamiques a des balades
+// qui pointent vers les identifiants historiques ('foret', 'lidl'…). On
+// reconstitue la liste À PARTIR DES BALADES RÉELLES — donc un carnet neuf, qui
+// n'a aucune balade, démarre bien avec une liste vide au lieu d'hériter des
+// lieux d'un autre foyer.
+export function ensurePlaces(state) {
+  if (state.places?.length) return state;
+  const used = [...new Set((state.walks || []).map((w) => w.location).filter(Boolean))];
+  if (used.length === 0) return state;
+  const places = used.map((slug) => {
+    const legacy = LEGACY_LOCATIONS.find((l) => l.id === slug);
+    return legacy
+      ? { slug, label: legacy.label, icon: legacy.icon }
+      : { slug, label: slug, icon: PLACE_ICON };
+  });
+  return { ...state, places };
+}
+
+export const placeBySlug = (state) =>
+  Object.fromEntries((state.places || []).map((p) => [p.slug, p]));
+
+export const placeLabel = (state, slug) =>
+  (state.places || []).find((p) => p.slug === slug)?.label ?? slug;
+
+// Lieux triés par fréquence d'usage puis par ordre alphabétique : les habitudes
+// remontent naturellement en tête sans qu'on ait à les classer à la main.
+export function orderedPlaces(state) {
+  const counts = {};
+  for (const w of state.walks || []) if (w.location) counts[w.location] = (counts[w.location] || 0) + 1;
+  return [...(state.places || [])].sort(
+    (a, b) => (counts[b.slug] || 0) - (counts[a.slug] || 0) || a.label.localeCompare(b.label),
+  );
+}
+
+// Ajoute un lieu s'il n'existe pas déjà (comparaison insensible à la casse et
+// aux espaces, pour ne pas créer « Petite forêt » deux fois).
+export function addPlace(places, rawLabel) {
+  const label = rawLabel.trim().replace(/\s+/g, ' ');
+  if (!label) return { places, slug: null };
+  const existing = (places || []).find(
+    (p) => p.label.toLowerCase() === label.toLowerCase(),
+  );
+  if (existing) return { places, slug: existing.slug };
+  const slug = slugify(label, (places || []).map((p) => p.slug));
+  return { places: [...(places || []), { slug, label, icon: PLACE_ICON }], slug };
+}
 
 // ---- Balade / gestion -----------------------------------------------------
 // une séance en catégorie « balade » comptée un jour où une balade a débordé (🔴)
@@ -112,12 +186,24 @@ export function tierFor(lifetime) {
 export const isAcquired = (state, skillId) =>
   state.skillStatus[skillId] === 'known' || state.skillStatus[skillId] === 'mastered';
 
-export const prereqsMet = (state, skill) => skill.prereqs.every((p) => isAcquired(state, p));
+// Prérequis annoncés dans l'arbre qui ne sont pas encore acquis. Ce sont des
+// CONSEILS : ils s'affichent, ils ne bloquent pas.
+export const missingPrereqs = (state, skill) =>
+  skill.prereqs.filter((p) => !isAcquired(state, p));
+
+// Prérequis qui bloquent réellement (sécurité / physique — voir HARD_PREREQS).
+export const missingHardPrereqs = (state, skill) =>
+  (HARD_PREREQS[skill.id] || []).filter((p) => !isAcquired(state, p));
+
+export const hardPrereqsMet = (state, skill) => missingHardPrereqs(state, skill).length === 0;
 
 export function skillUiStatus(state, skill) {
   const st = state.skillStatus[skill.id];
   if (st) return st; // known | learning | mastered
-  return prereqsMet(state, skill) ? 'available' : 'locked';
+  // Seuls les prérequis durs verrouillent : une compétence simplement « pas
+  // dans l'ordre conseillé » reste déblocable, parce qu'on la travaille peut-être
+  // déjà pour de vrai.
+  return hardPrereqsMet(state, skill) ? 'available' : 'locked';
 }
 
 // Progression rangée en lignes (table skillProgress) : upsert par compétence.

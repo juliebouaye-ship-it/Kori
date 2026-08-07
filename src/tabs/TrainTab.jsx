@@ -105,13 +105,25 @@ export function TrainTab({
   const gestionToday = isBaladeSkill(skill.id) && dayHasRedWalk(state.walks, localDate());
 
   const mastered = state.skillStatus[skill.id] === 'mastered';
+  // Une compétence maîtrisée n'a plus de palier « en cours » : on n'en désigne
+  // aucun, sinon l'écran se lit comme une leçon inachevée (le dernier palier
+  // s'affichait avec son critère, comme s'il restait à valider).
   const currentPalier = mastered
-    ? skill.paliers[skill.paliers.length - 1]
+    ? null
     : skill.paliers.find((p) => !state.paliersDone[p.id]);
-  const palierIndex = skill.paliers.indexOf(currentPalier);
+  const palierIndex = mastered ? -1 : skill.paliers.indexOf(currentPalier);
 
-  // coup de pouce anti-lassitude : 3 dernières séances de ce palier notées « Dur »
-  const lastThree = state.sessions.filter((s) => s.palierId === currentPalier.id).slice(-3);
+  // En entretien, on propose un palier à revoir — il tourne d'un jour à l'autre
+  // pour ne pas toujours retester la même chose. Simple suggestion, rien à cocher.
+  const revisionPalier = mastered
+    ? skill.paliers[new Date().getDate() % skill.paliers.length]
+    : null;
+
+  // coup de pouce anti-lassitude : 3 dernières séances de ce palier notées « Dur ».
+  // Sans objet en entretien : on ne « stagne » pas sur une compétence acquise.
+  const lastThree = mastered
+    ? []
+    : state.sessions.filter((s) => s.palierId === currentPalier.id).slice(-3);
   const stuck = lastThree.length === 3 && lastThree.every((s) => s.rating === 'dur');
 
   return (
@@ -154,7 +166,9 @@ export function TrainTab({
                   >
                     {s.icon} {s.name}
                     {state.skillStatus[s.id] === 'mastered' && (
-                      <span className="chip-tag">entretien</span>
+                      <span className="chip-tag" title="Maîtrisée — en entretien">
+                        🏆
+                      </span>
                     )}
                   </button>
                 ))}
@@ -163,33 +177,44 @@ export function TrainTab({
           ));
         })()}
 
-        <div className="palier-box">
-          <div className="palier-step">
-            {mastered
-              ? 'Entretien — compétence maîtrisée 🏆'
-              : `Palier ${palierIndex + 1} / ${skill.paliers.length}`}
+        {mastered ? (
+          <div className="revision-box">
+            <div className="revision-head">
+              <span className="revision-badge">🏆 Maîtrisée</span>
+              <InfoTip text="Tous les paliers sont franchis : il n’y a plus rien à valider ici. On la redemande de temps en temps pour qu’elle tienne, et ça rapporte quand même des 🦴." />
+            </div>
+            <div className="revision-line">Rien à finir — on entretient, c’est tout.</div>
+            <div className="revision-hint">
+              À revoir si tu veux : <em>{revisionPalier.label}</em>
+            </div>
           </div>
-          <div className="palier-label">{currentPalier.label}</div>
-          <div className="palier-criterion">Acquis quand : {currentPalier.criterion}</div>
-          {currentPalier.how && METHOD_BY_ID[currentPalier.how.method] && (
-            <div className="how-box">
-              <div className="how-head">
-                <span className="how-label">Ce soir</span>
-                <span className="how-method">{METHOD_BY_ID[currentPalier.how.method].name}</span>
-                <InfoTip text={METHOD_BY_ID[currentPalier.how.method].detail} />
+        ) : (
+          <div className="palier-box">
+            <div className="palier-step">
+              Palier {palierIndex + 1} / {skill.paliers.length}
+            </div>
+            <div className="palier-label">{currentPalier.label}</div>
+            <div className="palier-criterion">Acquis quand : {currentPalier.criterion}</div>
+            {currentPalier.how && METHOD_BY_ID[currentPalier.how.method] && (
+              <div className="how-box">
+                <div className="how-head">
+                  <span className="how-label">Ce soir</span>
+                  <span className="how-method">{METHOD_BY_ID[currentPalier.how.method].name}</span>
+                  <InfoTip text={METHOD_BY_ID[currentPalier.how.method].detail} />
+                </div>
+                <div className="how-tagline">{METHOD_BY_ID[currentPalier.how.method].tagline}</div>
+                <div className="how-setup">{currentPalier.how.setup}</div>
+                <div className="how-pitfall">Le piège : {currentPalier.how.pitfall}</div>
               </div>
-              <div className="how-tagline">{METHOD_BY_ID[currentPalier.how.method].tagline}</div>
-              <div className="how-setup">{currentPalier.how.setup}</div>
-              <div className="how-pitfall">Le piège : {currentPalier.how.pitfall}</div>
-            </div>
-          )}
-          {currentPalier.gate && GATES[currentPalier.gate] && (
-            <div className="palier-gate">
-              ⚕️ {GATES[currentPalier.gate].label}
-              <InfoTip text={GATES[currentPalier.gate].detail} />
-            </div>
-          )}
-        </div>
+            )}
+            {currentPalier.gate && GATES[currentPalier.gate] && (
+              <div className="palier-gate">
+                ⚕️ {GATES[currentPalier.gate].label}
+                <InfoTip text={GATES[currentPalier.gate].detail} />
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="rating-row">
           {RATINGS.map((r) => (

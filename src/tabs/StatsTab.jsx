@@ -5,7 +5,7 @@ import { deriveInsights } from '../insights.js';
 import {
   SKILL_BY_ID,
   CAT_BY_ID,
-  LOC_BY_ID,
+  placeBySlug,
   TRIGGER_BY_ID,
   CUP_BY_ID,
   isAcquired,
@@ -40,8 +40,10 @@ export function StatsTab({ state, onAddFirst }) {
     0
   );
 
+  // Les lieux vivent maintenant dans le carnet : l'annuaire se construit depuis
+  // l'état plutôt que depuis une constante du code.
   const insights = useMemo(
-    () => deriveInsights(state, { SKILL_BY_ID, LOC_BY_ID, TRIGGER_BY_ID }),
+    () => deriveInsights(state, { SKILL_BY_ID, LOC_BY_ID: placeBySlug(state), TRIGGER_BY_ID }),
     [state]
   );
 

@@ -11,13 +11,16 @@
 //     élément → Explorer lisible + fusion sûre à deux (pas d'écrasement global).
 
 export const COLLECTIONS = ['walks', 'sessions', 'care', 'reminders', 'firsts', 'skillProgress', 'palierDone'];
-export const META_FIELDS = ['onboarded', 'wallet', 'lifetime', 'cues', 'decompOff'];
+// `places` reste dans `meta` avec `cues`/`decompOff` : c'est de la CONFIG (une
+// poignée d'entrées, modifiée très rarement), pas un flux d'éléments comme les
+// balades. Le last-write-wins de meta est donc acceptable ici.
+export const META_FIELDS = ['onboarded', 'wallet', 'lifetime', 'cues', 'decompOff', 'places'];
 
 // Forme canonique de chaque type d'élément (+ valeurs par défaut). Garantit que
 // local et distant convergent vers exactement les mêmes clés, quelle que soit la
 // façon dont InstantDB gère les champs absents/null → pas de faux diff en boucle.
 export const COLLECTION_FIELDS = {
-  walks: { date: '', ts: 0, level: '', location: null, triggers: [], note: '' },
+  walks: { date: '', ts: 0, level: '', location: null, duration: null, triggers: [], note: '' },
   sessions: { date: '', skillId: '', palierId: '', rating: '', xp: 0, ts: 0 },
   care: { date: '', ts: 0, kind: '', label: '', grams: null, treatId: null },
   reminders: { type: '', label: '', dueDate: '', note: '' },

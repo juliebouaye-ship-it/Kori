@@ -7,6 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "test": "node src/domain.test.mjs",
+    "backup": "node scripts/backup-carnet.mjs",
     "deploy:preview": "vite build && netlify deploy --dir=dist --alias=preview",
     "deploy:prod": "vite build && netlify deploy --dir=dist --prod"
   },

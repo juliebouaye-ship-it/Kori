@@ -183,16 +183,38 @@ export const TIERS = [
 // sont facultatifs, pour qui veut creuser les patterns.
 // ------------------------------------------------------------
 
-// Lieux fournis par l'utilisatrice — sélection en un tap, jamais de texte libre.
+// Lieux de balade HISTORIQUES — ne servent plus qu'à migrer un carnet existant.
+// ------------------------------------------------------------
+// Les lieux vivent désormais DANS le carnet (`state.places`) et non dans le
+// code : la liste se construit toute seule au fil des balades, ce qui évite à la
+// fois une saisie initiale fastidieuse et le fait de coder en dur les habitudes
+// d'un seul foyer. Ce tableau ne sert qu'à retrouver le libellé des balades déjà
+// enregistrées avec ces identifiants (voir `ensurePlaces` dans domain.js).
 // NB : le terrain d'agility se trouve vers le Chemin des lapins mais les
 // aboiements portent sur tout le chemin → capturé via le tag « chiens/agility »
 // posé sur ce lieu, pas comme un lieu distinct.
-export const LOCATIONS = [
+export const LEGACY_LOCATIONS = [
   { id: 'foret', label: 'Petite forêt', icon: '🌲' },
   { id: 'amadia', label: 'Lotissement Amadia', icon: '🏘️' },
   { id: 'centre', label: 'Centre ville', icon: '🏙️' },
   { id: 'lidl', label: 'Tour Lidl', icon: '🛒' },
   { id: 'lapins', label: 'Chemin des lapins', icon: '🐇' },
+];
+
+// Icône par défaut d'un lieu créé à la volée.
+export const PLACE_ICON = '📍';
+
+// Durées de balade proposées en un tap. Facultatif : on peut très bien
+// enregistrer une sortie sans durée. Stockées en MINUTES pour rester
+// exploitables (moyennes, corrélation avec le niveau du verre) — d'où l'absence
+// de seau ouvert type « 1 h + », qui ne se moyenne pas honnêtement.
+export const WALK_DURATIONS = [
+  { min: 10, label: '10 min' },
+  { min: 20, label: '20 min' },
+  { min: 30, label: '30 min' },
+  { min: 45, label: '45 min' },
+  { min: 60, label: '1 h' },
+  { min: 90, label: '1 h 30' },
 ];
 
 // Déclencheurs (tags multi-select facultatifs)
@@ -1184,6 +1206,30 @@ export const GATES = {
     detail:
       'Ce palier fait réellement tirer Kori. Tant que les plaques de croissance ne sont pas fermées, la traction répétée peut abîmer le cartilage de façon définitive. Chez un gabarit moyen à grand, la fermeture se situe entre 12 et 18 mois. À faire valider en visite, avec un contrôle des hanches, des genoux et de la démarche.',
   },
+};
+
+// ------------------------------------------------------------
+// Prérequis DURS : les seuls qui empêchent réellement de débloquer.
+// ------------------------------------------------------------
+// Par défaut, un prérequis est un CONSEIL d'ordre pédagogique : « ça se passe
+// mieux dans cet ordre », pas « c'est interdit autrement ». On travaille très
+// souvent une compétence avant celle qui la précède dans l'arbre, et l'appli
+// n'a pas à empêcher de noter du travail réellement fait.
+//
+// Ne restent bloquants que les cas où l'ordre engage le CORPS du chien ou sa
+// sécurité — jamais la pédagogie. Même esprit que GATES : on ne verrouille que
+// ce qui peut faire mal.
+export const HARD_PREREQS = {
+  // Couper des griffes à un chien qui n'accepte pas encore qu'on manipule ses
+  // pattes, c'est se garantir une mauvaise expérience (et un risque de couper
+  // dans le vif) qui contamine toute la branche des soins.
+  griffes: ['pattes-soin'],
+  // Faire tirer sur autre chose qu'un harnais adapté fait porter la traction au
+  // cou : risque trachéal et cervical.
+  allez: ['harnais'],
+  // Croiser un autre chien en traction sans signal de décrochage fiable, c'est
+  // un départ en poursuite avec 21 kg au bout de la longe.
+  'croiser-traction': ['decrocher'],
 };
 
 // ------------------------------------------------------------

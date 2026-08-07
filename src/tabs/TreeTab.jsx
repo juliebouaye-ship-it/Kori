@@ -5,6 +5,8 @@ import {
   CAT_BY_ID,
   isAcquired,
   skillUiStatus,
+  missingPrereqs,
+  missingHardPrereqs,
   STATUS_LABELS,
 } from '../domain.js';
 
@@ -16,6 +18,7 @@ function SkillCard({ state, skill, wallet, onUnlock }) {
   const status = skillUiStatus(state, skill);
   const cat = CAT_BY_ID[skill.category];
   const doneCount = skill.paliers.filter((p) => state.paliersDone[p.id]).length;
+  const advised = missingPrereqs(state, skill);
 
   return (
     <div className="skill-card" style={{ '--cat-color': cat.color }}>
@@ -33,18 +36,27 @@ function SkillCard({ state, skill, wallet, onUnlock }) {
 
       {/* Action / info essentielle, toujours visible selon le statut */}
       {status === 'available' && (
-        <div className="unlock-row">
-          <button
-            className="btn btn-primary"
-            disabled={wallet < skill.cost}
-            onClick={() => onUnlock(skill)}
-          >
-            Débloquer · {skill.cost} 🦴
-          </button>
-          {wallet < skill.cost && (
-            <span className="lock-reason">Encore {skill.cost - wallet} 🦴</span>
+        <>
+          <div className="unlock-row">
+            <button
+              className="btn btn-primary"
+              disabled={wallet < skill.cost}
+              onClick={() => onUnlock(skill)}
+            >
+              Débloquer · {skill.cost} 🦴
+            </button>
+            {wallet < skill.cost && (
+              <span className="lock-reason">Encore {skill.cost - wallet} 🦴</span>
+            )}
+          </div>
+          {/* Ordre conseillé, pas imposé : on peut très bien avoir commencé
+              celle-ci avant. */}
+          {advised.length > 0 && (
+            <p className="prereq-advice">
+              💡 On conseille de voir {advised.map((p) => SKILL_BY_ID[p].name).join(', ')} d’abord.
+            </p>
           )}
-        </div>
+        </>
       )}
       {status === 'learning' && (
         <div className="skill-mini">
@@ -56,9 +68,8 @@ function SkillCard({ state, skill, wallet, onUnlock }) {
       )}
       {status === 'locked' && (
         <p className="lock-reason" style={{ marginTop: 6 }}>
-          🔒 D’abord :{' '}
-          {skill.prereqs
-            .filter((p) => !isAcquired(state, p))
+          🔒 Pour son corps, d’abord :{' '}
+          {missingHardPrereqs(state, skill)
             .map((p) => SKILL_BY_ID[p].name)
             .join(', ')}
         </p>
@@ -81,13 +92,16 @@ function SkillCard({ state, skill, wallet, onUnlock }) {
           </div>
 
           {skill.prereqs.length > 0 && (
-            <div className="prereq-row">
-              {skill.prereqs.map((p) => (
-                <span key={p} className={`prereq-chip ${isAcquired(state, p) ? 'ok' : ''}`}>
-                  {isAcquired(state, p) ? '✓' : '·'} {SKILL_BY_ID[p].name}
-                </span>
-              ))}
-            </div>
+            <>
+              <div className="prereq-label">Ordre conseillé</div>
+              <div className="prereq-row">
+                {skill.prereqs.map((p) => (
+                  <span key={p} className={`prereq-chip ${isAcquired(state, p) ? 'ok' : ''}`}>
+                    {isAcquired(state, p) ? '✓' : '·'} {SKILL_BY_ID[p].name}
+                  </span>
+                ))}
+              </div>
+            </>
           )}
 
           {status === 'known' && (
