@@ -124,9 +124,12 @@ function JoinCarnet({ user, onDone, onCreateInstead }) {
     try {
       // Le code circule en paramètre de règle : c'est lui qui autorise à voir ce
       // carnet-là, et rien d'autre dans la base.
-      const { data } = await db.queryOnce({
-        carnets: { $: { where: { inviteCode: code }, ruleParams: { inviteCode: code } } },
-      });
+      // ⚠️ `ruleParams` est le SECOND argument de queryOnce, pas une clé de `$`
+      // (qui n'accepte que where / fields / order / pagination).
+      const { data } = await db.queryOnce(
+        { carnets: { $: { where: { inviteCode: code } } } },
+        { ruleParams: { inviteCode: code } },
+      );
       const carnet = (data.carnets || [])[0];
       if (!carnet) {
         setError('Aucun carnet avec ce code. Vérifie les six caractères.');

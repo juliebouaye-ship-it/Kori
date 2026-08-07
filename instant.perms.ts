@@ -30,12 +30,18 @@ const rules = {
     allow: { $default: 'false' },
   },
 
-  // Personne ne crée ni ne modifie de compte depuis le client (c'est le rôle du
-  // flux d'authentification), et on ne voit que le sien.
+  // On ne voit que son propre compte.
+  //
+  // ⚠️ `create` doit rester autorisé : se connecter pour la première fois CRÉE
+  // la ligne `$users`, et cette création passe par la vérification des
+  // permissions. Un `create: 'false'` ici — écrit sur l'idée que « les comptes
+  // ne se créent pas depuis le client » — rend la connexion impossible pour
+  // tout le monde, avec un « Permission denied: not perms-pass? » au moment de
+  // saisir le code, qui ressemble à un mauvais code.
   $users: {
     allow: {
       view: 'auth.id == data.id',
-      create: 'false',
+      create: 'true',
       update: 'false',
       delete: 'false',
     },
@@ -47,8 +53,11 @@ const rules = {
     bind: [
       'isMember',
       "auth.id in data.ref('members.id')",
+      // Pas de garde `!= null` : `inviteCode` est obligatoire côté schéma, donc
+      // jamais nul sur la donnée. Une requête sans ruleParams donne simplement
+      // une comparaison fausse, et non une erreur d'évaluation.
       'knowsInviteCode',
-      "ruleParams.inviteCode != null && data.inviteCode == ruleParams.inviteCode",
+      'data.inviteCode == ruleParams.inviteCode',
     ],
     allow: {
       view: 'isMember || knowsInviteCode',
