@@ -6,7 +6,8 @@
 
 import { useEffect, useState } from 'react';
 import { SKILLS, QUICK_XP, validateDag } from '../skills-data.js';
-import { useKoriSync } from '../store.js';
+import { useKoriSync, updateCarnet } from '../store.js';
+import { defaultTabForMode } from '../carnets.js';
 import { localDate } from '../date-utils.js';
 import {
   DEFAULT_MEAL,
@@ -27,9 +28,9 @@ import {
   addPlace,
 } from '../domain.js';
 
-export function useKoriState() {
+export function useKoriState(carnet) {
   const [state, setState] = useState(() => ({ ...DEFAULT_STATE }));
-  const [tab, setTab] = useState('train');
+  const [tab, setTab] = useState(() => defaultTabForMode(carnet?.mode));
   const [toast, setToast] = useState(null);
   const [burst, setBurst] = useState(null);
   // Réouverture manuelle du bilan (depuis l'arbre). L'affichage AUTOMATIQUE au
@@ -48,7 +49,7 @@ export function useKoriState() {
   // `ready` passe à true une fois le carnet distant chargé.
   // `ensurePlaces` reconstitue une fois pour toutes la liste de lieux d'un carnet
   // antérieur aux lieux dynamiques, à partir des balades déjà enregistrées.
-  const ready = useKoriSync(state, setState, (remote) =>
+  const ready = useKoriSync(carnet?.id ?? null, state, setState, (remote) =>
     ensurePlaces({ ...DEFAULT_STATE, ...remote }),
   );
 
@@ -167,6 +168,9 @@ export function useKoriState() {
 
   const deleteWalk = (id) =>
     setState((prev) => ({ ...prev, walks: prev.walks.filter((w) => w.id !== id) }));
+
+  // ---- Carnet (identité : nom, mode, code d'invitation) ----
+  const setCarnetMode = (mode) => updateCarnet(carnet?.id, { mode });
 
   // ---- Lieux de balade ----
   // Crée le lieu s'il est nouveau, sinon retrouve celui qui porte déjà ce nom,
@@ -341,9 +345,13 @@ export function useKoriState() {
   // Le bilan de départ s'affiche soit sur réouverture manuelle, soit
   // automatiquement au tout premier lancement — mais seulement une fois le
   // carnet distant chargé, pour ne pas le faire clignoter pendant le chargement.
-  const showOnboarding = manualOnboarding || (ready && !state.onboarded);
+  // Un carnet « journal seul » ne le voit jamais : il porte sur les compétences.
+  const journalOnly = carnet?.mode === 'journal';
+  const showOnboarding = !journalOnly && (manualOnboarding || (ready && !state.onboarded));
 
   return {
+    carnet,
+    journalOnly,
     ready,
     state,
     viewState,
@@ -365,6 +373,7 @@ export function useKoriState() {
     updateWalk,
     createPlace,
     removePlace,
+    setCarnetMode,
     deleteWalk,
     setCue,
     addFirst,

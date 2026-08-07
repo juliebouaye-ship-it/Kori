@@ -1,169 +1,120 @@
 // ============================================================
-// Synchro du carnet de Kori entre appareils (InstantDB)
+// Synchro d'un carnet entre appareils (InstantDB)
 // ============================================================
-// Chaque type d'élément a sa propre table (balades, séances, repas/soins,
-// rappels, premières fois) → Explorer InstantDB lisible + fusion sûre à deux
-// (deux ajouts simultanés coexistent au lieu de s'écraser). Les compteurs et la
-// config restent dans un enregistrement `meta` unique.
+// Chaque type d'élément a sa propre table (balades, séances, soins, rappels,
+// premières fois, progression) et chaque ligne est rattachée à son carnet par un
+// lien → Explorer lisible, fusion sûre à plusieurs, et surtout isolation entre
+// carnets. La configuration et les compteurs vivent sur la ligne `carnets`.
 //
-// La logique pure (assemblage, diff, migration) est dans sync-core.js ; ici on
-// se contente d'orchestrer les transactions InstantDB et de gérer le cycle React.
+// La logique pure (assemblage, diff) est dans sync-core.js ; ici on se contente
+// d'orchestrer les transactions InstantDB et le cycle React.
 
 import { useEffect, useRef, useState } from 'react';
-import { db, META_ID, KORI_ID, syncEnabled } from './db.js';
-import {
-  COLLECTIONS,
-  assemble,
-  canonical,
-  diffPlan,
-  seedPlan,
-  migrateIds,
-  hasData,
-  uuid,
-} from './sync-core.js';
+import { db, syncEnabled } from './db.js';
+import { COLLECTIONS, assemble, canonical, diffPlan } from './sync-core.js';
 
 const PUSH_DEBOUNCE_MS = 800;
 
-// On interroge toutes les tables + l'ancien `carnet` (mono-bloc) pour pouvoir
-// migrer les données héritées lors du tout premier lancement du nouveau modèle.
-const QUERY = {
-  meta: {},
-  walks: {},
-  sessions: {},
-  care: {},
-  reminders: {},
-  firsts: {},
-  skillProgress: {},
-  palierDone: {},
-  carnet: {},
-};
+// Requête d'un carnet précis avec toutes ses collections imbriquées : une seule
+// requête suffit, et les permissions garantissent qu'on ne voit que les siens.
+export const carnetQuery = (carnetId) => ({
+  carnets: {
+    $: { where: { id: carnetId } },
+    walks: {},
+    sessions: {},
+    care: {},
+    reminders: {},
+    firsts: {},
+    skillProgress: {},
+    palierDone: {},
+  },
+});
 
-// Traduit un plan (meta + upserts + deletes) en une transaction InstantDB.
-function applyPlan(plan) {
+// Traduit un plan (carnet + upserts + deletes) en une transaction InstantDB.
+// Chaque upsert (re)pose le lien vers le carnet : l'opération est idempotente,
+// et c'est ce qui garantit qu'aucune ligne ne peut naître orpheline.
+function applyPlan(plan, carnetId) {
   const txs = [];
-  if (plan.metaUpdate) {
-    txs.push(db.tx.meta[META_ID].update({ ...plan.metaUpdate, updatedAt: Date.now() }));
+  if (plan.carnetUpdate) {
+    txs.push(db.tx.carnets[carnetId].update({ ...plan.carnetUpdate, updatedAt: Date.now() }));
   }
-  for (const u of plan.upserts || []) txs.push(db.tx[u.coll][u.id].update(u.attrs));
+  for (const u of plan.upserts || []) {
+    txs.push(db.tx[u.coll][u.id].update(u.attrs).link({ carnet: carnetId }));
+  }
   for (const d of plan.deletes || []) txs.push(db.tx[d.coll][d.id].delete());
   if (txs.length) db.transact(txs);
 }
 
 /**
- * @param {object} state       l'état courant de l'app
- * @param {function} setState  le setter React de l'état
- * @param {function} normalize (remoteState) => état complet (fusion des défauts)
+ * @param {string|null} carnetId  le carnet actif (null = pas encore choisi)
+ * @param {object} state          l'état courant de l'app
+ * @param {function} setState     le setter React de l'état
+ * @param {function} normalize    (remoteState) => état complet (fusion des défauts)
  * @returns {boolean} ready — true une fois le carnet distant chargé (ou si la
  *   synchro est désactivée). Tant que c'est false, l'app ne doit pas encore
  *   décider quoi afficher (ex. le bilan de départ) pour éviter tout clignotement.
  */
-export function useKoriSync(state, setState, normalize = (s) => s) {
-  const { data } = db.useQuery(syncEnabled ? QUERY : null);
-  const [ready, setReady] = useState(!syncEnabled);
+export function useKoriSync(carnetId, state, setState, normalize = (s) => s) {
+  const active = syncEnabled && Boolean(carnetId);
+  const { data } = db.useQuery(active ? carnetQuery(carnetId) : null);
+  const [ready, setReady] = useState(!active);
 
-  const seeded = useRef(false);
+  const loaded = useRef(false);
   const lastCanon = useRef(null); // empreinte du dernier état « d'accord »
   const lastState = useRef(null); // dernier état poussé/reçu (base du prochain diff)
-  const currentState = useRef(state);
-  currentState.current = state; // toujours la dernière valeur pour l'amorçage
 
-  // ---- distant -> local (+ migration/amorçage) ----
+  // Changer de carnet remet la synchro à zéro : sans ça, le premier diff
+  // comparerait l'état du carnet précédent au nouveau et écraserait des données.
   useEffect(() => {
-    if (!syncEnabled || !data) return;
+    loaded.current = false;
+    lastCanon.current = null;
+    lastState.current = null;
+    setReady(!active);
+  }, [carnetId, active]);
 
-    const isEmpty =
-      (data.meta || []).length === 0 && COLLECTIONS.every((c) => (data[c] || []).length === 0);
+  // ---- distant -> local ----
+  useEffect(() => {
+    if (!active || !data) return;
+    const carnet = (data.carnets || [])[0];
+    if (!carnet) return; // carnet inaccessible ou supprimé : on ne touche à rien
 
-    if (isEmpty) {
-      if (seeded.current) return; // on n'amorce qu'une fois
-      seeded.current = true;
-
-      // Source des données : l'état local s'il contient déjà quelque chose
-      // (cas normal : ce téléphone a du localStorage), sinon l'ancien carnet
-      // mono-bloc distant s'il existe (cas d'un appareil neuf).
-      const oldBlob = (data.carnet || [])[0]?.state;
-      const source = hasData(currentState.current)
-        ? currentState.current
-        : oldBlob
-          ? normalize(oldBlob)
-          : currentState.current;
-
-      const migrated = normalize(migrateIds(source));
-      lastState.current = migrated;
-      lastCanon.current = canonical(migrated);
-      setState(migrated);
-      applyPlan(seedPlan(migrated));
-      // ménage : on retire l'ancienne ligne unique désormais migrée.
-      if (oldBlob) db.transact(db.tx.carnet[KORI_ID].delete());
-      setReady(true);
-      return;
-    }
-
-    seeded.current = true;
-    let assembled = assemble(data, normalize);
-
-    // Migration (une fois) : progression héritée des maps `meta` (skillStatus /
-    // paliersDone) → lignes dans les tables dédiées, puis on efface les maps.
-    const metaRow = (data.meta || [])[0] || {};
-    const legacyStatus = metaRow.skillStatus || {};
-    const legacyPaliers = metaRow.paliersDone || {};
-    const tablesEmpty =
-      !(assembled.skillProgress || []).length && !(assembled.palierDone || []).length;
-    const hasLegacy = Object.keys(legacyStatus).length || Object.keys(legacyPaliers).length;
-    if (tablesEmpty && hasLegacy) {
-      const skillProgress = Object.entries(legacyStatus).map(([skillId, status]) => ({
-        id: uuid(),
-        skillId,
-        status,
-      }));
-      const palierDone = Object.entries(legacyPaliers).map(([palierId, doneAt]) => ({
-        id: uuid(),
-        palierId,
-        skillId: '',
-        doneAt,
-      }));
-      assembled = normalize({ ...assembled, skillProgress, palierDone });
-      applyPlan({
-        upserts: [
-          ...skillProgress.map((r) => ({
-            coll: 'skillProgress',
-            id: r.id,
-            attrs: { skillId: r.skillId, status: r.status },
-          })),
-          ...palierDone.map((r) => ({
-            coll: 'palierDone',
-            id: r.id,
-            attrs: { palierId: r.palierId, skillId: r.skillId, doneAt: r.doneAt },
-          })),
-        ],
-        deletes: [],
-      });
-      // on retire les maps héritées de la ligne meta (elles ne sont plus lues).
-      db.transact(db.tx.meta[META_ID].update({ skillStatus: null, paliersDone: null }));
-    }
-
+    const assembled = assemble(carnet, normalize);
     const canon = canonical(assembled);
     if (canon !== lastCanon.current) {
       lastCanon.current = canon;
       lastState.current = assembled;
       setState(assembled);
     }
+    loaded.current = true;
     setReady(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data]);
+  }, [data, active]);
 
   // ---- local -> distant (diff debouncé) ----
+  // ⚠️ Ce hook doit rester APRÈS tout autre hook : un `return` placé avant lui
+  // l'a déjà rendu mort une fois, ce qui avait fait perdre silencieusement
+  // toutes les écritures.
   useEffect(() => {
-    if (!syncEnabled || !seeded.current) return;
+    if (!active || !loaded.current) return;
     const canon = canonical(state);
     if (canon === lastCanon.current) return; // provient d'une synchro distante
     const t = setTimeout(() => {
-      applyPlan(diffPlan(lastState.current, state));
+      applyPlan(diffPlan(lastState.current, state), carnetId);
       lastState.current = state;
       lastCanon.current = canon;
     }, PUSH_DEBOUNCE_MS);
     return () => clearTimeout(t);
-  }, [state]);
+  }, [state, active, carnetId]);
 
   return ready;
 }
+
+// Champs d'identité du carnet (nom, mode, code d'invitation) : ils ne passent
+// pas par le diff d'état, qui ne gère que la configuration et les collections.
+export function updateCarnet(carnetId, patch) {
+  if (!carnetId) return;
+  db.transact(db.tx.carnets[carnetId].update({ ...patch, updatedAt: Date.now() }));
+}
+
+// Réexporté pour les écrans de création/rattachement de carnet.
+export { COLLECTIONS };

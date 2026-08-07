@@ -1,4 +1,6 @@
 import { useKoriState } from './state/useKoriState.js';
+import { tabsForMode } from './carnets.js';
+import { signOut } from './auth.jsx';
 import { Confetti } from './ui.jsx';
 import { TrainTab } from './tabs/TrainTab.jsx';
 import { BaladeTab } from './tabs/BaladeTab.jsx';
@@ -19,8 +21,9 @@ const TABS = [
   { id: 'help', label: 'Aide', icon: '💡' },
 ];
 
-export default function App() {
-  const k = useKoriState();
+export default function App({ carnet }) {
+  const k = useKoriState(carnet);
+  const tabs = tabsForMode(carnet?.mode, TABS);
 
   // Tant que le carnet en ligne n'est pas chargé, on n'affiche encore rien de
   // décisif (évite un flash du bilan de départ à chaque ouverture).
@@ -36,14 +39,20 @@ export default function App() {
   return (
     <div className="app">
       <header className="topbar">
-        <span className="topbar-tier" title={k.tier.name}>
-          {k.tier.emoji}
-        </span>
-        <span className="topbar-name">Kori</span>
-        <span className="topbar-metrics">
-          <span>{k.state.wallet} 🦴</span>
-          <span title="Jours d’entraînement ce mois">🎾 {k.monthStats.days} j</span>
-        </span>
+        {/* Niveau et 🦴 relèvent de l'entraînement : un carnet « journal seul »
+            n'affiche que le nom. */}
+        {!k.journalOnly && (
+          <span className="topbar-tier" title={k.tier.name}>
+            {k.tier.emoji}
+          </span>
+        )}
+        <span className="topbar-name">{carnet?.dogName ?? 'Le carnet'}</span>
+        {!k.journalOnly && (
+          <span className="topbar-metrics">
+            <span>{k.state.wallet} 🦴</span>
+            <span title="Jours d’entraînement ce mois">🎾 {k.monthStats.days} j</span>
+          </span>
+        )}
       </header>
 
       {k.tab === 'train' && (
@@ -79,10 +88,19 @@ export default function App() {
         />
       )}
       {k.tab === 'stats' && <StatsTab state={k.viewState} onAddFirst={k.addFirst} />}
-      {k.tab === 'help' && <HelpTab state={k.viewState} onSetCue={k.setCue} />}
+      {k.tab === 'help' && (
+        <HelpTab
+          state={k.viewState}
+          onSetCue={k.setCue}
+          carnet={carnet}
+          journalOnly={k.journalOnly}
+          onSetMode={k.setCarnetMode}
+          onSignOut={signOut}
+        />
+      )}
 
       <nav className="bottom-nav">
-        {TABS.map((t) => (
+        {tabs.map((t) => (
           <button
             key={t.id}
             className={`nav-btn ${k.tab === t.id ? 'active' : ''}`}

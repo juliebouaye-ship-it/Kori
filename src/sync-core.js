@@ -1,20 +1,23 @@
 // ============================================================
 // Cœur de synchro (pur, sans dépendance à InstantDB ni React)
 // ============================================================
-// Sépare la logique testable (assemblage, diff, migration) de l'orchestration
+// Sépare la logique testable (assemblage, diff) de l'orchestration
 // (transactions InstantDB + hooks) qui vit dans store.js.
 //
 // Modèle distant :
-//   - `meta`   : un seul enregistrement — compteurs & config (niveau, portefeuille,
-//                statuts de compétences, paliers, antisèche).
-//   - `walks` / `sessions` / `care` / `reminders` / `firsts` : une ligne par
-//     élément → Explorer lisible + fusion sûre à deux (pas d'écrasement global).
+//   - `carnets` : une ligne par chien — porte la configuration et les compteurs,
+//     et la liste de ses membres. Remplace l'ancien enregistrement `meta` unique
+//     d'identifiant fixe, qui rendait le multi-utilisateur impossible.
+//   - `walks` / `sessions` / `care` / `reminders` / `firsts` / `skillProgress` /
+//     `palierDone` : une ligne par élément, rattachée à son carnet → Explorer
+//     lisible et fusion sûre à plusieurs (deux ajouts simultanés coexistent).
 
 export const COLLECTIONS = ['walks', 'sessions', 'care', 'reminders', 'firsts', 'skillProgress', 'palierDone'];
-// `places` reste dans `meta` avec `cues`/`decompOff` : c'est de la CONFIG (une
-// poignée d'entrées, modifiée très rarement), pas un flux d'éléments comme les
-// balades. Le last-write-wins de meta est donc acceptable ici.
-export const META_FIELDS = ['onboarded', 'wallet', 'lifetime', 'cues', 'decompOff', 'places'];
+// Champs portés par la ligne `carnets` elle-même. `places` y figure avec
+// `cues`/`decompOff` : c'est de la CONFIG (une poignée d'entrées, modifiée très
+// rarement), pas un flux d'éléments comme les balades — le dernier écrivain
+// gagne, ce qui est acceptable à cette fréquence.
+export const CARNET_FIELDS = ['onboarded', 'wallet', 'lifetime', 'cues', 'decompOff', 'places'];
 
 // Forme canonique de chaque type d'élément (+ valeurs par défaut). Garantit que
 // local et distant convergent vers exactement les mêmes clés, quelle que soit la
@@ -28,9 +31,6 @@ export const COLLECTION_FIELDS = {
   skillProgress: { skillId: '', status: '' }, // status: 'known' | 'learning' | 'mastered'
   palierDone: { palierId: '', skillId: '', doneAt: '' },
 };
-
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-export const isUuid = (s) => typeof s === 'string' && UUID_RE.test(s);
 
 export function uuid() {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
@@ -65,19 +65,20 @@ const indexById = (items) => {
 };
 
 // ---- distant -> état applicatif -------------------------------------------
-// `data` = résultat de la requête InstantDB ; `normalize` fusionne les défauts.
-export function assemble(data, normalize = (s) => s) {
-  const metaRow = (data.meta || [])[0] || {};
+// `carnet` = la ligne `carnets` avec ses collections imbriquées (la requête les
+// remonte via les liens) ; `normalize` fusionne les défauts.
+export function assemble(carnet, normalize = (s) => s) {
+  const row = carnet || {};
   const base = {};
-  for (const f of META_FIELDS) if (metaRow[f] !== undefined) base[f] = metaRow[f];
-  for (const c of COLLECTIONS) base[c] = (data[c] || []).map((r) => projectItem(c, r));
+  for (const f of CARNET_FIELDS) if (row[f] !== undefined) base[f] = row[f];
+  for (const c of COLLECTIONS) base[c] = (row[c] || []).map((r) => projectItem(c, r));
   return normalize(base);
 }
 
 // Empreinte canonique d'un état (compteurs + collections triées par id).
 export function canonical(state) {
   const obj = {};
-  for (const f of META_FIELDS) obj[f] = state[f] === undefined ? null : state[f];
+  for (const f of CARNET_FIELDS) obj[f] = state[f] === undefined ? null : state[f];
   for (const c of COLLECTIONS) {
     obj[c] = (state[c] || [])
       .map((i) => projectItem(c, i))
@@ -86,40 +87,10 @@ export function canonical(state) {
   return stable(obj);
 }
 
-export function hasData(state) {
-  if (!state) return false;
-  if (state.onboarded) return true;
-  if ((state.lifetime || 0) > 0) return true;
-  // skillProgress/palierDone font partie de COLLECTIONS → couverts par la ligne suivante.
-  return COLLECTIONS.some((c) => (state[c] || []).length > 0);
-}
-
-// Réattribue un UUID à tout élément dont l'id n'en est pas un (données héritées
-// de l'ancien carnet mono-bloc).
-export function migrateIds(state) {
-  const out = { ...state };
-  for (const c of COLLECTIONS) {
-    out[c] = (state[c] || []).map((it) => (isUuid(it.id) ? it : { ...it, id: uuid() }));
-  }
-  return out;
-}
-
-function metaObjectOf(state) {
-  const meta = {};
-  for (const f of META_FIELDS) meta[f] = state[f];
-  return meta;
-}
-
-// Plan d'amorçage : écrit tout (meta + chaque élément).
-export function seedPlan(state) {
-  const upserts = [];
-  for (const c of COLLECTIONS) {
-    for (const raw of state[c] || []) {
-      const { id, ...attrs } = projectItem(c, raw);
-      upserts.push({ coll: c, id, attrs });
-    }
-  }
-  return { metaUpdate: metaObjectOf(state), upserts, deletes: [] };
+function carnetObjectOf(state) {
+  const row = {};
+  for (const f of CARNET_FIELDS) row[f] = state[f];
+  return row;
 }
 
 // Plan de diff : ce qui a changé entre `prev` et `next`.
@@ -127,9 +98,9 @@ export function diffPlan(prev, next) {
   const upserts = [];
   const deletes = [];
 
-  const metaChanged =
-    !prev || META_FIELDS.some((f) => stable(prev[f]) !== stable(next[f]));
-  const metaUpdate = metaChanged ? metaObjectOf(next) : null;
+  const carnetChanged =
+    !prev || CARNET_FIELDS.some((f) => stable(prev[f]) !== stable(next[f]));
+  const carnetUpdate = carnetChanged ? carnetObjectOf(next) : null;
 
   for (const c of COLLECTIONS) {
     const prevIdx = indexById((prev?.[c] || []).map((i) => projectItem(c, i)));
@@ -148,5 +119,5 @@ export function diffPlan(prev, next) {
     }
   }
 
-  return { metaUpdate, upserts, deletes };
+  return { carnetUpdate, upserts, deletes };
 }

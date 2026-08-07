@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { SKILLS, CATEGORIES, DIAGS, METHODS } from '../skills-data.js';
 import { cueFor } from '../domain.js';
+import { MODES } from '../carnets.js';
 import { SectionTitle, CollapsibleCategory } from '../ui.jsx';
 
 // ============================================================
@@ -154,7 +155,64 @@ function MethodsSection() {
   );
 }
 
-export function HelpTab({ state, onSetCue }) {
+// Le carnet : qui y a accès, sous quelle forme, et comment en sortir.
+function CarnetSection({ carnet, journalOnly, onSetMode, onSignOut }) {
+  const [copied, setCopied] = useState(false);
+  if (!carnet) return null;
+
+  const share = async () => {
+    try {
+      await navigator.clipboard.writeText(carnet.inviteCode);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setCopied(false); // pas de presse-papier : le code reste lisible à l'écran
+    }
+  };
+
+  return (
+    <div className="card">
+      <SectionTitle
+        title={`Le carnet de ${carnet.dogName}`}
+        info="Le code d’invitation donne accès à ce carnet, en lecture et en écriture. Ne le partage qu’avec les personnes qui s’occupent du chien."
+      />
+
+      <div className="invite-row">
+        <code className="invite-code">{carnet.inviteCode}</code>
+        <button className="btn btn-ghost" onClick={share}>
+          {copied ? 'Copié ✓' : 'Copier'}
+        </button>
+      </div>
+      <p className="muted invite-hint">
+        À donner à la personne qui partage le carnet : elle le saisit à la connexion.
+      </p>
+
+      <div className="mode-choice mode-choice-inline">
+        {MODES.map((m) => (
+          <button
+            key={m.id}
+            className={`mode-btn ${carnet.mode === m.id ? 'on' : ''}`}
+            onClick={() => onSetMode?.(m.id)}
+          >
+            <span className="mode-label">{m.label}</span>
+            <span className="mode-detail">{m.detail}</span>
+          </button>
+        ))}
+      </div>
+      {journalOnly && (
+        <p className="muted invite-hint">
+          En journal seul, l’arbre et l’entraînement sont masqués. Rien n’est perdu.
+        </p>
+      )}
+
+      <button className="back-link" onClick={onSignOut}>
+        Se déconnecter
+      </button>
+    </div>
+  );
+}
+
+export function HelpTab({ state, onSetCue, carnet, journalOnly, onSetMode, onSignOut }) {
   const [activeDiag, setActiveDiag] = useState(null);
   const [choice, setChoice] = useState(null);
 
@@ -165,9 +223,15 @@ export function HelpTab({ state, onSetCue }) {
           <h2>Aide 💡</h2>
           <p className="muted">Les signaux, les points, et des mini-diagnostics.</p>
         </div>
-        <AntisecheSection state={state} onSetCue={onSetCue} />
-        <MethodsSection />
-        <PointsCard />
+        {!journalOnly && <AntisecheSection state={state} onSetCue={onSetCue} />}
+        {!journalOnly && <MethodsSection />}
+        {!journalOnly && <PointsCard />}
+        <CarnetSection
+          carnet={carnet}
+          journalOnly={journalOnly}
+          onSetMode={onSetMode}
+          onSignOut={onSignOut}
+        />
         {DIAGS.map((d) => (
           <button
             key={d.id}
