@@ -1,46 +1,19 @@
 // ============================================================
-// Sauvegarde du carnet InstantDB vers un fichier JSON local.
+// Sauvegarde complète de la base vers un fichier JSON local
 // ============================================================
-// Lecture seule : aucune écriture dans la base. À lancer avant toute
-// modification du modèle de données (passage au multi-utilisateur).
+//   npm run backup
 //
-//   node scripts/backup-carnet.mjs
+// Lecture seule. À lancer avant toute opération risquée.
 //
-// Le fichier atterrit dans backups/carnet-AAAA-MM-JJ-HHMM.json (hors git).
+// Passe par l'API admin (voir scripts/_admin.mjs) : depuis la pose des règles de
+// permissions, un accès anonyme ne voit plus rien, et une sauvegarde qui renvoie
+// zéro ligne serait pire qu'inutile — elle donnerait l'illusion d'un filet.
 //
-// NB : le client InstantDB refuse de tourner hors navigateur (`queryOnce` lève
-// « We can't run queryOnce on the backend », et `subscribeQuery` plante faute de
-// stockage persistant). On le fait donc tourner dans un vrai Chromium via
-// Playwright, sur une page servie depuis une origine factice — ce qui évite
-// d'avoir à créer un jeton admin dans le tableau de bord.
+// Le fichier atterrit dans backups/, hors git : il contient des données réelles.
 
-import { chromium } from 'playwright';
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-
-// L'App ID vit dans .env (VITE_INSTANT_APP_ID) — on le lit sans le journaliser.
-function readAppId() {
-  const env = readFileSync(join(ROOT, '.env'), 'utf8');
-  const m = env.match(/^\s*VITE_INSTANT_APP_ID\s*=\s*(.+)$/m);
-  if (!m) throw new Error('VITE_INSTANT_APP_ID introuvable dans .env');
-  return m[1].trim().replace(/^["']|["']$/g, '');
-}
-
-// Toutes les tables du modèle actuel + l'ancien blob mono-bloc s'il traîne.
-const QUERY = {
-  meta: {},
-  walks: {},
-  sessions: {},
-  care: {},
-  reminders: {},
-  firsts: {},
-  skillProgress: {},
-  palierDone: {},
-  carnet: {},
-};
+import { writeFileSync, mkdirSync } from 'node:fs';
+import { join } from 'node:path';
+import { adminDb, ROOT, COLLECTIONS } from './_admin.mjs';
 
 const stamp = () => {
   const d = new Date();
@@ -48,55 +21,48 @@ const stamp = () => {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}`;
 };
 
-const umd = readFileSync(
-  join(ROOT, 'node_modules/@instantdb/core/dist/standalone/index.umd.cjs'),
-  'utf8',
-);
+const db = adminDb();
 
-const browser = await chromium.launch();
-const page = await browser.newPage();
+// `meta` et `carnet` sont les tables de l'ancien modèle : on les sauvegarde tant
+// qu'elles existent, elles peuvent encore servir de filet.
+const query = { $users: {}, carnets: { members: {} }, meta: {}, carnet: {} };
+for (const c of COLLECTIONS) query[c] = { carnet: {} };
 
-// Origine factice : InstantDB a besoin d'un vrai origin (IndexedDB) pour démarrer.
-await page.route('https://kori.local/**', (route) =>
-  route.fulfill({ contentType: 'text/html', body: '<!doctype html><html><body></body></html>' }),
-);
-await page.goto('https://kori.local/');
-await page.addScriptTag({ content: umd });
-
-const data = await page.evaluate(
-  ([appId, query]) =>
-    new Promise((resolve, reject) => {
-      const db = window.instant.init({ appId });
-      const timer = setTimeout(() => reject(new Error('Aucune réponse après 30 s')), 30_000);
-      const unsub = db.subscribeQuery(query, (res) => {
-        if (res.error) {
-          clearTimeout(timer);
-          unsub?.();
-          reject(new Error(res.error.message || String(res.error)));
-          return;
-        }
-        if (!res.data) return;
-        clearTimeout(timer);
-        unsub?.();
-        resolve(res.data);
-      });
-    }),
-  [readAppId(), QUERY],
-);
-
-await browser.close();
+let data;
+try {
+  data = await db.query(query);
+} catch (err) {
+  // Les tables de l'ancien modèle disparaissent une fois nettoyées : on réessaie
+  // sans elles plutôt que d'échouer.
+  const fallback = { $users: {}, carnets: { members: {} } };
+  for (const c of COLLECTIONS) fallback[c] = { carnet: {} };
+  data = await db.query(fallback);
+  console.log('(tables héritées absentes — sauvegarde du modèle courant seul)');
+}
 
 const counts = Object.fromEntries(
-  Object.keys(QUERY).map((k) => [k, (data[k] || []).length]),
+  Object.keys(data).map((k) => [k, (data[k] || []).length]),
+);
+
+const orphans = COLLECTIONS.reduce(
+  (n, c) => n + (data[c] || []).filter((r) => !r.carnet).length,
+  0,
 );
 
 mkdirSync(join(ROOT, 'backups'), { recursive: true });
 const out = join(ROOT, 'backups', `carnet-${stamp()}.json`);
 writeFileSync(
   out,
-  JSON.stringify({ savedAt: new Date().toISOString(), counts, data }, null, 2),
+  JSON.stringify({ savedAt: new Date().toISOString(), counts, orphans, data }, null, 2),
   'utf8',
 );
 
 console.log('Sauvegarde écrite :', out);
 console.table(counts);
+if (orphans) console.log(`⚠️  ${orphans} ligne(s) sans carnet — voir npm run etat`);
+
+const totalRows = Object.values(counts).reduce((a, b) => a + b, 0);
+if (totalRows === 0) {
+  console.error('\n⚠️  Sauvegarde VIDE. Vérifie le jeton admin avant de continuer.');
+  process.exit(1);
+}

@@ -5,6 +5,32 @@ qui compte. Compter une demi-heure, et le faire quand tu as le temps de vérifie
 derrière : entre l'étape 1 et l'étape 5, l'appli en production ne fonctionne plus
 normalement.
 
+## ⚠️ Le jeton admin, à mettre en place d'abord
+
+Une fois les permissions posées (étape 4), **un accès anonyme ne voit plus rien** —
+y compris les outils de maintenance. `npm run backup`, `npm run etat` et
+`npm run migrate` passent donc par l'API admin, qui court-circuite les règles.
+
+Tableau de bord InstantDB → ton application → onglet **Admin** → copie le jeton,
+et ajoute-le à `.env` (déjà hors git) :
+
+```
+INSTANT_ADMIN_TOKEN=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+```
+
+Ce jeton donne un accès **total** à la base, sans aucune règle. Il ne part jamais
+dans le bundle : les scripts le lisent côté Node uniquement.
+
+## Le diagnostic, à tout moment
+
+```
+npm run etat
+```
+
+Affiche les comptes, les carnets, leurs membres, et surtout le nombre de lignes
+**orphelines** — celles sans carnet, que plus personne ne peut lire une fois les
+permissions posées. C'est la commande à lancer dès qu'un doute apparaît.
+
 ## Ce qui change
 
 Avant : un seul carnet, aucune authentification, l'App ID dans le bundle. Toute
@@ -41,9 +67,24 @@ pouvoir écrire.
 
 ### 2. Se connecter et créer ton carnet
 
-Déploie la preview (`npm run deploy:preview`) et ouvre-la. L'appli demande ton
-adresse, envoie un code, puis propose de créer un carnet : mets **Kori**, mode
-**journal + entraînement**.
+**Déploie d'abord la preview avec le code à jour** :
+
+```
+npm run deploy:preview
+```
+
+Puis ouvre https://preview--koritracker.netlify.app et **force le rechargement**
+(l'appli est une PWA : un service worker peut servir l'ancienne version).
+Vérifie que tu vois bien un écran « Le carnet » qui demande ton adresse. Si tu
+tombes directement dans l'appli, c'est l'ancien bundle — recharge encore.
+
+C'est le piège de la première tentative : une preview datant d'avant le code de
+connexion affiche l'ancienne appli, qui rend son **cache local** IndexedDB. On
+croit alors que rien n'a changé, alors que le serveur, lui, ne renvoie déjà plus
+rien.
+
+L'appli envoie un code par e-mail, puis propose de créer un carnet : mets
+**Kori**, mode **journal + entraînement**.
 
 Le carnet est vide à ce stade — c'est normal, tes données ne lui sont pas encore
 rattachées.
@@ -112,10 +153,20 @@ Tant que tu n'as pas poussé les permissions (étape 4), tout est réversible : 
 sauvegarde de l'étape 0 contient l'état exact d'avant, et l'ancienne ligne `meta`
 est toujours là.
 
-Après l'étape 4, une ligne sans carnet n'est plus lisible par personne. Si tu
-t'aperçois qu'il en reste, remets temporairement des règles ouvertes depuis le
-tableau de bord InstantDB, relance `npm run migrate -- --apply`, puis repousse
-les permissions.
+Après l'étape 4, une ligne sans carnet n'est plus lisible par personne — mais
+elle n'est pas perdue pour autant. Le jeton admin passe au-dessus des règles :
+
+```
+npm run etat                 # combien de lignes orphelines ?
+npm run migrate -- --apply   # les rattacher
+npm run etat                 # vérifier qu'il n'en reste aucune
+```
+
+Inutile de rouvrir les permissions pour réparer, et il ne faut surtout pas le
+faire : ça rouvrirait la base à tout le monde pendant l'opération.
+
+Le script refuse de rattacher des données à un carnet **sans membre** — ça les
+rendrait définitivement illisibles.
 
 ## Ce qui reste à faire ensuite
 

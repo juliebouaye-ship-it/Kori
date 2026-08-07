@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "test": "node src/domain.test.mjs && node src/carnets.test.mjs",
     "backup": "node scripts/backup-carnet.mjs",
+    "etat": "node scripts/etat-base.mjs",
     "migrate": "node scripts/migrate-to-carnets.mjs",
     "deploy:preview": "vite build && netlify deploy --dir=dist --alias=preview",
     "deploy:prod": "vite build && netlify deploy --dir=dist --prod"
@@ -19,6 +20,7 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@instantdb/admin": "^1.0.63",
     "@vitejs/plugin-react": "^4.3.4",
     "netlify-cli": "^26.2.0",
     "playwright": "^1.61.1",
