@@ -21,7 +21,7 @@
 // `ensurePlaces` les reconstitue tout seul à partir des balades au chargement.
 
 import { readFileSync } from 'node:fs';
-import { adminDb, COLLECTIONS, CARNET_FIELDS, isOrphan } from './_admin.mjs';
+import { adminDb, COLLECTIONS, CARNET_FIELDS, isOrphan, carnetIdOf } from './_admin.mjs';
 
 const argv = process.argv.slice(2);
 const arg = (name) => {
@@ -93,21 +93,37 @@ async function main() {
     metaSource = `sauvegarde ${backupPath}`;
   }
 
+  // Un carnet qui vient d'être créé porte les valeurs par défaut, pas des
+  // valeurs vides : le portefeuille démarre à 12 🦴, ce qui écraserait un vrai
+  // solde de 34 si on ne reprenait que les champs « vides ». On considère donc
+  // qu'un carnet SANS AUCUNE ligne rattachée et sans niveau acquis est neuf, et
+  // on y recopie toute la configuration.
+  const linkedRows = COLLECTIONS.reduce(
+    (n, c) => n + (data[c] || []).filter((r) => carnetIdOf(r) === carnet.id).length,
+    0,
+  );
+  const carnetIsFresh = linkedRows === 0 && !carnet.lifetime;
+
   const carried = {};
   for (const f of CARNET_FIELDS) {
     const already = carnet[f];
     const isEmpty =
+      carnetIsFresh ||
       already === undefined ||
       already === null ||
       (Array.isArray(already) && already.length === 0) ||
-      (typeof already === 'object' && !Array.isArray(already) && Object.keys(already).length === 0) ||
-      (f === 'lifetime' && already === 0) ||
-      (f === 'onboarded' && already === false);
+      (typeof already === 'object' && !Array.isArray(already) && Object.keys(already).length === 0);
     if (metaRow[f] !== undefined && metaRow[f] !== null && isEmpty) carried[f] = metaRow[f];
   }
 
   console.log(`\nCarnet cible : « ${carnet.dogName} » (${carnet.id})`);
   console.log('Membres      :', (carnet.members || []).map((m) => m.email || m.id).join(', '));
+  console.log(
+    'État         :',
+    carnetIsFresh
+      ? 'neuf (aucune ligne rattachée) — la config sera intégralement reprise'
+      : `déjà utilisé (${linkedRows} ligne(s)) — seuls les champs vides seront complétés`,
+  );
   console.log('\nLignes à rattacher :');
   console.table(
     COLLECTIONS.map((c) => ({ table: c, orphelines: orphans[c].length })),
