@@ -162,6 +162,17 @@ npm run migrate -- --apply   # les rattacher
 npm run etat                 # vérifier qu'il n'en reste aucune
 ```
 
+Si la table `meta` a disparu (pousser le schéma peut l'avoir supprimée, elle ne
+fait pas partie du nouveau modèle), la configuration — portefeuille, niveau,
+antisèche, jours « elle va bien » — se récupère depuis une sauvegarde :
+
+```
+npm run migrate -- --from-backup backups/carnet-AAAA-MM-JJ-HHMM.json --apply
+```
+
+Les **lieux** n'ont pas besoin d'être restaurés : `ensurePlaces` les reconstitue
+tout seul à partir des balades, au chargement.
+
 Inutile de rouvrir les permissions pour réparer, et il ne faut surtout pas le
 faire : ça rouvrirait la base à tout le monde pendant l'opération.
 

@@ -8,7 +8,7 @@
 // lignes ORPHELINES (sans carnet) — celles-ci ne sont plus lisibles par personne
 // une fois les permissions posées.
 
-import { adminDb, COLLECTIONS, CARNET_FIELDS } from './_admin.mjs';
+import { adminDb, COLLECTIONS, CARNET_FIELDS, isOrphan } from './_admin.mjs';
 
 const db = adminDb();
 
@@ -41,7 +41,7 @@ let orphansTotal = 0;
 const rows = [];
 for (const c of COLLECTIONS) {
   const all = data[c] || [];
-  const orphans = all.filter((r) => !r.carnet);
+  const orphans = all.filter(isOrphan);
   orphansTotal += orphans.length;
   rows.push({ table: c, total: all.length, orphelines: orphans.length });
 }

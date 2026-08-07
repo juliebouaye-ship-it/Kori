@@ -13,7 +13,7 @@
 
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { adminDb, ROOT, COLLECTIONS } from './_admin.mjs';
+import { adminDb, ROOT, COLLECTIONS, isOrphan } from './_admin.mjs';
 
 const stamp = () => {
   const d = new Date();
@@ -45,7 +45,7 @@ const counts = Object.fromEntries(
 );
 
 const orphans = COLLECTIONS.reduce(
-  (n, c) => n + (data[c] || []).filter((r) => !r.carnet).length,
+  (n, c) => n + (data[c] || []).filter(isOrphan).length,
   0,
 );
 
@@ -64,5 +64,5 @@ if (orphans) console.log(`⚠️  ${orphans} ligne(s) sans carnet — voir npm r
 const totalRows = Object.values(counts).reduce((a, b) => a + b, 0);
 if (totalRows === 0) {
   console.error('\n⚠️  Sauvegarde VIDE. Vérifie le jeton admin avant de continuer.');
-  process.exit(1);
+  process.exitCode = 1;
 }

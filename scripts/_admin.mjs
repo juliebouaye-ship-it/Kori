@@ -59,3 +59,21 @@ export const COLLECTIONS = [
 ];
 
 export const CARNET_FIELDS = ['onboarded', 'wallet', 'lifetime', 'cues', 'decompOff', 'places'];
+
+/**
+ * Identifiant du carnet auquel une ligne est rattachée, ou null.
+ *
+ * ⚠️ Piège : selon que le client connaît ou non le schéma, un lien de
+ * cardinalité « one » revient tantôt comme un objet, tantôt comme un TABLEAU
+ * (vide s'il n'y a pas de lien). Tester `!row.carnet` ne marche donc pas — un
+ * tableau vide est truthy, et toutes les lignes orphelines passaient pour
+ * rattachées. C'est exactement le genre de faux négatif qui coûte des données.
+ */
+export function carnetIdOf(row) {
+  const c = row?.carnet;
+  if (!c) return null;
+  if (Array.isArray(c)) return c.length ? (c[0]?.id ?? null) : null;
+  return c.id ?? null;
+}
+
+export const isOrphan = (row) => carnetIdOf(row) === null;
