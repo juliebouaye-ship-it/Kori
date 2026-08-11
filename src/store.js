@@ -27,6 +27,7 @@ export const carnetQuery = (carnetId) => ({
     firsts: {},
     skillProgress: {},
     palierDone: {},
+    cues: {},
   },
 });
 

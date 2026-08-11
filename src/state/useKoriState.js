@@ -189,11 +189,33 @@ export function useKoriState(carnet) {
     setState((prev) => ({ ...prev, places: prev.places.filter((p) => p.slug !== slug) }));
 
   // ---- Antisèche (mot + geste éditables) ----
+  // Une ligne par compétence renseignée. À la première saisie, on part des
+  // suggestions du catalogue : sans ça, modifier le mot effacerait le geste
+  // proposé (la ligne du carnet l'emporte sur la suggestion, champ par champ).
   const setCue = (skillId, patch) =>
-    setState((prev) => ({
-      ...prev,
-      cues: { ...prev.cues, [skillId]: { ...(prev.cues?.[skillId] || {}), ...patch } },
-    }));
+    setState((prev) => {
+      const rows = prev.cues || [];
+      if (rows.some((c) => c.skillId === skillId)) {
+        return {
+          ...prev,
+          cues: rows.map((c) => (c.skillId === skillId ? { ...c, ...patch } : c)),
+        };
+      }
+      const skill = SKILLS.find((s) => s.id === skillId);
+      return {
+        ...prev,
+        cues: [
+          ...rows,
+          {
+            id: newId(),
+            skillId,
+            word: skill?.cue ?? '',
+            gesture: skill?.signal ?? '',
+            ...patch,
+          },
+        ],
+      };
+    });
 
   // ---- Carnet : repas & friandises ----
   const addCare = (entry) =>

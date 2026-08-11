@@ -1201,6 +1201,699 @@ export const SKILLS = [
       { id: 'visiteurs-3', label: 'Bonjour sur invitation', criterion: 'Attend l’autorisation pour aller saluer, et salue sans sauter.' },
     ],
   },
+
+  // ---------- CERVEAU (2e vague) ----------
+  {
+    id: 'touche',
+    name: 'Touche',
+    category: 'cerveau',
+    icon: '👉',
+    cue: 'Touche',
+    signal: 'Main ouverte, paume vers elle, présentée à hauteur de museau.',
+    description: 'Kori vient poser son truffe contre la main tendue.',
+    purpose:
+      'La brique la plus rentable de l’arbre. Une cible qu’on déplace permet de la faire bouger sans la toucher ni la leurrer : se replacer, monter, passer un portillon, se détourner d’un truc. Elle resservira dans les soins et en balade.',
+    difficulty: 1,
+    cost: 6,
+    bonus: 8,
+    prereqs: [],
+    paliers: [
+      {
+        id: 'touche-1',
+        label: 'La main qui paie',
+        criterion: 'Vient toucher ta paume tendue à 10 cm, 8 fois sur 10.',
+        how: {
+          method: 'faconnement',
+          setup:
+            'Main plate à côté d’elle, sans rien dedans. Le moindre mouvement du museau vers la main est payé, puis seulement le contact.',
+          pitfall:
+            'Cacher une friandise dans la main : elle apprend à flairer la nourriture, pas à toucher. La main doit être vide, la friandise vient de l’autre.',
+        },
+      },
+      {
+        id: 'touche-2',
+        label: 'Elle se déplace pour toucher',
+        criterion: 'Fait deux ou trois pas pour venir toucher la main.',
+        how: {
+          method: '3d',
+          setup: 'On augmente la distance seule : la main s’éloigne, le décor et la durée ne bougent pas.',
+          pitfall: 'Tendre la main trop haut : elle saute au lieu d’avancer.',
+        },
+      },
+      {
+        id: 'touche-3',
+        label: 'Sur le mot, ailleurs',
+        criterion: 'Répond à « Touche » dans une autre pièce, puis dans le jardin.',
+        how: {
+          method: 'generaliser',
+          setup: 'Même exercice, un décor nouveau à la fois. On redescend d’un cran à chaque changement.',
+          pitfall: 'Considérer que c’est acquis parce que ça marche au salon.',
+        },
+      },
+    ],
+  },
+  {
+    id: 'cherche',
+    name: 'Cherche !',
+    category: 'cerveau',
+    icon: '👃',
+    cue: 'Cherche',
+    signal: '',
+    description: 'Kori cherche au flair des friandises éparpillées, puis cachées.',
+    purpose:
+      'L’activité la plus utile pour une chienne à qui la course est interdite : ça fatigue sans solliciter les articulations, et ça se fait par tous les temps.',
+    note:
+      'Le flair a un effet mesuré sur l’humeur : dans une étude de Duranton et Horowitz (2019), des chiens ayant pratiqué des séances de recherche olfactive pendant deux semaines montraient un biais de jugement plus optimiste que le groupe témoin. À privilégier les jours de décompression.',
+    difficulty: 1,
+    cost: 6,
+    bonus: 8,
+    prereqs: [],
+    paliers: [
+      {
+        id: 'cherche-1',
+        label: 'À vue',
+        criterion: 'Ramasse cinq friandises jetées au sol devant elle, sans se précipiter sur toi.',
+        how: {
+          method: 'capture',
+          setup: 'Tu jettes, tu dis « Cherche » pendant qu’elle mange. Le mot se colle sur ce qu’elle fait déjà.',
+          pitfall: 'Dire le mot avant de jeter : il annonce ta main, pas la recherche.',
+        },
+      },
+      {
+        id: 'cherche-2',
+        label: 'Dans l’herbe',
+        criterion: 'Trouve des friandises éparpillées dans un carré d’herbe, museau au sol.',
+        how: {
+          method: '3d',
+          setup: 'On augmente la difficulté par la hauteur d’herbe, pas par la surface.',
+          pitfall: 'Trop grande zone d’un coup : elle abandonne et revient te voir.',
+        },
+      },
+      {
+        id: 'cherche-3',
+        label: 'Hors de vue',
+        criterion: 'Trouve une friandise cachée dans la pièce pendant qu’elle attendait ailleurs.',
+        how: {
+          method: 'decoupage',
+          setup: 'Une seule cachette, toujours la même au début, puis on varie.',
+          pitfall: 'Cacher pendant qu’elle regarde : elle utilise ses yeux, pas son nez.',
+        },
+      },
+    ],
+  },
+  {
+    id: 'nommer',
+    name: 'Le nom des objets',
+    category: 'cerveau',
+    icon: '🏷️',
+    cue: '',
+    signal: '',
+    description: 'Kori rapporte l’objet qu’on lui nomme, parmi plusieurs.',
+    purpose: 'Du vrai travail de tête. Long à construire, très gratifiant, et ça se joue assis dans le canapé.',
+    difficulty: 3,
+    cost: 12,
+    bonus: 14,
+    prereqs: ['apporte'],
+    paliers: [
+      {
+        id: 'nommer-1',
+        label: 'Un seul objet',
+        criterion: 'Rapporte « Lapin » quand c’est le seul objet présent, 8 fois sur 10.',
+        how: {
+          method: 'mot-avant-geste',
+          setup: 'Le nom se dit AVANT qu’elle parte, une seule fois, toujours pareil.',
+          pitfall: 'Répéter le nom pendant qu’elle cherche : le mot devient un bruit de fond.',
+        },
+      },
+      {
+        id: 'nommer-2',
+        label: 'Entre deux',
+        criterion: 'Choisit le bon objet parmi deux, dont un jamais nommé.',
+        how: {
+          method: 'decoupage',
+          setup: 'Le second objet est d’abord inintéressant (un torchon), et loin du premier.',
+          pitfall: 'Deux objets qu’elle adore : elle prend le préféré, pas celui qu’on nomme.',
+        },
+      },
+      {
+        id: 'nommer-3',
+        label: 'Entre trois',
+        criterion: 'Choisit le bon parmi trois objets nommés, en variant les positions.',
+      },
+    ],
+  },
+  {
+    id: 'cache-cache',
+    name: 'Cache-cache',
+    category: 'cerveau',
+    icon: '🙈',
+    cue: 'Cherche-moi',
+    signal: '',
+    description: 'Quelqu’un se cache, Kori le retrouve.',
+    purpose:
+      'Le meilleur jeu pour muscler le rappel sans le travailler frontalement : te retrouver devient une victoire, pas une contrainte. Se joue à deux, à l’intérieur comme dehors.',
+    difficulty: 2,
+    cost: 8,
+    bonus: 10,
+    prereqs: ['rappel'],
+    paliers: [
+      {
+        id: 'cachecache-1',
+        label: 'Derrière la porte',
+        criterion: 'Te retrouve quand tu es à peine caché·e, dans la même pièce.',
+        how: {
+          method: 'decoupage',
+          setup:
+            'Kévin la retient, tu vas te mettre derrière un meuble à moitié visible, tu appelles une fois. Grosse fête à l’arrivée.',
+          pitfall: 'Se cacher trop bien du premier coup : elle renonce et le jeu s’éteint.',
+        },
+      },
+      {
+        id: 'cachecache-2',
+        label: 'Dans la maison',
+        criterion: 'Te retrouve dans une autre pièce, hors de vue, sans que tu appelles deux fois.',
+      },
+      {
+        id: 'cachecache-3',
+        label: 'Dehors',
+        criterion: 'Te retrouve derrière un arbre en zone calme et clôturée.',
+        how: {
+          method: 'generaliser',
+          setup: 'Dehors, tout est plus dur : on repart du niveau « à peine caché ».',
+          pitfall: 'Le faire là où elle est déjà distraite — le jeu perd contre l’environnement.',
+        },
+      },
+    ],
+  },
+
+  // ---------- TOURS (2e vague) ----------
+  {
+    id: 'roule',
+    name: 'Roulé',
+    category: 'tours',
+    icon: '🔄',
+    cue: 'Roule',
+    signal: '',
+    description: 'Kori roule sur le dos, d’un côté puis de l’autre.',
+    purpose: 'Un tour qui a un bénéfice caché : elle apprend à se mettre sur le dos volontairement, ce qui sert au contrôle du ventre chez le véto.',
+    difficulty: 2,
+    cost: 8,
+    bonus: 8,
+    prereqs: ['couche'],
+    paliers: [
+      {
+        id: 'roule-1',
+        label: 'La bascule',
+        criterion: 'Bascule sur une hanche depuis le couché en suivant la friandise.',
+        how: {
+          method: 'leurre',
+          setup: 'Couchée, la friandise part de sa truffe vers son épaule, lentement, en arc.',
+          pitfall: 'Aller vite : elle se relève. On paie la bascule seule, pas le tour entier.',
+        },
+      },
+      {
+        id: 'roule-2',
+        label: 'Le tour complet',
+        criterion: 'Fait un tour complet en suivant la main.',
+      },
+      {
+        id: 'roule-3',
+        label: 'Sans la main',
+        criterion: 'Roule sur le mot seul, main vide, 8 fois sur 10.',
+        how: {
+          method: 'effacer-leurre',
+          setup: 'On réduit le geste un peu à chaque séance : grand arc, puis petit, puis rien.',
+          pitfall: 'Retirer la main d’un coup — on remonte alors d’un cran, sans insister.',
+        },
+      },
+    ],
+  },
+  {
+    id: 'beau',
+    name: 'Fais le beau',
+    category: 'tours',
+    icon: '🙌',
+    cue: 'Fais le beau',
+    signal: '',
+    description: 'Kori se redresse sur son arrière-train, antérieurs levés.',
+    purpose: 'Un classique qui plaît, et qui travaille les abdominaux et l’équilibre.',
+    note:
+      'À garder court : la position met en charge le dos et les postérieurs. Quelques secondes, quelques répétitions, sur un sol non glissant — et on passe à autre chose si elle retombe systématiquement.',
+    difficulty: 2,
+    cost: 8,
+    bonus: 8,
+    prereqs: ['assis'],
+    paliers: [
+      {
+        id: 'beau-1',
+        label: 'Les antérieurs décollent',
+        criterion: 'Lève les deux antérieurs depuis l’assis en suivant la friandise.',
+        how: {
+          method: 'leurre',
+          setup: 'Assise, la friandise monte droit au-dessus de sa tête, très près.',
+          pitfall: 'Monter trop haut ou trop loin : elle se met debout au lieu de se redresser.',
+        },
+      },
+      {
+        id: 'beau-2',
+        label: 'Deux secondes',
+        criterion: 'Tient la position deux secondes avant la friandise.',
+      },
+      {
+        id: 'beau-3',
+        label: 'Sur le mot',
+        criterion: 'Se redresse sur le mot seul.',
+        how: { method: 'effacer-leurre', setup: 'Le geste rétrécit séance après séance.', pitfall: 'Rallonger la durée en même temps qu’on efface le geste.' },
+      },
+    ],
+  },
+  {
+    id: 'slalom',
+    name: 'Slalom entre les jambes',
+    category: 'tours',
+    icon: '🐍',
+    cue: 'Slalom',
+    signal: '',
+    description: 'Kori passe en huit entre tes jambes pendant que tu marches.',
+    purpose: 'Spectaculaire, facile à travailler dans un couloir, et ça la fait bouger les jours où on ne sort pas beaucoup.',
+    difficulty: 2,
+    cost: 8,
+    bonus: 10,
+    prereqs: ['touche'],
+    paliers: [
+      {
+        id: 'slalom-1',
+        label: 'Un passage',
+        criterion: 'Passe sous une jambe écartée pour venir toucher ta main de l’autre côté.',
+        how: {
+          method: 'leurre',
+          setup: 'Jambes bien écartées, la main passe dessous et appelle de l’autre côté.',
+          pitfall: 'Écart trop faible : elle contourne au lieu de passer dessous.',
+        },
+      },
+      {
+        id: 'slalom-2',
+        label: 'Le huit',
+        criterion: 'Enchaîne deux passages, un de chaque côté, à l’arrêt.',
+      },
+      {
+        id: 'slalom-3',
+        label: 'En marchant',
+        criterion: 'Enchaîne trois passages pendant que tu avances lentement.',
+        how: {
+          method: 'decoupage',
+          setup: 'D’abord un pas entre deux passages, puis deux, puis une marche continue.',
+          pitfall: 'Marcher normalement d’emblée : elle ne suit plus et le huit se casse.',
+        },
+      },
+    ],
+  },
+  {
+    id: 'tenir',
+    name: 'Tenir un objet',
+    category: 'tours',
+    icon: '🦷',
+    cue: 'Tiens',
+    signal: '',
+    description: 'Kori prend un objet dans sa gueule et le garde jusqu’au signal.',
+    purpose:
+      'La base du rapport, construite proprement : elle apprend à tenir parce que ça paie, pas parce qu’on lui met l’objet dans la bouche.',
+    difficulty: 3,
+    cost: 10,
+    bonus: 12,
+    prereqs: [],
+    paliers: [
+      {
+        id: 'tenir-1',
+        label: 'Elle prend',
+        criterion: 'Referme la gueule sur l’objet présenté, 8 fois sur 10.',
+        how: {
+          method: 'faconnement',
+          setup:
+            'On paie par étapes : le regard vers l’objet, puis le museau qui touche, puis les dents qui se posent, puis la prise. Une étape par séance.',
+          pitfall:
+            'Ouvrir sa gueule pour y glisser l’objet. Ça fabrique une chienne qui recule dès qu’elle voit l’objet arriver.',
+        },
+      },
+      {
+        id: 'tenir-2',
+        label: 'Trois secondes',
+        criterion: 'Garde l’objet trois secondes avant de le lâcher dans ta main.',
+        how: {
+          method: '3d',
+          setup: 'On allonge d’une seconde à la fois, en revenant souvent à une durée facile.',
+          pitfall: 'Tendre la main trop tôt : elle lâche pour prendre la friandise.',
+        },
+      },
+      {
+        id: 'tenir-3',
+        label: 'Elle bouge avec',
+        criterion: 'Fait trois pas en gardant l’objet.',
+      },
+    ],
+  },
+  {
+    id: 'apporte',
+    name: 'Apporte',
+    category: 'tours',
+    icon: '🎾',
+    cue: 'Apporte',
+    signal: '',
+    description: 'Kori va chercher un objet lancé et revient te le donner en main.',
+    purpose:
+      'Utile pour de vrai, et c’est le rappel déguisé en jeu : revenir vers toi devient la partie amusante. Attention à ne pas en faire une course répétée — lancer vingt fois de suite sollicite les articulations et monte l’excitation.',
+    difficulty: 2,
+    cost: 10,
+    bonus: 12,
+    prereqs: ['tenir'],
+    paliers: [
+      {
+        id: 'apporte-1',
+        label: 'Elle revient avec',
+        criterion: 'Revient vers toi avec l’objet lancé à deux mètres.',
+        how: {
+          method: 'premack',
+          setup: 'Le relancer est la récompense : elle rend, tu relances aussitôt.',
+          pitfall: 'Lui courir après pour récupérer l’objet — le jeu devient « garde-le ».',
+        },
+      },
+      {
+        id: 'apporte-2',
+        label: 'Dans la main',
+        criterion: 'Dépose l’objet dans ta main plutôt qu’au sol.',
+      },
+      {
+        id: 'apporte-3',
+        label: 'Plus loin',
+        criterion: 'Rapporte depuis dix mètres, en extérieur clôturé.',
+        how: {
+          method: 'generaliser',
+          setup: 'Dehors on repart court, avec l’objet le plus connu.',
+          pitfall: 'Changer d’objet et de lieu en même temps.',
+        },
+      },
+    ],
+  },
+  {
+    id: 'ranger-jouets',
+    name: 'Ranger ses jouets',
+    category: 'tours',
+    icon: '🧸',
+    cue: 'Range',
+    signal: '',
+    description: 'Kori rapporte ses jouets et les lâche dans leur caisse.',
+    purpose: 'La suite logique d’« Apporte », et un enchaînement dont on voit le résultat par terre le soir.',
+    difficulty: 3,
+    cost: 12,
+    bonus: 14,
+    prereqs: ['apporte'],
+    paliers: [
+      {
+        id: 'ranger-1',
+        label: 'Lâcher au-dessus',
+        criterion: 'Lâche l’objet dans la caisse quand tu la tiens sous sa gueule.',
+        how: {
+          method: 'decoupage',
+          setup: 'On commence par la fin : caisse haute, tenue juste sous sa tête, elle n’a qu’à lâcher.',
+          pitfall: 'Poser la caisse au sol tout de suite : viser un trou par terre est bien plus dur.',
+        },
+      },
+      {
+        id: 'ranger-2',
+        label: 'La caisse au sol',
+        criterion: 'Apporte un jouet et le lâche dans la caisse posée au sol.',
+      },
+      {
+        id: 'ranger-3',
+        label: 'Trois jouets',
+        criterion: 'Enchaîne trois jouets d’affilée sur un seul « Range ».',
+      },
+    ],
+  },
+
+  // ---------- BALADE (2e vague) ----------
+  {
+    id: 'au-pied',
+    name: 'Au pied',
+    category: 'balade',
+    icon: '🦵',
+    cue: 'Au pied',
+    signal: '',
+    description: 'Kori vient se placer le long de ta jambe et y reste.',
+    purpose:
+      'La position de secours en balade : un trottoir étroit, un cycliste, un croisement serré. Différent de la marche en laisse, qui dure ; ici c’est une place précise qu’on demande ponctuellement.',
+    difficulty: 2,
+    cost: 10,
+    bonus: 10,
+    prereqs: ['marche-laisse'],
+    paliers: [
+      {
+        id: 'aupied-1',
+        label: 'La place',
+        criterion: 'Vient se placer le long de ta jambe depuis un pas de distance.',
+        how: {
+          method: 'leurre',
+          setup: 'La main guide le long de la couture du pantalon, elle finit parallèle à toi.',
+          pitfall: 'Payer quand elle est devant toi ou de travers : c’est la position exacte qu’on paie.',
+        },
+      },
+      {
+        id: 'aupied-2',
+        label: 'Elle y reste',
+        criterion: 'Garde la position pendant trois pas.',
+      },
+      {
+        id: 'aupied-3',
+        label: 'De plus loin, dehors',
+        criterion: 'Vient se placer depuis deux mètres, en balade, laisse détendue.',
+        how: {
+          method: '3d',
+          setup: 'Distance d’abord, en environnement calme. La distraction viendra après.',
+          pitfall: 'Demander « Au pied » la première fois au moment où un chien arrive.',
+        },
+      },
+    ],
+  },
+  {
+    id: 'milieu',
+    name: 'Au milieu',
+    category: 'balade',
+    icon: '🧍',
+    cue: 'Milieu',
+    signal: '',
+    description: 'Kori vient se placer entre tes jambes, face à la même direction que toi.',
+    purpose:
+      'La position la plus rassurante qu’on puisse lui offrir dehors : tes jambes font barrière des deux côtés, elle est contre toi, et tu gardes les mains libres. Parfaite quand un vélo ou un chien passe et qu’on veut juste laisser passer.',
+    difficulty: 2,
+    cost: 10,
+    bonus: 10,
+    prereqs: ['touche'],
+    paliers: [
+      {
+        id: 'milieu-1',
+        label: 'Elle passe',
+        criterion: 'Traverse l’espace entre tes jambes pour venir toucher ta main devant.',
+        how: {
+          method: 'leurre',
+          setup: 'Jambes écartées, la main tendue devant toi l’appelle à travers.',
+          pitfall: 'La faire venir par le côté : on veut qu’elle entre par l’arrière, dans ton axe.',
+        },
+      },
+      {
+        id: 'milieu-2',
+        label: 'Elle s’arrête là',
+        criterion: 'S’immobilise entre tes jambes et y reste cinq secondes.',
+      },
+      {
+        id: 'milieu-3',
+        label: 'En balade',
+        criterion: 'Vient au milieu sur demande pendant une sortie, avant qu’un truc passe.',
+        how: {
+          method: 'generaliser',
+          setup: 'On la demande dix fois pour rien, dans le calme, avant de s’en servir un jour utile.',
+          pitfall: 'Ne l’utiliser qu’en situation tendue : la position finit par annoncer le danger.',
+        },
+      },
+    ],
+  },
+  {
+    id: 'croiser-chien',
+    name: 'Croiser un chien',
+    category: 'balade',
+    icon: '🐩',
+    cue: '',
+    signal: '',
+    description: 'Kori croise un chien en laisse sans se tendre ni tirer.',
+    purpose:
+      'Le sujet quotidien. Ce n’est pas un exercice d’obéissance mais un travail d’émotion : on ne lui demande pas de se retenir, on change ce qu’elle ressent quand un chien apparaît.',
+    note:
+      'La distance est la seule variable qui compte. Trop près, elle est au-dessus de son seuil et rien ne s’apprend : on est en gestion, pas en entraînement. Mieux vaut dix croisements à trente mètres qu’un seul à trois.',
+    difficulty: 3,
+    cost: 12,
+    bonus: 14,
+    prereqs: ['decrocher'],
+    paliers: [
+      {
+        id: 'croiser-1',
+        label: 'Loin, elle mange',
+        criterion: 'Voit un chien au loin, te regarde et prend la friandise sans se figer.',
+        how: {
+          method: 'contre-conditionnement',
+          setup:
+            'Le chien apparaît → la pluie de friandises commence. Le chien disparaît → elle s’arrête. C’est l’apparition qui annonce la nourriture, pas l’inverse.',
+          pitfall:
+            'Demander « Assis » ou « Regarde » d’abord. On ne veut pas un ordre bien exécuté, on veut qu’elle apprenne que chien = bonne nouvelle.',
+        },
+      },
+      {
+        id: 'croiser-2',
+        label: 'À mi-distance',
+        criterion: 'Même chose à la distance où elle remarque le chien mais reste détendue.',
+        how: {
+          method: '3d',
+          setup: 'On réduit la distance de quelques mètres par séance, jamais de moitié.',
+          pitfall: 'Réduire la distance le jour où elle est déjà chargée — le seuil bouge d’un jour à l’autre.',
+        },
+      },
+      {
+        id: 'croiser-3',
+        label: 'Le vrai croisement',
+        criterion: 'Croise un chien sur un trottoir large, laisse détendue.',
+      },
+    ],
+  },
+  {
+    id: 'sniffari',
+    name: 'Le sniffari',
+    category: 'balade',
+    icon: '🌾',
+    cue: '',
+    signal: '',
+    description: 'Une sortie où c’est elle qui décide où aller et combien de temps renifler.',
+    purpose:
+      'Ce n’est pas une compétence du chien, c’est une habitude à prendre pour nous : une balade sans objectif, sans exercice, sans distance à faire. Le contrepoids exact des sorties chargées.',
+    note:
+      'Renifler n’est pas du temps perdu : dans l’étude de Duranton et Horowitz (2019), des chiens pratiquant régulièrement des activités olfactives montraient un biais de jugement plus optimiste. Une sortie lente et reniflée fatigue autant qu’une sortie rapide, sans monter l’excitation.',
+    difficulty: 1,
+    cost: 6,
+    bonus: 8,
+    prereqs: [],
+    paliers: [
+      {
+        id: 'sniffari-1',
+        label: 'Dix minutes sans but',
+        criterion: 'Une sortie de dix minutes où tu ne l’as jamais rappelée ni pressée.',
+        how: {
+          method: 'premack',
+          setup: 'La laisse est longue, la direction est la sienne. Ton seul rôle est de suivre.',
+          pitfall: 'Vouloir « en profiter pour travailler le rappel ». Ce n’est pas le moment.',
+        },
+      },
+      {
+        id: 'sniffari-2',
+        label: 'Le bon endroit',
+        criterion: 'Tu as identifié un lieu où elle peut renifler longtemps sans croiser grand-monde.',
+      },
+      {
+        id: 'sniffari-3',
+        label: 'Le réflexe',
+        criterion: 'Un sniffari a suivi une sortie chargée ou un jour de décompression.',
+      },
+    ],
+  },
+  {
+    id: 'rappel-urgence',
+    name: 'Rappel d’urgence',
+    category: 'balade',
+    icon: '🚨',
+    cue: '',
+    signal: '',
+    description: 'Un second mot, gardé pour les vraies urgences, auquel elle revient sans réfléchir.',
+    purpose:
+      'Le rappel ordinaire s’use : on l’emploie dix fois par jour, parfois pour interrompre quelque chose d’agréable. Ce mot-là ne sert jamais à rien d’ordinaire, il paie énormément à chaque fois, et il reste donc intact le jour où il faut vraiment.',
+    note:
+      'Trois règles, sans exception. Le mot ne s’utilise jamais pour du confort. Il est toujours payé d’un jackpot, même s’il a fallu du temps. Il ne s’emploie jamais pour finir une balade ou faire quelque chose qu’elle n’aime pas — sinon il s’abîme comme l’autre.',
+    difficulty: 2,
+    cost: 12,
+    bonus: 16,
+    prereqs: ['rappel'],
+    paliers: [
+      {
+        id: 'urgence-1',
+        label: 'Charger le mot',
+        criterion: 'Le mot est suivi d’un jackpot vingt fois de suite, sans qu’on lui demande rien.',
+        how: {
+          method: 'association',
+          setup:
+            'Elle est à côté, tranquille. Le mot, puis immédiatement une poignée de très bon. On ne lui demande RIEN — on colle une émotion sur un son.',
+          pitfall: 'Attendre qu’elle vienne avant de payer. À ce stade, le mot annonce, il ne demande pas.',
+        },
+      },
+      {
+        id: 'urgence-2',
+        label: 'À la maison',
+        criterion: 'Fait demi-tour et arrive au galop depuis une autre pièce, jackpot à l’arrivée.',
+      },
+      {
+        id: 'urgence-3',
+        label: 'Dehors, une seule fois',
+        criterion: 'Testé une fois en extérieur clôturé, avec une distraction modérée. Puis on le remet au placard.',
+        how: {
+          method: 'generaliser',
+          setup: 'Un test, pas un entraînement. On recharge le mot à la maison entre deux essais.',
+          pitfall: 'S’en servir « pour voir » : chaque emploi sans urgence l’use un peu.',
+        },
+      },
+    ],
+  },
+  {
+    id: 'trottoir',
+    name: 'Le trottoir',
+    category: 'balade',
+    icon: '🚦',
+    cue: 'On traverse',
+    signal: '',
+    description: 'Kori reste sur le trottoir, ne descend pas seule, et traverse au mot.',
+    purpose:
+      'La règle de sécurité la plus utile en ville : la chaussée n’existe pas tant qu’on ne l’a pas dit. Ça vaut aussi le jour où la laisse échappe des mains.',
+    difficulty: 2,
+    cost: 10,
+    bonus: 12,
+    prereqs: ['attends'],
+    paliers: [
+      {
+        id: 'trottoir-1',
+        label: 'Rester dessus',
+        criterion: 'Marche sur le trottoir sans descendre sur la chaussée, sur cent mètres.',
+        how: {
+          method: 'capture',
+          setup: 'On paie discrètement quand elle marche bien à l’intérieur du trottoir, sans rien demander.',
+          pitfall: 'Ne réagir que quand elle descend : elle apprend que descendre attire l’attention.',
+        },
+      },
+      {
+        id: 'trottoir-2',
+        label: 'S’arrêter au bord',
+        criterion: 'S’arrête d’elle-même au bord du trottoir, sans que tu aies à retenir la laisse.',
+        how: {
+          method: 'capture',
+          setup:
+            'Tu t’arrêtes systématiquement à chaque bordure, en silence. Quand elle s’arrête aussi, tu paies. Au bout d’un moment la bordure devient le signal.',
+          pitfall: 'Dire « Attends » à chaque fois : c’est la bordure qui doit déclencher l’arrêt, pas ta voix.',
+        },
+      },
+      {
+        id: 'trottoir-3',
+        label: 'Traverser au mot',
+        criterion: 'Ne s’engage sur la chaussée qu’après le mot, 8 fois sur 10.',
+        how: {
+          method: 'mot-avant-geste',
+          setup: 'Le mot d’abord, puis tu avances. Jamais l’inverse.',
+          pitfall: 'Avancer en même temps qu’on parle : c’est ton mouvement qu’elle suit, pas le mot.',
+        },
+      },
+    ],
+  },
 ];
 
 // ------------------------------------------------------------

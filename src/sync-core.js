@@ -12,12 +12,22 @@
 //     `palierDone` : une ligne par élément, rattachée à son carnet → Explorer
 //     lisible et fusion sûre à plusieurs (deux ajouts simultanés coexistent).
 
-export const COLLECTIONS = ['walks', 'sessions', 'care', 'reminders', 'firsts', 'skillProgress', 'palierDone'];
-// Champs portés par la ligne `carnets` elle-même. `places` y figure avec
-// `cues`/`decompOff` : c'est de la CONFIG (une poignée d'entrées, modifiée très
-// rarement), pas un flux d'éléments comme les balades — le dernier écrivain
-// gagne, ce qui est acceptable à cette fréquence.
-export const CARNET_FIELDS = ['onboarded', 'wallet', 'lifetime', 'cues', 'decompOff', 'places'];
+export const COLLECTIONS = [
+  'walks',
+  'sessions',
+  'care',
+  'reminders',
+  'firsts',
+  'skillProgress',
+  'palierDone',
+  'cues',
+];
+// Champs portés par la ligne `carnets` elle-même : de la CONFIG (une poignée
+// d'entrées, modifiée très rarement), pas un flux d'éléments — le dernier
+// écrivain gagne, ce qui est acceptable à cette fréquence.
+// `cues` en est sorti pour sa propre table : régler un signal se fait à deux, et
+// un blob unique faisait s'écraser deux réglages simultanés.
+export const CARNET_FIELDS = ['onboarded', 'wallet', 'lifetime', 'decompOff', 'places'];
 
 // Forme canonique de chaque type d'élément (+ valeurs par défaut). Garantit que
 // local et distant convergent vers exactement les mêmes clés, quelle que soit la
@@ -30,6 +40,7 @@ export const COLLECTION_FIELDS = {
   firsts: { date: '', title: '', note: '' },
   skillProgress: { skillId: '', status: '' }, // status: 'known' | 'learning' | 'mastered'
   palierDone: { palierId: '', skillId: '', doneAt: '' },
+  cues: { skillId: '', word: '', gesture: '' },
 };
 
 export function uuid() {

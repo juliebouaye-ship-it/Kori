@@ -34,6 +34,8 @@ const _schema = i.schema({
       onboarded: i.boolean().optional(),
       wallet: i.number().optional(),
       lifetime: i.number().optional(),
+      // `cues` a quitté ce blob pour sa propre table (voir plus bas). L'attribut
+      // reste déclaré le temps que la migration l'ait vidé partout.
       cues: i.json().optional(),
       decompOff: i.json().optional(),
       places: i.json().optional(),
@@ -92,6 +94,16 @@ const _schema = i.schema({
       skillId: i.string().optional(),
       doneAt: i.string().optional(),
     }),
+
+    // Antisèche : le mot et le geste convenus pour une compétence. Une ligne par
+    // compétence renseignée — l'Explorer devient lisible, et deux personnes qui
+    // règlent des signaux différents en même temps ne s'écrasent plus (ce que
+    // faisait l'ancien blob JSON unique).
+    cues: i.entity({
+      skillId: i.string().indexed(),
+      word: i.string().optional(),
+      gesture: i.string().optional(),
+    }),
   },
 
   links: {
@@ -131,6 +143,10 @@ const _schema = i.schema({
     palierDoneCarnet: {
       forward: { on: 'palierDone', has: 'one', label: 'carnet', onDelete: 'cascade' },
       reverse: { on: 'carnets', has: 'many', label: 'palierDone' },
+    },
+    cueCarnet: {
+      forward: { on: 'cues', has: 'one', label: 'carnet', onDelete: 'cascade' },
+      reverse: { on: 'carnets', has: 'many', label: 'cues' },
     },
   },
 });

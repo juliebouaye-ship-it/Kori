@@ -44,18 +44,26 @@ export const DEFAULT_STATE = {
   sessions: [], // { id, date, skillId, palierId, rating, xp }
   walks: [], // { id, date, ts, level: 'vert'|'jaune'|'rouge', location, duration, triggers: [], note }
   places: [], // { slug, label, icon } — lieux du carnet, alimentés au fil des balades
-  cues: {}, // skillId -> { word, gesture } — antisèche partagée, éditable
+  cues: [], // { id, skillId, word, gesture } — antisèche partagée, éditable
   decompOff: [], // dates « elle va bien » : l'observation prime sur la règle
   care: [], // { id, date, ts, kind: 'repas'|'friandise', label, grams?, treatId? }
   reminders: [], // { id, type, label, dueDate, note }
   firsts: [], // { id, date, title, note } — « premières fois » à célébrer
 };
 
-// Antisèche : mot + geste effectifs (override utilisateur, sinon défaut du skill).
-export const cueFor = (state, skill) => ({
-  word: state.cues?.[skill.id]?.word ?? skill.cue ?? '',
-  gesture: state.cues?.[skill.id]?.gesture ?? skill.signal ?? '',
-});
+// Antisèche : mot + geste effectifs. Une ligne du carnet l'emporte sur la
+// suggestion du catalogue. Un champ vidé volontairement reste vide (la chaîne
+// vide n'est pas nullish) — on ne « ressuscite » pas une suggestion effacée.
+export const cueRowFor = (state, skillId) =>
+  (state.cues || []).find((c) => c.skillId === skillId) || null;
+
+export const cueFor = (state, skill) => {
+  const row = cueRowFor(state, skill.id);
+  return {
+    word: row?.word ?? skill.cue ?? '',
+    gesture: row?.gesture ?? skill.signal ?? '',
+  };
+};
 
 // ---- Lieux de balade ------------------------------------------------------
 // Les lieux appartiennent au carnet, pas au code : la liste s'alimente au fil

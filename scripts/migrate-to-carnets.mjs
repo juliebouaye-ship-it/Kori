@@ -21,6 +21,7 @@
 // `ensurePlaces` les reconstitue tout seul à partir des balades au chargement.
 
 import { readFileSync } from 'node:fs';
+import { randomUUID } from 'node:crypto';
 import { adminDb, COLLECTIONS, CARNET_FIELDS, isOrphan, carnetIdOf } from './_admin.mjs';
 
 const argv = process.argv.slice(2);
@@ -128,7 +129,28 @@ async function main() {
   console.table(
     COLLECTIONS.map((c) => ({ table: c, orphelines: orphans[c].length })),
   );
+  // --- antisèche : ancien blob JSON sur le carnet -> une ligne par compétence -
+  // Régler un signal se fait à deux ; un blob unique faisait s'écraser deux
+  // réglages simultanés. On ne touche pas aux lignes déjà présentes.
+  const cueBlob = carnet.cues && typeof carnet.cues === 'object' ? carnet.cues : {};
+  const existingCueSkills = new Set(
+    (data.cues || [])
+      .filter((r) => carnetIdOf(r) === carnet.id)
+      .map((r) => r.skillId),
+  );
+  const cueRows = Object.entries(cueBlob)
+    .filter(([skillId, v]) => v && !existingCueSkills.has(skillId))
+    .map(([skillId, v]) => ({
+      skillId,
+      word: v.word ?? '',
+      gesture: v.gesture ?? '',
+    }));
+
   console.log('Total :', total);
+  console.log(
+    'Antisèche à convertir en lignes :',
+    cueRows.length || '(rien — le blob est vide)',
+  );
   console.log('Source de la config :', metaSource || 'AUCUNE');
   console.log(
     'Config reprise :',
@@ -151,7 +173,7 @@ async function main() {
       return;
   }
 
-  if (total === 0 && Object.keys(carried).length === 0) {
+  if (total === 0 && Object.keys(carried).length === 0 && cueRows.length === 0) {
     console.log('\n✓ Rien à faire.');
     process.exitCode = 0;
       return;
@@ -161,6 +183,13 @@ async function main() {
   const txs = [];
   if (Object.keys(carried).length) {
     txs.push(db.tx.carnets[carnet.id].update({ ...carried, updatedAt: Date.now() }));
+  }
+  // Antisèche : on crée les lignes, puis on vide le blob devenu inutile.
+  for (const row of cueRows) {
+    txs.push(db.tx.cues[randomUUID()].update(row).link({ carnet: carnet.id }));
+  }
+  if (cueRows.length) {
+    txs.push(db.tx.carnets[carnet.id].update({ cues: null }));
   }
   for (const c of COLLECTIONS) {
     for (const id of orphans[c]) txs.push(db.tx[c][id].link({ carnet: carnet.id }));

@@ -80,6 +80,7 @@ const rules = {
   firsts: memberOfOwningCarnet,
   skillProgress: memberOfOwningCarnet,
   palierDone: memberOfOwningCarnet,
+  cues: memberOfOwningCarnet,
 
   // Le schéma est figé côté serveur : le client ne crée pas d'attributs.
   attrs: {
