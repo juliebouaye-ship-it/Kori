@@ -71,6 +71,24 @@ export function CollapsibleCard({ title, summary, defaultOpen = false, children 
   );
 }
 
+// Feuille du bas : contenu qui monte depuis le bas de l'écran, fermé par un
+// tap sur le fond. Sert au changement de chien.
+export function BottomSheet({ title, onClose, children }) {
+  return (
+    <div className="sheet-backdrop" onClick={onClose}>
+      <div className="sheet-panel" onClick={(e) => e.stopPropagation()}>
+        <div className="sheet-head">
+          <h2>{title}</h2>
+          <button className="sheet-close" onClick={onClose} aria-label="Fermer">
+            ✕
+          </button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
 // Titre de carte + ⓘ optionnel. L'explication s'affiche sous le titre.
 // `right` : contenu aligné à droite du titre (badge, compteur…).
 export function SectionTitle({ title, info, right }) {

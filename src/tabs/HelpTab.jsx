@@ -150,7 +150,7 @@ function MethodsSection() {
 }
 
 // Le carnet : qui y a accès, sous quelle forme, et comment en sortir.
-function CarnetSection({ carnet, journalOnly, onSetMode, onSignOut }) {
+function CarnetSection({ carnet, journalOnly, onSetMode, onSignOut, onAddCarnet, onJoinCarnet }) {
   const [copied, setCopied] = useState(false);
   if (!carnet) return null;
 
@@ -199,6 +199,14 @@ function CarnetSection({ carnet, journalOnly, onSetMode, onSignOut }) {
         </p>
       )}
 
+      {/* Seule entrée vers un second chien quand on n'en a qu'un : la barre du
+          haut ne devient un sélecteur qu'à partir de deux carnets. */}
+      <button className="back-link" onClick={onAddCarnet}>
+        ＋ Ajouter un chien
+      </button>
+      <button className="back-link" onClick={onJoinCarnet}>
+        Rejoindre un carnet avec un code
+      </button>
       <button className="back-link" onClick={onSignOut}>
         Se déconnecter
       </button>
@@ -206,7 +214,7 @@ function CarnetSection({ carnet, journalOnly, onSetMode, onSignOut }) {
   );
 }
 
-export function HelpTab({ state, onSetCue, carnet, journalOnly, onSetMode, onSignOut }) {
+export function HelpTab({ state, onSetCue, carnet, journalOnly, onSetMode, onSignOut, onAddCarnet, onJoinCarnet }) {
   const [activeDiag, setActiveDiag] = useState(null);
   const [choice, setChoice] = useState(null);
 

@@ -249,5 +249,13 @@ export function CarnetGate({ user, children }) {
     return <PickCarnet carnets={carnets} onPick={setPicked} onNew={() => setIntent('create')} />;
   }
 
-  return children(active);
+  // L'application reçoit de quoi changer de chien et en ajouter un. Sans ça,
+  // une personne qui n'a qu'un carnet ne peut JAMAIS en créer un second : on
+  // entre directement dans le sien et plus rien ne mène à l'écran de création.
+  return children(active, {
+    carnets,
+    switchTo: setPicked,
+    addCarnet: () => setIntent('create'),
+    joinCarnet: () => setIntent('join'),
+  });
 }

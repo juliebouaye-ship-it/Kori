@@ -1220,3 +1220,31 @@ button {
 }
 .wt-main { display: block; font-weight: 700; font-size: 14px; }
 .wt-sub { display: block; font-size: 12px; color: var(--ink-soft); }
+
+/* Sélecteur de chien dans la barre du haut (à partir de deux carnets). */
+.topbar-switch { display: inline-flex; align-items: center; gap: 5px; padding: 0; }
+.topbar-caret { font-size: 10px; color: var(--ink-soft); }
+.carnet-item.on { border-color: var(--sage); background: var(--sage-bg); }
+
+/* Feuille du bas générique. */
+.sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(51, 41, 31, 0.35);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 40;
+}
+.sheet-panel {
+  background: var(--card);
+  border-radius: var(--radius) var(--radius) 0 0;
+  padding: 16px 16px 26px;
+  width: 100%;
+  max-width: 480px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+.sheet-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.sheet-head h2 { font-size: 17px; }
+.sheet-close { color: var(--ink-soft); font-size: 16px; }

@@ -1,7 +1,8 @@
+import { useState } from 'react';
 import { useKoriState } from './state/useKoriState.js';
-import { tabsForMode } from './carnets.js';
+import { tabsForMode, defaultTabForMode } from './carnets.js';
 import { signOut } from './auth.jsx';
-import { Confetti } from './ui.jsx';
+import { Confetti, BottomSheet } from './ui.jsx';
 import { TrainTab } from './tabs/TrainTab.jsx';
 import { BaladeTab } from './tabs/BaladeTab.jsx';
 import { TreeTab } from './tabs/TreeTab.jsx';
@@ -21,9 +22,16 @@ const TABS = [
   { id: 'help', label: 'Aide', icon: '💡' },
 ];
 
-export default function App({ carnet }) {
+export default function App({ carnet, carnets = [], onSwitchCarnet, onAddCarnet, onJoinCarnet }) {
   const k = useKoriState(carnet);
+  const [switching, setSwitching] = useState(false);
   const tabs = tabsForMode(carnet?.mode, TABS);
+  const multi = carnets.length > 1;
+
+  // Changer de chien peut faire disparaître l'onglet courant (un carnet
+  // « journal seul » n'a ni Entraîner ni Arbre) : on retombe alors sur l'onglet
+  // d'accueil du mode plutôt que sur un écran vide.
+  const activeTab = tabs.some((t) => t.id === k.tab) ? k.tab : defaultTabForMode(carnet?.mode);
 
   // Tant que le carnet en ligne n'est pas chargé, on n'affiche encore rien de
   // décisif (évite un flash du bilan de départ à chaque ouverture).
@@ -46,7 +54,19 @@ export default function App({ carnet }) {
             {k.tier.emoji}
           </span>
         )}
-        <span className="topbar-name">{carnet?.dogName ?? 'Le carnet'}</span>
+        {/* Avec plusieurs chiens, le nom devient le sélecteur — c'est là qu'on
+            le cherche. Avec un seul, il reste du texte, sans décor inutile. */}
+        {multi ? (
+          <button
+            className="topbar-name topbar-switch"
+            onClick={() => setSwitching(true)}
+            aria-haspopup="dialog"
+          >
+            {carnet?.dogName ?? 'Le carnet'} <span className="topbar-caret">▾</span>
+          </button>
+        ) : (
+          <span className="topbar-name">{carnet?.dogName ?? 'Le carnet'}</span>
+        )}
         {!k.journalOnly && (
           <span className="topbar-metrics">
             <span>{k.state.wallet} 🦴</span>
@@ -55,7 +75,7 @@ export default function App({ carnet }) {
         )}
       </header>
 
-      {k.tab === 'train' && (
+      {activeTab === 'train' && (
         <TrainTab
           state={k.viewState}
           onLogSession={k.logSession}
@@ -68,7 +88,7 @@ export default function App({ carnet }) {
           onDismissDecomp={k.dismissDecomp}
         />
       )}
-      {k.tab === 'balade' && (
+      {activeTab === 'balade' && (
         <BaladeTab
           state={k.viewState}
           onLogWalk={k.logWalk}
@@ -80,15 +100,15 @@ export default function App({ carnet }) {
           care={k.care}
         />
       )}
-      {k.tab === 'tree' && (
+      {activeTab === 'tree' && (
         <TreeTab
           state={k.viewState}
           onUnlock={k.unlockSkill}
           reopenOnboarding={() => k.setManualOnboarding(true)}
         />
       )}
-      {k.tab === 'stats' && <StatsTab state={k.viewState} onAddFirst={k.addFirst} />}
-      {k.tab === 'help' && (
+      {activeTab === 'stats' && <StatsTab state={k.viewState} onAddFirst={k.addFirst} />}
+      {activeTab === 'help' && (
         <HelpTab
           state={k.viewState}
           onSetCue={k.setCue}
@@ -96,6 +116,8 @@ export default function App({ carnet }) {
           journalOnly={k.journalOnly}
           onSetMode={k.setCarnetMode}
           onSignOut={signOut}
+          onAddCarnet={onAddCarnet}
+          onJoinCarnet={onJoinCarnet}
         />
       )}
 
@@ -103,7 +125,7 @@ export default function App({ carnet }) {
         {tabs.map((t) => (
           <button
             key={t.id}
-            className={`nav-btn ${k.tab === t.id ? 'active' : ''}`}
+            className={`nav-btn ${activeTab === t.id ? 'active' : ''}`}
             onClick={() => k.setTab(t.id)}
           >
             <span className="n-icon">{t.icon}</span>
@@ -111,6 +133,37 @@ export default function App({ carnet }) {
           </button>
         ))}
       </nav>
+
+      {switching && (
+        <BottomSheet title="Quel chien ?" onClose={() => setSwitching(false)}>
+          <div className="carnet-list">
+            {carnets.map((c) => (
+              <button
+                key={c.id}
+                className={`carnet-item ${c.id === carnet?.id ? 'on' : ''}`}
+                onClick={() => {
+                  onSwitchCarnet?.(c.id);
+                  setSwitching(false);
+                }}
+              >
+                <span className="carnet-name">{c.dogName}</span>
+                <span className="carnet-mode">
+                  {c.mode === 'journal' ? 'journal seul' : 'journal + entraînement'}
+                </span>
+              </button>
+            ))}
+          </div>
+          <button
+            className="btn btn-ghost btn-block"
+            onClick={() => {
+              setSwitching(false);
+              onAddCarnet?.();
+            }}
+          >
+            ＋ Ajouter un chien
+          </button>
+        </BottomSheet>
+      )}
 
       {k.showOnboarding && (
         <OnboardingSheet state={k.viewState} onValidate={k.validateOnboarding} />
