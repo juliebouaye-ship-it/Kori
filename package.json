@@ -13,7 +13,8 @@
     "migrate": "node scripts/migrate-to-carnets.mjs",
     "deploy:preview": "vite build && netlify deploy --dir=dist --alias=preview",
     "deploy:prod": "vite build && netlify deploy --dir=dist --prod",
-    "verif-acces": "node scripts/verif-acces.mjs"
+    "verif-acces": "node scripts/verif-acces.mjs",
+    "verif-parcours": "node scripts/verif-parcours.mjs"
   },
   "dependencies": {
     "@instantdb/react": "^1.0.49",
