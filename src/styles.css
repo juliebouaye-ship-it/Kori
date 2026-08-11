@@ -720,12 +720,17 @@ button {
 .walk-note:focus { outline: 2px solid var(--sage-soft); border-color: var(--sage-soft); }
 
 .past-walk {
-  display: flex;
-  align-items: center;
-  gap: 10px;
   padding: 8px 2px;
   border-top: 1px dashed var(--line);
   font-size: 13px;
+}
+.past-walk-main { display: flex; align-items: center; gap: 10px; }
+/* La note rend le tag « Autre » relisible des semaines plus tard. */
+.pw-note {
+  margin: 3px 0 0 26px;
+  font-size: 12px;
+  color: var(--ink-soft);
+  font-style: italic;
 }
 .past-walk:first-of-type { border-top: none; }
 .pw-cup { font-size: 16px; }
@@ -1185,3 +1190,33 @@ button {
   opacity: 0.75;
   word-break: break-word;
 }
+
+/* ---------- Cartes repliables (Aide) ---------- */
+/* Tout est replié par défaut : l'Aide se parcourt du regard avant de choisir
+   où entrer. L'en-tête seul doit dire ce qu'il y a dedans. */
+.help-head { padding: 2px 4px 10px; }
+.help-head h2 { font-size: 20px; }
+.card-collapsible { padding: 0; }
+.card-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  padding: 14px;
+}
+.card-toggle-title { font-family: var(--font-head); font-weight: 700; font-size: 17px; flex: 1; }
+.card-toggle-summary { font-size: 12px; color: var(--ink-soft); font-weight: 600; }
+.card-toggle-chevron { color: var(--ink-soft); font-size: 11px; }
+.card-toggle-body { padding: 0 14px 14px; }
+.card-collapsible.is-open .card-toggle { padding-bottom: 8px; }
+.card-intro { margin: 0 0 10px; }
+
+/* Temps de balade (Progrès) — porte uniquement sur les sorties minutées. */
+.walk-time {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--line);
+}
+.wt-main { display: block; font-weight: 700; font-size: 14px; }
+.wt-sub { display: block; font-size: 12px; color: var(--ink-soft); }

@@ -11,6 +11,7 @@ import {
   LEGACY_LOCATIONS,
   PLACE_ICON,
   WALK_TRIGGERS,
+  RETIRED_TRIGGERS,
   CUP_LEVELS,
   TIERS,
   HARD_PREREQS,
@@ -26,7 +27,11 @@ export { uuid as newId };
 // ---- Annuaires (id -> objet de contenu statique) --------------------------
 export const SKILL_BY_ID = Object.fromEntries(SKILLS.map((s) => [s.id, s]));
 export const CAT_BY_ID = Object.fromEntries(CATEGORIES.map((c) => [c.id, c]));
-export const TRIGGER_BY_ID = Object.fromEntries(WALK_TRIGGERS.map((t) => [t.id, t]));
+// Les déclencheurs retirés du sélecteur restent dans l'annuaire : une balade
+// enregistrée avant leur retrait doit continuer à afficher son tag.
+export const TRIGGER_BY_ID = Object.fromEntries(
+  [...WALK_TRIGGERS, ...RETIRED_TRIGGERS].map((t) => [t.id, t]),
+);
 export const CUP_BY_ID = Object.fromEntries(CUP_LEVELS.map((c) => [c.id, c]));
 
 // ---- État par défaut ------------------------------------------------------

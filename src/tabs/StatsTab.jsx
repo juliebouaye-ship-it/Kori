@@ -19,6 +19,16 @@ import { FirstsTimeline } from '../carnet.jsx';
 // ============================================================
 // Onglet PROGRÈS 📊
 // ============================================================
+
+// Minutes → « 45 min », « 1 h », « 3 h 20 ».
+function formatMinutes(min) {
+  if (!min) return '0 min';
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  if (!h) return `${m} min`;
+  return m ? `${h} h ${m}` : `${h} h`;
+}
+
 export function StatsTab({ state, onAddFirst }) {
   const monthStats = trainingMonthStats(state.sessions, state.walks);
   const { current: tier, next: nextTier } = tierFor(state.lifetime);
@@ -86,6 +96,16 @@ export function StatsTab({ state, onAddFirst }) {
       const date = localDate(d);
       days.push({ date, level: byDay[date] ?? null });
     }
+    // Durées : on compte les SORTIES (pas les jours), et uniquement celles qui
+    // portent une durée. La durée est facultative — afficher un total comme s'il
+    // couvrait toutes les balades donnerait un chiffre faux et décourageant.
+    const inWindow = state.walks.filter((w) => {
+      const diff = daysBetween(today, w.date);
+      return diff >= 0 && diff <= 13;
+    });
+    const timed = inWindow.filter((w) => w.duration > 0);
+    const minutes = timed.reduce((n, w) => n + w.duration, 0);
+
     const noted = days.filter((d) => d.level);
     return {
       days,
@@ -93,6 +113,10 @@ export function StatsTab({ state, onAddFirst }) {
       vert: noted.filter((d) => d.level === 'vert').length,
       jaune: noted.filter((d) => d.level === 'jaune').length,
       rouge: noted.filter((d) => d.level === 'rouge').length,
+      walksInWindow: inWindow.length,
+      timedCount: timed.length,
+      minutes,
+      average: timed.length ? Math.round(minutes / timed.length) : 0,
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.walks]);
@@ -183,6 +207,24 @@ export function StatsTab({ state, onAddFirst }) {
                 ? 'Aucune balade débordée sur 2 semaines. Beau travail 🐾'
                 : `${walkStats.rouge} jour${walkStats.rouge > 1 ? 's' : ''} stacké${walkStats.rouge > 1 ? 's' : ''} sur 2 semaines. Le journal aide à repérer les lieux et créneaux à éviter.`}
             </p>
+
+            {/* Temps de balade : uniquement sur les sorties qui portent une
+                durée, et on le dit — sinon le total se lirait comme le temps
+                total passé dehors, ce qu'il n'est pas. */}
+            {walkStats.timedCount > 0 && (
+              <div className="walk-time">
+                <span className="wt-main">
+                  ⏱️ {formatMinutes(walkStats.minutes)} · {formatMinutes(walkStats.average)} en
+                  moyenne
+                </span>
+                <span className="wt-sub">
+                  sur {walkStats.timedCount} sortie{walkStats.timedCount > 1 ? 's' : ''} minutée
+                  {walkStats.timedCount > 1 ? 's' : ''}
+                  {walkStats.walksInWindow > walkStats.timedCount &&
+                    ` (${walkStats.walksInWindow - walkStats.timedCount} sans durée)`}
+                </span>
+              </div>
+            )}
           </>
         )}
       </div>

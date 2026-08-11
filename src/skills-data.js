@@ -221,7 +221,6 @@ export const WALK_DURATIONS = [
 export const WALK_TRIGGERS = [
   { id: 'chat', label: 'Chat', icon: '🐱' },
   { id: 'chien', label: 'Chien', icon: '🐕' },
-  { id: 'agility', label: 'Chiens / agility', icon: '🐾' },
   { id: 'velo', label: 'Vélo', icon: '🚲' },
   { id: 'bruit', label: 'Bruit', icon: '🔊' },
   // Journée sociale (repas de famille, apéro chez des amis…). C'est un tag
@@ -230,8 +229,18 @@ export const WALK_TRIGGERS = [
   // chien qui aime les gens peut passer 4 h en visite et rentrer serein.
   // Le niveau reste ce que Julie a vu, jamais ce que l'appli déduit.
   { id: 'monde', label: 'Monde / invités', icon: '🎉' },
+  // « Autre » ouvre la note de la sortie : ce qu'on y écrit s'affiche ensuite
+  // dans le journal, sinon le tag ne dirait rien trois semaines plus tard.
   { id: 'autre', label: 'Autre', icon: '❓' },
 ];
+
+// Déclencheurs retirés du sélecteur mais encore présents dans l'historique :
+// on garde de quoi les afficher, pour qu'une ancienne balade ne perde pas
+// silencieusement son tag.
+export const RETIRED_TRIGGERS = [{ id: 'agility', label: 'Chiens / agility', icon: '🐾' }];
+
+// Identifiant du tag « Autre » — celui qui déclenche la saisie libre.
+export const OTHER_TRIGGER = 'autre';
 
 // Niveau du « verre » — un seul tap suffit pour enregistrer la sortie.
 export const CUP_LEVELS = [

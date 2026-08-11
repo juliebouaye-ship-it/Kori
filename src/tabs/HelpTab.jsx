@@ -2,15 +2,14 @@ import { useState } from 'react';
 import { SKILLS, CATEGORIES, DIAGS, METHODS } from '../skills-data.js';
 import { cueFor } from '../domain.js';
 import { MODES } from '../carnets.js';
-import { SectionTitle, CollapsibleCategory } from '../ui.jsx';
+import { CollapsibleCard, CollapsibleCategory } from '../ui.jsx';
 
 // ============================================================
 // Onglet AIDE 💡
 // ============================================================
 function PointsCard() {
   return (
-    <div className="card">
-      <h2>Comment marchent les 🦴 ?</h2>
+    <CollapsibleCard title="Comment marchent les 🦴 ?">
       <ul className="points-list">
         <li>
           🎾 <strong>Noter une séance</strong> rapporte des friandises : Dur +2, Correct +4,
@@ -35,25 +34,25 @@ function PointsCard() {
           passé.
         </li>
       </ul>
-    </div>
+    </CollapsibleCard>
   );
 }
 
 function AntisecheSection({ state, onSetCue }) {
-  const [open, setOpen] = useState(false);
+  // La carte se replie déjà d'un cran au-dessus : plus besoin du bouton
+  // « Voir / modifier » qui ajoutait un second niveau de dépliage.
+  const total = SKILLS.length;
+  const filledAll = SKILLS.filter((s) => {
+    const c = cueFor(state, s);
+    return c.word.trim() || c.gesture.trim();
+  }).length;
   return (
-    <div className="card">
-      <SectionTitle
-        title="Antisèche 🗣️"
-        info="Le mot et le geste de chaque compétence, pour demander pareil à deux. Ce sont vos signaux, modifiables."
-      />
-      {!open ? (
-        <button className="btn btn-ghost btn-block" onClick={() => setOpen(true)}>
-          Voir / modifier l’antisèche
-        </button>
-      ) : (
-        <>
-          {CATEGORIES.map((cat) => {
+    <CollapsibleCard title="Antisèche 🗣️" summary={`${filledAll}/${total}`}>
+      <p className="muted card-intro">
+        Le mot et le geste de chaque compétence, pour demander pareil à deux. Ce sont vos
+        signaux, modifiables.
+      </p>
+      {CATEGORIES.map((cat) => {
             const catSkills = SKILLS.filter((s) => s.category === cat.id);
             const filled = catSkills.filter((s) => {
               const c = cueFor(state, s);
@@ -99,12 +98,7 @@ function AntisecheSection({ state, onSetCue }) {
               </CollapsibleCategory>
             );
           })}
-          <button className="back-link" onClick={() => setOpen(false)}>
-            Replier
-          </button>
-        </>
-      )}
-    </div>
+    </CollapsibleCard>
   );
 }
 
@@ -114,11 +108,11 @@ function AntisecheSection({ state, onSetCue }) {
 function MethodsSection() {
   const [openId, setOpenId] = useState(null);
   return (
-    <div className="card">
-      <SectionTitle
-        title="Les méthodes 🧰"
-        info="Les mêmes façons de faire reviennent sur toutes les compétences. Les connaître permet d’inventer ses propres exercices, au-delà de ce que propose l’appli."
-      />
+    <CollapsibleCard title="Les méthodes 🧰" summary={`${METHODS.length}`}>
+      <p className="muted card-intro">
+        Les mêmes façons de faire reviennent sur toutes les compétences. Les connaître permet
+        d’inventer ses propres exercices, au-delà de ce que propose l’appli.
+      </p>
       {METHODS.map((m) => {
         const open = openId === m.id;
         return (
@@ -151,7 +145,7 @@ function MethodsSection() {
           </div>
         );
       })}
-    </div>
+    </CollapsibleCard>
   );
 }
 
@@ -171,11 +165,11 @@ function CarnetSection({ carnet, journalOnly, onSetMode, onSignOut }) {
   };
 
   return (
-    <div className="card">
-      <SectionTitle
-        title={`Le carnet de ${carnet.dogName}`}
-        info="Le code d’invitation donne accès à ce carnet, en lecture et en écriture. Ne le partage qu’avec les personnes qui s’occupent du chien."
-      />
+    <CollapsibleCard title={`Le carnet de ${carnet.dogName}`}>
+      <p className="muted card-intro">
+        Le code d’invitation donne accès à ce carnet, en lecture et en écriture. Ne le partage
+        qu’avec les personnes qui s’occupent du chien.
+      </p>
 
       <div className="invite-row">
         <code className="invite-code">{carnet.inviteCode}</code>
@@ -208,7 +202,7 @@ function CarnetSection({ carnet, journalOnly, onSetMode, onSignOut }) {
       <button className="back-link" onClick={onSignOut}>
         Se déconnecter
       </button>
-    </div>
+    </CollapsibleCard>
   );
 }
 
@@ -219,12 +213,13 @@ export function HelpTab({ state, onSetCue, carnet, journalOnly, onSetMode, onSig
   if (!activeDiag) {
     return (
       <>
-        <div className="card">
+        <div className="help-head">
           <h2>Aide 💡</h2>
-          <p className="muted">Les signaux, les points, et des mini-diagnostics.</p>
+          <p className="muted">Tout est replié. Ouvre ce dont tu as besoin.</p>
         </div>
-        {!journalOnly && <AntisecheSection state={state} onSetCue={onSetCue} />}
-        {!journalOnly && <MethodsSection />}
+
+        {/* Ordre voulu : les points, le carnet, l'antisèche, les méthodes,
+            puis les diagnostics rassemblés dans un seul bloc. */}
         {!journalOnly && <PointsCard />}
         <CarnetSection
           carnet={carnet}
@@ -232,23 +227,31 @@ export function HelpTab({ state, onSetCue, carnet, journalOnly, onSetMode, onSig
           onSetMode={onSetMode}
           onSignOut={onSignOut}
         />
-        {DIAGS.map((d) => (
-          <button
-            key={d.id}
-            className="diag-card"
-            onClick={() => {
-              setActiveDiag(d);
-              setChoice(null);
-            }}
-          >
-            <span className="d-icon">{d.icon}</span>
-            <span>
-              <span className="d-title">{d.title}</span>
-              <br />
-              <span className="d-sub">{d.subtitle}</span>
-            </span>
-          </button>
-        ))}
+        {!journalOnly && <AntisecheSection state={state} onSetCue={onSetCue} />}
+        {!journalOnly && <MethodsSection />}
+
+        <CollapsibleCard title="Quand ça coince 🧭" summary={`${DIAGS.length}`}>
+          <p className="muted card-intro">
+            Des mini-diagnostics à lire quand une situation bloque. Jamais une case à cocher.
+          </p>
+          {DIAGS.map((d) => (
+            <button
+              key={d.id}
+              className="diag-card"
+              onClick={() => {
+                setActiveDiag(d);
+                setChoice(null);
+              }}
+            >
+              <span className="d-icon">{d.icon}</span>
+              <span>
+                <span className="d-title">{d.title}</span>
+                <br />
+                <span className="d-sub">{d.subtitle}</span>
+              </span>
+            </button>
+          ))}
+        </CollapsibleCard>
       </>
     );
   }

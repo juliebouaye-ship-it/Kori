@@ -49,6 +49,28 @@ export function CollapsibleCategory({ icon, name, color, summary, defaultOpen = 
   );
 }
 
+// Carte entière repliable. Repliée par défaut : l'Aide est une page qu'on
+// parcourt du regard avant de choisir où entrer, pas un mur de texte à faire
+// défiler. L'en-tête seul doit suffire à savoir ce qu'il y a dedans.
+export function CollapsibleCard({ title, summary, defaultOpen = false, children }) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className={`card card-collapsible ${open ? 'is-open' : ''}`}>
+      <button
+        type="button"
+        className="card-toggle"
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+      >
+        <span className="card-toggle-title">{title}</span>
+        {summary && <span className="card-toggle-summary">{summary}</span>}
+        <span className="card-toggle-chevron">{open ? '▲' : '▼'}</span>
+      </button>
+      {open && <div className="card-toggle-body">{children}</div>}
+    </div>
+  );
+}
+
 // Titre de carte + ⓘ optionnel. L'explication s'affiche sous le titre.
 // `right` : contenu aligné à droite du titre (badge, compteur…).
 export function SectionTitle({ title, info, right }) {

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CUP_LEVELS, WALK_TRIGGERS, WALK_DURATIONS } from '../skills-data.js';
+import { CUP_LEVELS, WALK_TRIGGERS, WALK_DURATIONS, OTHER_TRIGGER } from '../skills-data.js';
 import { localDate, frDate } from '../date-utils.js';
 import { CUP_BY_ID, TRIGGER_BY_ID, orderedPlaces, placeLabel } from '../domain.js';
 import { SectionTitle } from '../ui.jsx';
@@ -144,10 +144,14 @@ function WalkCard({ state, walk, onUpdate, onDelete, onCreatePlace }) {
         })}
       </div>
 
-      {showNote ? (
+      {/* « Autre » n'a de sens que si on peut relire ce que c'était : le champ
+          s'ouvre tout seul et son texte s'affiche ensuite dans le journal. */}
+      {showNote || walk.triggers.includes(OTHER_TRIGGER) ? (
         <input
           className="walk-note"
-          placeholder="Note (optionnel)…"
+          placeholder={
+            walk.triggers.includes(OTHER_TRIGGER) ? 'Autre : quoi ?' : 'Note (optionnel)…'
+          }
           value={walk.note}
           onChange={(e) => onUpdate(walk.id, { note: e.target.value })}
         />
@@ -162,17 +166,22 @@ function WalkCard({ state, walk, onUpdate, onDelete, onCreatePlace }) {
 
 function PastWalkRow({ state, walk, today }) {
   const cup = CUP_BY_ID[walk.level];
+  const note = (walk.note || '').trim();
   return (
     <div className="past-walk">
-      <span className="pw-cup">{cup.emoji}</span>
-      <span className="pw-date">
-        {walk.date === today ? 'Aujourd’hui' : frDate(walk.date)}
-      </span>
-      <span className="pw-loc">{walk.location ? placeLabel(state, walk.location) : '—'}</span>
-      <span className="pw-dur">{formatDuration(walk.duration)}</span>
-      <span className="pw-tags">
-        {walk.triggers.map((t) => TRIGGER_BY_ID[t]?.icon).join(' ')}
-      </span>
+      <div className="past-walk-main">
+        <span className="pw-cup">{cup.emoji}</span>
+        <span className="pw-date">
+          {walk.date === today ? 'Aujourd’hui' : frDate(walk.date)}
+        </span>
+        <span className="pw-loc">{walk.location ? placeLabel(state, walk.location) : '—'}</span>
+        <span className="pw-dur">{formatDuration(walk.duration)}</span>
+        <span className="pw-tags">
+          {walk.triggers.map((t) => TRIGGER_BY_ID[t]?.icon).filter(Boolean).join(' ')}
+        </span>
+      </div>
+      {/* La note s'affiche ici : c'est ce qui rend le tag « Autre » relisible. */}
+      {note && <div className="pw-note">{note}</div>}
     </div>
   );
 }
@@ -277,7 +286,9 @@ export function BaladeTab({
 
             <input
               className="walk-note"
-              placeholder="Note (optionnel)…"
+              placeholder={
+                draft.triggers.includes(OTHER_TRIGGER) ? 'Autre : quoi ?' : 'Note (optionnel)…'
+              }
               value={draft.note}
               onChange={(e) => setDraft((d) => ({ ...d, note: e.target.value }))}
             />
