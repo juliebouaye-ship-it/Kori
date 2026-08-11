@@ -132,7 +132,13 @@ async function main() {
   // --- antisèche : ancien blob JSON sur le carnet -> une ligne par compétence -
   // Régler un signal se fait à deux ; un blob unique faisait s'écraser deux
   // réglages simultanés. On ne touche pas aux lignes déjà présentes.
-  const cueBlob = carnet.cues && typeof carnet.cues === 'object' ? carnet.cues : {};
+  // ⚠️ Un tableau est aussi un `object` : une fois le lien en place, `carnet.cues`
+  // peut renvoyer les LIGNES liées et non l'ancien blob. On n'accepte donc qu'un
+  // objet simple, sinon on prendrait des lignes déjà migrées pour un blob.
+  const cueBlob =
+    carnet.cues && typeof carnet.cues === 'object' && !Array.isArray(carnet.cues)
+      ? carnet.cues
+      : {};
   const existingCueSkills = new Set(
     (data.cues || [])
       .filter((r) => carnetIdOf(r) === carnet.id)

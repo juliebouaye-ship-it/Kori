@@ -34,9 +34,10 @@ const _schema = i.schema({
       onboarded: i.boolean().optional(),
       wallet: i.number().optional(),
       lifetime: i.number().optional(),
-      // `cues` a quitté ce blob pour sa propre table (voir plus bas). L'attribut
-      // reste déclaré le temps que la migration l'ait vidé partout.
-      cues: i.json().optional(),
+      // ⚠️ Pas d'attribut `cues` ici : l'antisèche a sa propre table, et le lien
+      // qui la relie au carnet porte déjà le label `cues`. Un attribut et un
+      // lien de même nom sur la même entité se télescopent — Instant refuse le
+      // push avec « `cues` already exists on `carnets` ».
       decompOff: i.json().optional(),
       places: i.json().optional(),
       createdAt: i.number().optional(),

@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node src/domain.test.mjs && node src/carnets.test.mjs",
+    "test": "node src/domain.test.mjs && node src/carnets.test.mjs && node src/schema.test.mjs",
     "backup": "node scripts/backup-carnet.mjs",
     "etat": "node scripts/etat-base.mjs",
     "migrate": "node scripts/migrate-to-carnets.mjs",
