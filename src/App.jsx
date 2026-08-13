@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { useKoriState } from './state/useKoriState.js';
-import { tabsForMode, defaultTabForMode } from './carnets.js';
+import { tabsForMode, defaultTabForMode, MODES, makeInviteCode } from './carnets.js';
 import { signOut } from './auth.jsx';
+import { db } from './db.js';
+import { uuid } from './sync-core.js';
 import { Confetti, BottomSheet } from './ui.jsx';
 import { TrainTab } from './tabs/TrainTab.jsx';
 import { BaladeTab } from './tabs/BaladeTab.jsx';
@@ -19,12 +21,88 @@ const TABS = [
   { id: 'balade', label: 'Journal', icon: '📓' },
   { id: 'tree', label: 'Arbre', icon: '🌱' },
   { id: 'stats', label: 'Progrès', icon: '📊' },
-  { id: 'help', label: 'Aide', icon: '💡' },
+  { id: 'help', label: 'Réglages', icon: '⚙️' },
 ];
 
-export default function App({ carnet, carnets = [], onSwitchCarnet, onAddCarnet, onJoinCarnet }) {
+// Modale autonome : crée le carnet directement, sans passer par l'écran plein
+// cadre de CarnetGate. Volontairement indépendante de onAddCarnet (qui bascule
+// tout l'écran vers CreateCarnet) — plus fiable et plus rapide à utiliser.
+function AddDogSheet({ user, onDone, onClose }) {
+  const [name, setName] = useState('');
+  const [mode, setMode] = useState('complet');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState(null);
+
+  const create = async (e) => {
+    e.preventDefault();
+    const dogName = name.trim();
+    if (!dogName || !user?.id) return;
+    setBusy(true);
+    setError(null);
+    const id = uuid();
+    try {
+      await db.transact(
+        db.tx.carnets[id]
+          .update({
+            dogName,
+            mode,
+            inviteCode: makeInviteCode(),
+            onboarded: false,
+            wallet: 12,
+            lifetime: 0,
+            decompOff: [],
+            places: [],
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          })
+          .link({ members: user.id }),
+      );
+      onDone(id);
+    } catch (err) {
+      console.error(err);
+      setError(err?.message || 'La création a échoué. Réessaie dans un instant.');
+      setBusy(false);
+    }
+  };
+
+  return (
+    <BottomSheet title="Un nouveau chien" onClose={onClose}>
+      <form onSubmit={create}>
+        <input
+          className="auth-input"
+          placeholder="Son nom"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          autoFocus
+          maxLength={30}
+        />
+        <div className="mode-choice">
+          {MODES.map((m) => (
+            <button
+              key={m.id}
+              type="button"
+              className={`mode-btn ${mode === m.id ? 'on' : ''}`}
+              onClick={() => setMode(m.id)}
+            >
+              <span className="mode-label">{m.label}</span>
+              <span className="mode-detail">{m.detail}</span>
+            </button>
+          ))}
+        </div>
+        <p className="auth-hint">Ça se change plus tard, dans l’aide.</p>
+        {error && <p className="auth-error">{error}</p>}
+        <button className="btn btn-primary btn-block" disabled={busy || !name.trim()}>
+          {busy ? 'Création…' : 'Créer le carnet'}
+        </button>
+      </form>
+    </BottomSheet>
+  );
+}
+
+export default function App({ carnet, carnets = [], user, onSwitchCarnet, onJoinCarnet }) {
   const k = useKoriState(carnet);
   const [switching, setSwitching] = useState(false);
+  const [addingDog, setAddingDog] = useState(false);
   const tabs = tabsForMode(carnet?.mode, TABS);
   const multi = carnets.length > 1;
 
@@ -67,6 +145,14 @@ export default function App({ carnet, carnets = [], onSwitchCarnet, onAddCarnet,
         ) : (
           <span className="topbar-name">{carnet?.dogName ?? 'Le carnet'}</span>
         )}
+        <button
+          className="topbar-add-dog"
+          onClick={() => setAddingDog(true)}
+          aria-label="Ajouter un chien"
+          title="Ajouter un chien"
+        >
+          ＋
+        </button>
         {!k.journalOnly && (
           <span className="topbar-metrics">
             <span>{k.state.wallet} 🦴</span>
@@ -116,7 +202,7 @@ export default function App({ carnet, carnets = [], onSwitchCarnet, onAddCarnet,
           journalOnly={k.journalOnly}
           onSetMode={k.setCarnetMode}
           onSignOut={signOut}
-          onAddCarnet={onAddCarnet}
+          onAddCarnet={() => setAddingDog(true)}
           onJoinCarnet={onJoinCarnet}
         />
       )}
@@ -157,12 +243,23 @@ export default function App({ carnet, carnets = [], onSwitchCarnet, onAddCarnet,
             className="btn btn-ghost btn-block"
             onClick={() => {
               setSwitching(false);
-              onAddCarnet?.();
+              setAddingDog(true);
             }}
           >
             ＋ Ajouter un chien
           </button>
         </BottomSheet>
+      )}
+
+      {addingDog && (
+        <AddDogSheet
+          user={user}
+          onClose={() => setAddingDog(false)}
+          onDone={(id) => {
+            setAddingDog(false);
+            onSwitchCarnet?.(id);
+          }}
+        />
       )}
 
       {k.showOnboarding && (

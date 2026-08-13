@@ -45,7 +45,6 @@ function CreateCarnet({ user, onDone, onJoinInstead, canCancel, onCancel }) {
             onboarded: false,
             wallet: 12,
             lifetime: 0,
-            cues: {},
             decompOff: [],
             places: [],
             createdAt: Date.now(),
@@ -254,6 +253,7 @@ export function CarnetGate({ user, children }) {
   // entre directement dans le sien et plus rien ne mène à l'écran de création.
   return children(active, {
     carnets,
+    user,
     switchTo: setPicked,
     addCarnet: () => setIntent('create'),
     joinCarnet: () => setIntent('join'),

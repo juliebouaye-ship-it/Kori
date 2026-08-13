@@ -201,15 +201,17 @@ function CarnetSection({ carnet, journalOnly, onSetMode, onSignOut, onAddCarnet,
 
       {/* Seule entrée vers un second chien quand on n'en a qu'un : la barre du
           haut ne devient un sélecteur qu'à partir de deux carnets. */}
-      <button className="back-link" onClick={onAddCarnet}>
-        ＋ Ajouter un chien
-      </button>
-      <button className="back-link" onClick={onJoinCarnet}>
-        Rejoindre un carnet avec un code
-      </button>
-      <button className="back-link" onClick={onSignOut}>
-        Se déconnecter
-      </button>
+      <div className="carnet-actions">
+        <button type="button" className="back-link" onClick={onAddCarnet}>
+          ＋ Ajouter un chien
+        </button>
+        <button type="button" className="back-link" onClick={onJoinCarnet}>
+          Rejoindre un carnet avec un code
+        </button>
+        <button type="button" className="back-link" onClick={onSignOut}>
+          Se déconnecter
+        </button>
+      </div>
     </CollapsibleCard>
   );
 }
@@ -222,7 +224,7 @@ export function HelpTab({ state, onSetCue, carnet, journalOnly, onSetMode, onSig
     return (
       <>
         <div className="help-head">
-          <h2>Aide 💡</h2>
+          <h2>Réglages ⚙️</h2>
           <p className="muted">Tout est replié. Ouvre ce dont tu as besoin.</p>
         </div>
 

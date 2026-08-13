@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh repo *)",
+      "Bash(node -e \"console.log\\('WebSocket global:', typeof WebSocket\\)\")",
+      "Bash(node scripts/backup-carnet.mjs)",
+      "Bash(node -e ' *)",
+      "Bash(node src/domain.test.mjs)",
+      "Bash(python -c ' *)",
+      "Bash(netstat -ano)",
+      "Bash(npm test *)",
+      "Bash(curl -s -o /dev/null -w \"preview HTTP %{http_code}\\\\n\" https://preview--koritracker.netlify.app)",
+      "Bash(curl -s https://preview--koritracker.netlify.app)",
+      "Bash(npm install *)",
+      "Bash(node --check scripts/migrate-to-carnets.mjs)",
+      "Bash(grep -roh \"code[^,;\\)]\\\\{0,40\\\\}\" node_modules/@instantdb/core/dist/commonjs/authAPI.d.ts)",
+      "Bash(node ./.verif-auth.mjs \"C:/Users/Julie/AppData/Local/Temp/claude/c--Users-Julie-Documents-Kori/b4e03668-3e00-4983-8985-7f90e58a9e96/scratchpad\")",
+      "Bash(npx instant-cli@latest --help)",
+      "Bash(npx instant-cli@latest info)",
+      "Bash(node ./.verif-aide.mjs \"C:/Users/Julie/AppData/Local/Temp/claude/c--Users-Julie-Documents-Kori/b4e03668-3e00-4983-8985-7f90e58a9e96/scratchpad\")",
+      "Bash(node -e \"import\\('./src/skills-data.js'\\).then\\(m=>console.log\\(m.METHODS.map\\(x=>x.id\\).join\\(', '\\)\\)\\)\")",
+      "Bash(node -e \"import\\('./src/skills-data.js'\\).then\\(m=>console.log\\('icônes prises :', m.SKILLS.map\\(s=>s.icon\\).join\\(' '\\)\\)\\)\")",
+      "Bash(awk -F: '$1>800')",
+      "Bash(node src/schema.test.mjs)",
+      "Bash(npx instant-cli@latest push --help)",
+      "Bash(node ./.verif-chiens.mjs \"C:/Users/Julie/AppData/Local/Temp/claude/c--Users-Julie-Documents-Kori/b4e03668-3e00-4983-8985-7f90e58a9e96/scratchpad\")",
+      "Bash(node scripts/seed-cues-once.mjs)",
+      "Bash(node scripts/seed-cues-once.mjs --apply)",
+      "Bash(node .strip-cues.mjs)",
+      "Bash(node .clear-gestures.mjs)"
+    ]
+  }
+}

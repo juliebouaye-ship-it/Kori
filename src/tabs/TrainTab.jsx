@@ -235,7 +235,7 @@ export function TrainTab({
             💡 Trois séances « Dur » d’affilée sur ce palier — c’est le moment de découper
             l’exercice, pas de forcer.{' '}
             <button className="back-link" onClick={goToHelp}>
-              Voir « Je stagne » dans l’Aide →
+              Voir « Je stagne » dans Réglages →
             </button>
           </div>
         )}

@@ -8,7 +8,7 @@ import { useEffect, useState } from 'react';
 import { SKILLS, QUICK_XP, validateDag } from '../skills-data.js';
 import { useKoriSync, updateCarnet } from '../store.js';
 import { defaultTabForMode } from '../carnets.js';
-import { localDate } from '../date-utils.js';
+import { localDate, frDate } from '../date-utils.js';
 import {
   DEFAULT_MEAL,
   DEFAULT_MEALS_PER_DAY,
@@ -134,14 +134,18 @@ export function useKoriState(carnet) {
   const logWalk = (draft) => {
     const level = draft.level;
     if (!level) return;
+    const today = localDate();
+    // Une date passée choisie explicitement (jamais dans le futur, jamais
+    // automatique) : sinon la balade tombe sur aujourd'hui comme d'habitude.
+    const date = draft.date && draft.date <= today ? draft.date : today;
     setState((prev) => ({
       ...prev,
       walks: [
         ...prev.walks,
         {
           id: newId(),
-          date: localDate(),
-          ts: Date.now(),
+          date,
+          ts: date === today ? Date.now() : new Date(`${date}T12:00:00`).getTime(),
           level,
           location: draft.location ?? null,
           duration: draft.duration ?? null,
@@ -151,10 +155,11 @@ export function useKoriState(carnet) {
       ],
     }));
     const cup = CUP_BY_ID[level];
+    const when = date === today ? '' : ` · ${frDate(date)}`;
     showToast(
       level === 'rouge'
-        ? '🔴 Balade enregistrée · décompression activée'
-        : `${cup.emoji} Balade enregistrée · ${cup.short}`
+        ? `🔴 Balade enregistrée${when} · décompression activée`
+        : `${cup.emoji} Balade enregistrée${when} · ${cup.short}`
     );
     // petite fête uniquement pour une sortie sereine (jamais pour une 🔴)
     if (level === 'vert') fireConfetti();

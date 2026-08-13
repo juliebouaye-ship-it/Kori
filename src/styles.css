@@ -1248,3 +1248,25 @@ button {
 .sheet-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
 .sheet-head h2 { font-size: 17px; }
 .sheet-close { color: var(--ink-soft); font-size: 16px; }
+
+.carnet-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+
+.topbar-add-dog {
+  width: 26px;
+  height: 26px;
+  border-radius: 99px;
+  background: var(--sage-bg);
+  color: var(--sage-dark);
+  font-weight: 700;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+.walk-date-input {
+  border: 1.5px solid var(--sage);
+  border-radius: var(--radius-sm);
+  padding: 8px 11px;
+  font-family: var(--font-body);
+  font-size: 13.5px;
+  margin-bottom: 4px;
+}

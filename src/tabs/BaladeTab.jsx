@@ -211,11 +211,13 @@ export function BaladeTab({
   // brouillon de balade : rien n'est enregistré tant qu'on ne valide pas.
   const [draft, setDraft] = useState({
     level: null,
+    date: null, // null = aujourd'hui ; jamais rempli automatiquement
     location: null,
     duration: null,
     triggers: [],
     note: '',
   });
+  const [pickDate, setPickDate] = useState(false);
   const canSave = Boolean(draft.level);
   const setLevel = (id) => setDraft((d) => ({ ...d, level: d.level === id ? null : id }));
   const setLocation = (slug) => setDraft((d) => ({ ...d, location: slug }));
@@ -230,7 +232,8 @@ export function BaladeTab({
   const saveWalk = () => {
     if (!canSave) return;
     onLogWalk(draft);
-    setDraft({ level: null, location: null, duration: null, triggers: [], note: '' });
+    setDraft({ level: null, date: null, location: null, duration: null, triggers: [], note: '' });
+    setPickDate(false);
   };
 
   return (
@@ -260,6 +263,25 @@ export function BaladeTab({
 
         {draft.level && (
           <div className="walk-draft">
+            {/* Jamais rempli tout seul : par défaut la sortie est d'aujourd'hui,
+                on ne propose de changer la date que si on le demande. */}
+            {pickDate ? (
+              <>
+                <div className="walk-field-label">Date de la sortie</div>
+                <input
+                  type="date"
+                  className="walk-date-input"
+                  value={draft.date ?? today}
+                  max={today}
+                  onChange={(e) => setDraft((d) => ({ ...d, date: e.target.value }))}
+                />
+              </>
+            ) : (
+              <button className="back-link" onClick={() => setPickDate(true)}>
+                ＋ Noter une sortie passée
+              </button>
+            )}
+
             <div className="walk-field-label">Lieu (optionnel)</div>
             <PlacePicker
               state={state}

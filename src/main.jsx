@@ -29,10 +29,11 @@ const Root = () =>
     <AuthGate>
       {(user) => (
         <CarnetGate user={user}>
-          {(carnet, { carnets, switchTo, addCarnet, joinCarnet }) => (
+          {(carnet, { carnets, user: gateUser, switchTo, addCarnet, joinCarnet }) => (
             <App
               carnet={carnet}
               carnets={carnets}
+              user={gateUser}
               onSwitchCarnet={switchTo}
               onAddCarnet={addCarnet}
               onJoinCarnet={joinCarnet}
@@ -42,7 +43,7 @@ const Root = () =>
       )}
     </AuthGate>
   ) : (
-    <App carnet={SANDBOX_CARNET} carnets={SANDBOX_CARNETS} />
+    <App carnet={SANDBOX_CARNET} carnets={SANDBOX_CARNETS} user={{ id: 'sandbox' }} />
   );
 
 ReactDOM.createRoot(document.getElementById('root')).render(
