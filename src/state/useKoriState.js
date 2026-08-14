@@ -176,6 +176,10 @@ export function useKoriState(carnet) {
 
   // ---- Carnet (identité : nom, mode, code d'invitation) ----
   const setCarnetMode = (mode) => updateCarnet(carnet?.id, { mode });
+  // Poil : réglage optionnel, jamais demandé au bilan de départ. `null` tant
+  // que personne n'a choisi → aucun conseil de brossage affiché (voir
+  // COAT_TIPS dans skills-data.js), plutôt qu'une valeur par défaut inventée.
+  const setCoatType = (coatType) => updateCarnet(carnet?.id, { coatType });
 
   // ---- Lieux de balade ----
   // Crée le lieu s'il est nouveau, sinon retrouve celui qui porte déjà ce nom,
@@ -367,7 +371,13 @@ export function useKoriState(carnet) {
   const paliersDoneById = Object.fromEntries(
     (state.palierDone || []).map((r) => [r.palierId, r.doneAt])
   );
-  const viewState = { ...state, skillStatus: statusById, paliersDone: paliersDoneById };
+  const viewState = {
+    ...state,
+    skillStatus: statusById,
+    paliersDone: paliersDoneById,
+    dogName: carnet?.dogName ?? '',
+    coatType: carnet?.coatType ?? null,
+  };
 
   // Le bilan de départ s'affiche soit sur réouverture manuelle, soit
   // automatiquement au tout premier lancement — mais seulement une fois le
@@ -401,6 +411,7 @@ export function useKoriState(carnet) {
     createPlace,
     removePlace,
     setCarnetMode,
+    setCoatType,
     deleteWalk,
     setCue,
     addFirst,

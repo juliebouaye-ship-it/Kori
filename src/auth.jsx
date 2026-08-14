@@ -142,19 +142,21 @@ function SignIn() {
           {busy ? 'Vérification…' : 'Entrer'}
         </button>
       </form>
-      <button className="back-link" onClick={resend} disabled={busy}>
-        Renvoyer un code
-      </button>
-      <button
-        className="back-link"
-        onClick={() => {
-          setSentTo(null);
-          setCode('');
-          setError(null);
-        }}
-      >
-        Changer d’adresse
-      </button>
+      <div className="auth-actions">
+        <button className="back-link" onClick={resend} disabled={busy}>
+          Renvoyer un code
+        </button>
+        <button
+          className="back-link"
+          onClick={() => {
+            setSentTo(null);
+            setCode('');
+            setError(null);
+          }}
+        >
+          Changer d’adresse
+        </button>
+      </div>
     </Screen>
   );
 }

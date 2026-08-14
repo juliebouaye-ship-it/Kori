@@ -12,6 +12,7 @@ import {
   sessionIsGestion,
   trainingMonthStats,
   tierFor,
+  personalize,
 } from '../domain.js';
 import { SectionTitle, ProgressBar } from '../ui.jsx';
 import { FirstsTimeline } from '../carnet.jsx';
@@ -126,7 +127,7 @@ export function StatsTab({ state, onAddFirst }) {
       <div className="tier-card">
         <div className="tier-row">
           <span className="tier-name">
-            {tier.emoji} {tier.name}
+            {tier.emoji} {personalize(tier.name, state.dogName)}
           </span>
           <span className="tier-metrics">
             <span>{state.wallet} 🦴</span>

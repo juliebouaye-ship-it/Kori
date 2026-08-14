@@ -97,14 +97,16 @@ function CreateCarnet({ user, onDone, onJoinInstead, canCancel, onCancel }) {
           {busy ? 'Création…' : 'Créer le carnet'}
         </button>
       </form>
-      <button className="back-link" onClick={onJoinInstead}>
-        Rejoindre un carnet existant
-      </button>
-      {canCancel && (
-        <button className="back-link" onClick={onCancel}>
-          Annuler
+      <div className="auth-actions">
+        <button className="back-link" onClick={onJoinInstead}>
+          Rejoindre un carnet existant
         </button>
-      )}
+        {canCancel && (
+          <button className="back-link" onClick={onCancel}>
+            Annuler
+          </button>
+        )}
+      </div>
     </Screen>
   );
 }
@@ -228,6 +230,15 @@ export function CarnetGate({ user, children }) {
     setIntent(null);
   };
 
+  // Supprime le carnet (cascade côté schéma : walks/sessions/… disparaissent
+  // avec lui — voir onDelete: 'cascade' dans instant.schema.ts). On retombe
+  // sur `picked = null` pour repasser par le choix/la création, comme si ce
+  // carnet n'avait jamais existé.
+  const deleteCarnet = async (id) => {
+    await db.transact(db.tx.carnets[id].delete());
+    setPicked(null);
+  };
+
   if (intent === 'join') {
     return <JoinCarnet user={user} onDone={done} onCreateInstead={() => setIntent('create')} />;
   }
@@ -257,5 +268,6 @@ export function CarnetGate({ user, children }) {
     switchTo: setPicked,
     addCarnet: () => setIntent('create'),
     joinCarnet: () => setIntent('join'),
+    deleteCarnet,
   });
 }

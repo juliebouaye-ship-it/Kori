@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { SKILLS, CATEGORIES, DIAGS, METHODS } from '../skills-data.js';
-import { cueFor } from '../domain.js';
-import { MODES } from '../carnets.js';
+import { cueFor, personalize } from '../domain.js';
+import { MODES, COAT_TYPES } from '../carnets.js';
 import { CollapsibleCard, CollapsibleCategory } from '../ui.jsx';
 
 // ============================================================
@@ -149,8 +149,73 @@ function MethodsSection() {
   );
 }
 
+// Suppression du carnet : irréversible et partagée (elle emporte les données
+// de tout le monde qui a rejoint avec le code), donc pas un simple bouton —
+// repliée par défaut, puis il faut retaper le nom du chien pour confirmer.
+function DeleteCarnetZone({ carnet, onDeleteCarnet }) {
+  const [open, setOpen] = useState(false);
+  const [typed, setTyped] = useState('');
+  const [busy, setBusy] = useState(false);
+  if (!onDeleteCarnet) return null;
+
+  if (!open) {
+    return (
+      <button type="button" className="back-link danger-link" onClick={() => setOpen(true)}>
+        Supprimer ce carnet
+      </button>
+    );
+  }
+
+  return (
+    <div className="danger-zone">
+      <p className="danger-text">
+        Supprime tout le carnet de {carnet.dogName} — balades, séances, progrès — pour tout le
+        monde qui le partage. Irréversible.
+      </p>
+      <input
+        className="auth-input"
+        placeholder={`Tape « ${carnet.dogName} » pour confirmer`}
+        value={typed}
+        onChange={(e) => setTyped(e.target.value)}
+      />
+      <div className="carnet-actions">
+        <button
+          type="button"
+          className="btn btn-danger"
+          disabled={busy || typed.trim() !== carnet.dogName}
+          onClick={async () => {
+            setBusy(true);
+            await onDeleteCarnet(carnet.id);
+          }}
+        >
+          {busy ? 'Suppression…' : 'Supprimer définitivement'}
+        </button>
+        <button
+          type="button"
+          className="back-link"
+          onClick={() => {
+            setOpen(false);
+            setTyped('');
+          }}
+        >
+          Annuler
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // Le carnet : qui y a accès, sous quelle forme, et comment en sortir.
-function CarnetSection({ carnet, journalOnly, onSetMode, onSignOut, onAddCarnet, onJoinCarnet }) {
+function CarnetSection({
+  carnet,
+  journalOnly,
+  onSetMode,
+  onSetCoatType,
+  onSignOut,
+  onAddCarnet,
+  onJoinCarnet,
+  onDeleteCarnet,
+}) {
   const [copied, setCopied] = useState(false);
   if (!carnet) return null;
 
@@ -199,6 +264,26 @@ function CarnetSection({ carnet, journalOnly, onSetMode, onSignOut, onAddCarnet,
         </p>
       )}
 
+      {!journalOnly && (
+        <>
+          <p className="muted invite-hint" style={{ marginTop: 12 }}>
+            Poil de {carnet.dogName} (optionnel, pour le conseil de brossage) :
+          </p>
+          <div className="mode-choice mode-choice-inline">
+            {COAT_TYPES.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                className={`mode-btn ${carnet.coatType === c.id ? 'on' : ''}`}
+                onClick={() => onSetCoatType?.(carnet.coatType === c.id ? null : c.id)}
+              >
+                <span className="mode-label">{c.label}</span>
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+
       {/* Seule entrée vers un second chien quand on n'en a qu'un : la barre du
           haut ne devient un sélecteur qu'à partir de deux carnets. */}
       <div className="carnet-actions">
@@ -212,11 +297,23 @@ function CarnetSection({ carnet, journalOnly, onSetMode, onSignOut, onAddCarnet,
           Se déconnecter
         </button>
       </div>
+      <DeleteCarnetZone carnet={carnet} onDeleteCarnet={onDeleteCarnet} />
     </CollapsibleCard>
   );
 }
 
-export function HelpTab({ state, onSetCue, carnet, journalOnly, onSetMode, onSignOut, onAddCarnet, onJoinCarnet }) {
+export function HelpTab({
+  state,
+  onSetCue,
+  carnet,
+  journalOnly,
+  onSetMode,
+  onSetCoatType,
+  onSignOut,
+  onAddCarnet,
+  onJoinCarnet,
+  onDeleteCarnet,
+}) {
   const [activeDiag, setActiveDiag] = useState(null);
   const [choice, setChoice] = useState(null);
 
@@ -235,7 +332,11 @@ export function HelpTab({ state, onSetCue, carnet, journalOnly, onSetMode, onSig
           carnet={carnet}
           journalOnly={journalOnly}
           onSetMode={onSetMode}
+          onSetCoatType={onSetCoatType}
           onSignOut={onSignOut}
+          onAddCarnet={onAddCarnet}
+          onJoinCarnet={onJoinCarnet}
+          onDeleteCarnet={onDeleteCarnet}
         />
         {!journalOnly && <AntisecheSection state={state} onSetCue={onSetCue} />}
         {!journalOnly && <MethodsSection />}
@@ -267,6 +368,7 @@ export function HelpTab({ state, onSetCue, carnet, journalOnly, onSetMode, onSig
   }
 
   const selected = choice != null ? activeDiag.options[choice] : null;
+  const withDog = (text) => personalize(text, state.dogName);
 
   return (
     <div className="card">
@@ -274,7 +376,7 @@ export function HelpTab({ state, onSetCue, carnet, journalOnly, onSetMode, onSig
         ← Toute l’aide
       </button>
       <div className="diag-question">
-        {activeDiag.icon} {activeDiag.question}
+        {activeDiag.icon} {withDog(activeDiag.question)}
       </div>
       {activeDiag.options.map((opt, i) => (
         <button
@@ -282,16 +384,16 @@ export function HelpTab({ state, onSetCue, carnet, journalOnly, onSetMode, onSig
           className={`diag-option ${choice === i ? 'selected' : ''}`}
           onClick={() => setChoice(i)}
         >
-          {opt.label}
+          {withDog(opt.label)}
         </button>
       ))}
 
       {selected && (
         <>
-          <div className="diag-verdict">{selected.verdict}</div>
+          <div className="diag-verdict">{withDog(selected.verdict)}</div>
           <ul className="diag-actions">
             {selected.actions.map((a, i) => (
-              <li key={i}>{a}</li>
+              <li key={i}>{withDog(a)}</li>
             ))}
           </ul>
           <div className="diag-sources">

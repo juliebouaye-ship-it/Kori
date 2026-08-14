@@ -10,6 +10,7 @@ import {
 } from './health-data.js';
 import { SectionTitle } from './ui.jsx';
 import { localDate, frDate } from './date-utils.js';
+import { personalize } from './domain.js';
 
 // ============================================================
 // Repas & friandises du jour (monté dans l'onglet Journal)
@@ -27,7 +28,10 @@ export function MealsSection({ state, onAddCare, onLogDefaultMeals, onRemoveCare
     <div className="card">
       <SectionTitle
         title="Repas & friandises 🍽️"
-        info="Un coup d’œil, à deux, pour voir ce que Kori a déjà eu aujourd’hui. Rien d’obligatoire."
+        info={personalize(
+          'Un coup d’œil, à deux, pour voir ce que Kori a déjà eu aujourd’hui. Rien d’obligatoire.',
+          state.dogName,
+        )}
       />
 
       <div className="care-summary">

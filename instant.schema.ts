@@ -34,6 +34,10 @@ const _schema = i.schema({
       onboarded: i.boolean().optional(),
       wallet: i.number().optional(),
       lifetime: i.number().optional(),
+      // Poil du chien (réglage optionnel — voir carnets.js COAT_TYPES). Sert
+      // uniquement à choisir le conseil de brossage affiché ; jamais demandé
+      // au bilan de départ.
+      coatType: i.string().optional(),
       // ⚠️ Pas d'attribut `cues` ici : l'antisèche a sa propre table, et le lien
       // qui la relie au carnet porte déjà le label `cues`. Un attribut et un
       // lien de même nom sur la même entité se télescopent — Instant refuse le

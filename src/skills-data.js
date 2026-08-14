@@ -10,10 +10,20 @@ export const CATEGORIES = [
   { id: 'balade', name: 'Balade', icon: '🌿', color: '#7C8F5E' },
   { id: 'cerveau', name: 'Cerveau', icon: '🧠', color: '#5B7FA6' },
   { id: 'tours', name: 'Tours', icon: '🎪', color: '#B0648C' },
-  { id: 'sport', name: 'Sport', icon: '🎽', color: '#6E7B8B' },
+  { id: 'sport', name: 'Sport canin', icon: '🎽', color: '#6E7B8B' },
   { id: 'soins', name: 'Soins', icon: '🩺', color: '#6FA098' },
   { id: 'autonomie', name: 'Autonomie', icon: '🏠', color: '#A8845C' },
 ];
+
+// Sous-catégories : seulement pour « Sport canin », qui regroupe plusieurs
+// activités bien distinctes plutôt que d'en faire une catégorie chacune (ça
+// ferait 8+ catégories dans l'arbre pour un contenu qui reste petit par
+// activité). Une compétence sans `subcategory` n'en a simplement pas besoin.
+export const SUBCATEGORIES = {
+  rando: { name: 'Cani-rando', icon: '🥾' },
+  agility: { name: 'Agility', icon: '🏃' },
+  pistage: { name: 'Pistage', icon: '👃' },
+};
 
 // rating d'une séance → friandises (🦴) gagnées
 export const RATINGS = [
@@ -810,6 +820,7 @@ export const SKILLS = [
     id: 'harnais',
     name: 'Le harnais de traction',
     category: 'sport',
+    subcategory: 'rando',
     icon: '🦺',
     cue: 'Harnais',
     signal: '',
@@ -832,6 +843,7 @@ export const SKILLS = [
     id: 'allez',
     name: 'Allez (partir devant)',
     category: 'sport',
+    subcategory: 'rando',
     icon: '➡️',
     cue: 'Allez',
     signal: '',
@@ -859,6 +871,7 @@ export const SKILLS = [
     id: 'directions',
     name: 'Droite / Gauche',
     category: 'sport',
+    subcategory: 'rando',
     icon: '↔️',
     cue: 'Droite / Gauche',
     signal: '',
@@ -879,6 +892,7 @@ export const SKILLS = [
     id: 'stop-traction',
     name: 'Stop et Doucement',
     category: 'sport',
+    subcategory: 'rando',
     icon: '🛑',
     cue: 'Stop / Doucement',
     signal: '',
@@ -901,6 +915,7 @@ export const SKILLS = [
     id: 'devant',
     name: 'Rester devant',
     category: 'sport',
+    subcategory: 'rando',
     icon: '🧭',
     cue: 'Devant',
     signal: '',
@@ -921,6 +936,7 @@ export const SKILLS = [
     id: 'croiser-traction',
     name: 'Croiser en traction',
     category: 'sport',
+    subcategory: 'rando',
     icon: '🐕‍🦺',
     cue: '',
     signal: '',
@@ -943,6 +959,7 @@ export const SKILLS = [
     id: 'rando-duree',
     name: 'Endurance de rando',
     category: 'sport',
+    subcategory: 'rando',
     icon: '⛰️',
     cue: '',
     signal: '',
@@ -950,7 +967,7 @@ export const SKILLS = [
     purpose:
       'La finalité de la branche : partir en rando ensemble. Se construit très progressivement, en distance seulement — jamais en vitesse.',
     note:
-      'Amstaff : la chaleur est le vrai facteur limitant, pas le souffle. Pas de sortie en pleine journée de juin à septembre — lever du jour ou après le coucher du soleil, et l’humidité compte double pour un museau court.',
+      'Pour un chien à la morphologie proche du molosse (crâne large, museau court, musculature dense), la chaleur est souvent le vrai facteur limitant, pas le souffle — si c’est son cas, pas de sortie en pleine journée l’été : lever du jour ou après le coucher du soleil, et l’humidité compte double pour un museau court.',
     difficulty: 3,
     cost: 16,
     bonus: 16,
@@ -960,6 +977,222 @@ export const SKILLS = [
       { id: 'rando-duree-1', label: 'Vingt minutes', criterion: 'Sortie de 20 minutes en traction douce, à l’aise, sans traîner au retour.', gate: 'traction' },
       { id: 'rando-duree-2', label: 'Quarante minutes', criterion: 'Sortie de 40 minutes avec deux pauses, récupération rapide.', gate: 'traction' },
       { id: 'rando-duree-3', label: 'Une vraie rando', criterion: 'Sortie d’une heure sur terrain varié, allure de marche, forme intacte le lendemain.', gate: 'traction' },
+    ],
+  },
+
+  // ---------- SPORT · AGILITY (initiation) ----------
+  // Pas une catégorie à part : une sous-branche de Sport canin, en initiation
+  // pure (aucun objectif de compétition). Les obstacles bas se travaillent à
+  // vide ; seul le vrai saut charge les articulations, d'où le gate `impact`.
+  {
+    id: 'agility-contact',
+    name: 'La palette',
+    category: 'sport',
+    subcategory: 'agility',
+    icon: '🪵',
+    cue: '',
+    signal: '',
+    description: 'Kori traverse une planche basse posée au sol, à une allure choisie, sans se précipiter.',
+    purpose: 'La toute première rencontre avec un obstacle d’agility : accepter une surface inhabituelle sous les pattes, sans rien demander d’athlétique.',
+    difficulty: 2,
+    cost: 8,
+    bonus: 8,
+    prereqs: ['monte'],
+    paliers: [
+      {
+        id: 'agility-contact-1',
+        label: 'Elle monte',
+        criterion: 'Monte sur la planche posée à plat et la traverse en suivant la main.',
+        how: {
+          method: 'leurre',
+          setup: 'Planche bien stable, posée au sol (pas surélevée). La main guide d’un bout à l’autre.',
+          pitfall: 'Une planche qui bascule ou glisse au premier passage : elle n’y remonte plus volontiers.',
+        },
+      },
+      {
+        id: 'agility-contact-2',
+        label: 'Elle ralentit à l’extrémité',
+        criterion: 'Marque un temps d’arrêt avant de descendre, sans sauter dans le vide.',
+      },
+      {
+        id: 'agility-contact-3',
+        label: 'Sur le mot seul',
+        criterion: 'Traverse la planche au mot, main vide, 8 fois sur 10.',
+        how: {
+          method: 'effacer-leurre',
+          setup: 'Le geste rétrécit séance après séance jusqu’à disparaître.',
+          pitfall: 'Presser l’allure : on veut de la précision, pas de la vitesse, à ce stade.',
+        },
+      },
+    ],
+  },
+  {
+    id: 'agility-tunnel',
+    name: 'Le tunnel',
+    category: 'sport',
+    subcategory: 'agility',
+    icon: '🕳️',
+    cue: '',
+    signal: '',
+    description: 'Kori traverse un tunnel d’agility court, sans hésiter à l’entrée.',
+    purpose: 'L’obstacle le plus ludique pour débuter : aucune contrainte physique, juste un passage à apprivoiser.',
+    difficulty: 2,
+    cost: 8,
+    bonus: 8,
+    prereqs: ['touche'],
+    paliers: [
+      {
+        id: 'agility-tunnel-1',
+        label: 'Un tunnel raccourci',
+        criterion: 'Traverse un tunnel replié très court, quelqu’un l’appelant de l’autre bout.',
+        how: {
+          method: 'capture',
+          setup: 'Tunnel plié au maximum, une personne à chaque bout. Elle paie en sortant, sans être poussée dedans.',
+          pitfall: 'La pousser ou la tirer à l’intérieur : un tunnel subi se refuse la fois suivante.',
+        },
+      },
+      {
+        id: 'agility-tunnel-2',
+        label: 'Longueur normale',
+        criterion: 'Traverse le tunnel déplié, seule, jusqu’au bout.',
+      },
+      {
+        id: 'agility-tunnel-3',
+        label: 'En léger virage',
+        criterion: 'Traverse un tunnel légèrement courbé sans ressortir par où elle est entrée.',
+        how: {
+          method: 'decoupage',
+          setup: 'On courbe le tunnel d’un cran à la fois, en revenant droit si elle hésite.',
+          pitfall: 'Courber trop d’un coup : elle ne voit plus la sortie et rebrousse chemin.',
+        },
+      },
+    ],
+  },
+  {
+    id: 'agility-saut',
+    name: 'Le saut bas',
+    category: 'sport',
+    subcategory: 'agility',
+    icon: '🤸',
+    cue: '',
+    signal: '',
+    description: 'Kori franchit une barre basse au trot, dans l’axe, sans la toucher.',
+    purpose: 'Le premier vrai obstacle athlétique de la branche — et le seul qui charge réellement les articulations.',
+    difficulty: 3,
+    cost: 12,
+    bonus: 12,
+    prereqs: ['agility-tunnel'],
+    gate: 'impact',
+    paliers: [
+      { id: 'agility-saut-1', label: 'La barre au sol', criterion: 'Enjambe une barre posée au sol, dans l’axe, en suivant la main.' },
+      {
+        id: 'agility-saut-2',
+        label: 'Une hauteur minimale',
+        criterion: 'Franchit une barre surélevée à quelques centimètres, au trot.',
+        gate: 'impact',
+        how: {
+          method: 'decoupage',
+          setup: 'On monte la barre d’un ou deux centimètres à la fois, jamais plus.',
+          pitfall: 'Monter la hauteur avant que l’appui au sol ne soit propre — c’est ce qui charge les articulations.',
+        },
+      },
+      {
+        id: 'agility-saut-3',
+        label: 'Sur le mot seul',
+        criterion: 'Franchit la barre au mot, sans qu’on l’accompagne du geste, 8 fois sur 10.',
+        gate: 'impact',
+      },
+    ],
+  },
+
+  // ---------- SPORT · PISTAGE (initiation) ----------
+  // Suite naturelle de « Cherche ! » (flair posé, en intérieur) vers une
+  // vraie piste au sol, en extérieur — la même compétence olfactive, à plus
+  // grande échelle.
+  {
+    id: 'piste-objet',
+    name: 'La piste courte',
+    category: 'sport',
+    subcategory: 'pistage',
+    icon: '👣',
+    cue: '',
+    signal: '',
+    description: 'Kori suit une piste au sol en ligne droite jusqu’à l’objet ou la friandise posés au bout.',
+    purpose: 'Passer du flair « posé » au flair « en mouvement » : elle apprend à garder le nez au sol sur la distance, pas seulement sur un point fixe.',
+    note:
+      'Comme pour le flair posé, cet effort olfactif fatigue sans exciter — une bonne activité les jours de décompression.',
+    difficulty: 2,
+    cost: 10,
+    bonus: 10,
+    prereqs: ['cherche'],
+    paliers: [
+      {
+        id: 'piste-objet-1',
+        label: 'Cinq pas',
+        criterion: 'Suit une piste fraîche de cinq pas en ligne droite jusqu’à la récompense.',
+        how: {
+          method: 'faconnement',
+          setup: 'Marche lentement dans l’herbe haute en laissant tomber des petits bouts de friandise, un objet à l’arrivée.',
+          pitfall: 'Une piste trop vieille dès le départ : à ce stade, l’odeur doit être toute fraîche pour rester facile.',
+        },
+      },
+      {
+        id: 'piste-objet-2',
+        label: 'Vingt pas',
+        criterion: 'Suit une piste de vingt pas, sans repère visuel au sol.',
+        how: {
+          method: '3d',
+          setup: 'On allonge la piste par étapes, en revenant souvent à une distance facile.',
+          pitfall: 'Rallonger et faire vieillir la piste en même temps.',
+        },
+      },
+      {
+        id: 'piste-objet-3',
+        label: 'Piste reposée',
+        criterion: 'Suit une piste posée dix minutes plus tôt, sans supervision pendant la pose.',
+      },
+    ],
+  },
+  {
+    id: 'piste-longue',
+    name: 'La piste longue',
+    category: 'sport',
+    subcategory: 'pistage',
+    icon: '🐾',
+    cue: '',
+    signal: '',
+    description: 'Kori suit une piste vieillie de plusieurs dizaines de mètres, avec au moins un angle.',
+    purpose: 'La vraie discipline du pistage : distance, patience, et un nez qui doit trancher entre l’ancien et le récent.',
+    difficulty: 3,
+    cost: 14,
+    bonus: 16,
+    prereqs: ['piste-objet'],
+    paliers: [
+      {
+        id: 'piste-longue-1',
+        label: 'Un angle',
+        criterion: 'Suit une piste avec un virage à 90°, sans perdre la trace au tournant.',
+        how: {
+          method: 'decoupage',
+          setup: 'On introduit l’angle sur une piste par ailleurs déjà connue et courte.',
+          pitfall: 'Ajouter l’angle et rallonger la piste le même jour.',
+        },
+      },
+      {
+        id: 'piste-longue-2',
+        label: 'Trente minutes de pose',
+        criterion: 'Suit une piste vieillie trente minutes, sur terrain varié.',
+      },
+      {
+        id: 'piste-longue-3',
+        label: 'En extérieur non préparé',
+        criterion: 'Suit une piste posée par quelqu’un d’autre, sur un terrain que Kori ne connaît pas déjà.',
+        how: {
+          method: 'generaliser',
+          setup: 'Un terrain neuf, une piste posée par une deuxième personne pour retirer tout indice involontaire.',
+          pitfall: 'Choisir un terrain trop riche en odeurs concurrentes (marché, aire de pique-nique) pour une première fois.',
+        },
+      },
     ],
   },
 
@@ -1051,8 +1284,8 @@ export const SKILLS = [
     prereqs: ['menton'],
     paliers: [
       { id: 'oreilles-1', label: 'L’oreille soulevée', criterion: 'Laisse soulever et regarder l’intérieur de chaque oreille, menton posé.' },
-      { id: 'oreilles-2', label: 'Le produit', criterion: 'Reste en place pendant une instillation dans l’oreille, sans secouer avant la fin.' },
       { id: 'oreilles-3', label: 'Le tour des yeux', criterion: 'Laisse essuyer le tour des yeux avec une compresse, sans reculer.' },
+      { id: 'oreilles-2', label: 'Le produit', criterion: 'Reste en place pendant une instillation dans l’oreille, sans secouer avant la fin.' },
     ],
   },
   {
@@ -1064,7 +1297,11 @@ export const SKILLS = [
     signal: '',
     description: 'Kori se pose pour être brossée et reste détendue pendant le passage de la brosse.',
     purpose:
-      'Poil court ne veut pas dire zéro entretien : le gant ou la brosse douce enlèvent le poil mort et donnent un rendez-vous calme et régulier à deux.',
+      'Un rendez-vous calme et régulier à deux : on enlève le poil mort, on repère tôt une anomalie sur la peau, et ça construit la confiance pour les soins qui suivent.',
+    coatTips: {
+      court: 'Poil court ne veut pas dire zéro entretien : le gant ou la brosse douce suffisent à enlever le poil mort.',
+      long: 'Le poil long démêle plus qu’il ne se brosse : une brosse à picots ou un peigne, en partant des pointes, évite de tirer sur les nœuds.',
+    },
     difficulty: 1,
     cost: 6,
     bonus: 6,
@@ -1084,9 +1321,9 @@ export const SKILLS = [
     signal: '',
     description: 'Kori met le museau dans sa muselière d’elle-même et la porte détendue, sans chercher à l’enlever.',
     purpose:
-      'Pour une Amstaff en France, c’est l’équipement qui conditionne toutes les sorties. Autant qu’elle l’adore plutôt qu’elle la subisse — et une muselière bien vécue rend aussi le véto et l’imprévu beaucoup plus simples.',
+      'Utile pour les chiens de type dogue ou molossoïde, souvent soumis à une muselière obligatoire en France, ainsi que pour le véto et l’imprévu — autant qu’elle l’adore plutôt qu’elle la subisse.',
     note:
-      'Muselière panier uniquement, jamais un modèle en nylon qui ferme la gueule : Kori doit pouvoir haleter et boire. Pour une race qui dissipe mal la chaleur, ce détail est une question de sécurité, pas de confort.',
+      'Muselière panier uniquement, jamais un modèle en nylon qui ferme la gueule : elle doit pouvoir haleter et boire. Ce détail compte double pour un chien qui dissipe déjà mal la chaleur (museau court, musculature dense) : c’est une question de sécurité, pas de confort.',
     difficulty: 2,
     cost: 10,
     bonus: 10,
@@ -1190,7 +1427,7 @@ export const SKILLS = [
     signal: '',
     description: 'Kori va à sa place à la sonnette et attend d’être invitée pour aller dire bonjour.',
     purpose:
-      'Le moment le plus explosif de la maison. Une routine claire vaut mieux que dix rappels à l’ordre — et pour une Amstaff, un accueil posé change le regard des gens.',
+      'Le moment le plus explosif de la maison. Une routine claire vaut mieux que dix rappels à l’ordre — et pour un chien qui impressionne par son gabarit, un accueil posé change aussi le regard des gens.',
     difficulty: 2,
     cost: 10,
     bonus: 10,
@@ -1630,6 +1867,52 @@ export const SKILLS = [
       },
     ],
   },
+  {
+    id: 'mort',
+    name: 'Fais le mort',
+    category: 'tours',
+    icon: '💥',
+    cue: 'Pan !',
+    signal: '',
+    description: 'Kori bascule sur le flanc et reste immobile jusqu’au signal de libération.',
+    purpose: 'Le tour spectacle par excellence — et une bascule sur le flanc bien apprise sert aussi le jour d’un vrai examen du ventre.',
+    difficulty: 2,
+    cost: 8,
+    bonus: 10,
+    prereqs: ['roule'],
+    paliers: [
+      {
+        id: 'mort-1',
+        label: 'La bascule',
+        criterion: 'Bascule sur le flanc et y reste un instant en suivant la friandise.',
+        how: {
+          method: 'leurre',
+          setup: 'Couchée, la friandise part de sa truffe vers son épaule puis redescend au sol : elle bascule pour la suivre.',
+          pitfall: 'Aller trop vite : elle se relève au lieu de rester couchée sur le côté.',
+        },
+      },
+      {
+        id: 'mort-2',
+        label: 'Trois secondes immobile',
+        criterion: 'Reste sur le flanc, tête posée, trois secondes avant la friandise.',
+        how: {
+          method: '3d',
+          setup: 'On allonge la durée d’une seconde à la fois, en revenant souvent à un temps facile.',
+          pitfall: 'La relever avec la main : elle doit rester jusqu’au mot de libération, pas jusqu’au contact.',
+        },
+      },
+      {
+        id: 'mort-3',
+        label: 'Sur le mot seul',
+        criterion: 'Bascule et reste immobile au mot « Pan ! » seul, main vide, 8 fois sur 10.',
+        how: {
+          method: 'effacer-leurre',
+          setup: 'Le geste rétrécit séance après séance jusqu’à disparaître.',
+          pitfall: 'Retirer la main d’un coup — on remonte alors d’un cran, sans insister.',
+        },
+      },
+    ],
+  },
 
   // ---------- BALADE (2e vague) ----------
   {
@@ -1894,6 +2177,59 @@ export const SKILLS = [
       },
     ],
   },
+  {
+    id: 'suivi-naturel',
+    name: 'Suivi naturel en balade',
+    category: 'balade',
+    icon: '🧭',
+    cue: '',
+    signal: '',
+    description:
+      'Kori marche sans laisse à proximité, reste attentive et revient vérifier régulièrement, sans qu’on ait à l’appeler.',
+    purpose:
+      'Ni au pied, ni loin devant : le lâcher en confiance, où elle choisit de rester dans l’orbite parce que c’est là que le monde est le plus intéressant. C’est ce qui rend une vraie balade possible.',
+    note:
+      'Se construit dans un lieu clôturé ou vraiment sûr, jamais en pariant sur le rappel du jour. Le harnais ou la laisse restent la norme partout où la sécurité (ou la loi) l’impose — ce n’est pas un remplacement, c’est un supplément.',
+    difficulty: 3,
+    cost: 14,
+    bonus: 16,
+    prereqs: ['rappel', 'decrocher'],
+    paliers: [
+      {
+        id: 'suivi-1',
+        label: 'Elle revient vérifier',
+        criterion:
+          'Détachée dans un espace sûr, revient spontanément vers toi au moins une fois par minute.',
+        how: {
+          method: 'capture',
+          setup:
+            'Pas d’appel : tu paies chaque retour spontané, discrètement, sans t’arrêter de marcher.',
+          pitfall: 'L’appeler pour la faire venir — on veut capturer un choix, pas provoquer une réponse.',
+        },
+      },
+      {
+        id: 'suivi-2',
+        label: 'Elle suit les changements de direction',
+        criterion: 'Change de direction avec toi sans être appelée, dans un lieu sûr et peu distrayant.',
+        how: {
+          method: 'premack',
+          setup: 'Change de direction sans prévenir, au hasard des sorties : le monde qui continue est la récompense.',
+          pitfall: 'T’arrêter pour vérifier qu’elle suit — elle apprend à te surveiller au lieu de bouger avec toi.',
+        },
+      },
+      {
+        id: 'suivi-3',
+        label: 'Sur un sentier connu',
+        criterion:
+          'Marche en autonomie sur un sentier familier et peu fréquenté, sans s’éloigner de plus de quelques dizaines de mètres.',
+        how: {
+          method: 'generaliser',
+          setup: 'Toujours le même sentier au départ, aux heures calmes, laisse à portée de main en filet de sécurité.',
+          pitfall: 'Généraliser le lieu et la distraction en même temps : un sentier fréquenté annule le travail du palier précédent.',
+        },
+      },
+    ],
+  },
 ];
 
 // ------------------------------------------------------------
@@ -1907,6 +2243,11 @@ export const GATES = {
     label: 'Feu vert véto requis',
     detail:
       'Ce palier fait réellement tirer Kori. Tant que les plaques de croissance ne sont pas fermées, la traction répétée peut abîmer le cartilage de façon définitive. Chez un gabarit moyen à grand, la fermeture se situe entre 12 et 18 mois. À faire valider en visite, avec un contrôle des hanches, des genoux et de la démarche.',
+  },
+  impact: {
+    label: 'Feu vert véto requis',
+    detail:
+      'Ce palier fait sauter ou réceptionner un appui. Tant que les plaques de croissance ne sont pas fermées, les chocs répétés peuvent abîmer le cartilage de façon définitive — même à faible hauteur. Chez un gabarit moyen à grand, la fermeture se situe entre 12 et 18 mois. À faire valider en visite, avec un contrôle des hanches, des genoux et de la démarche.',
   },
 };
 

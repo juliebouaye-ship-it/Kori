@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { CUP_LEVELS, WALK_TRIGGERS, WALK_DURATIONS, OTHER_TRIGGER } from '../skills-data.js';
 import { localDate, frDate } from '../date-utils.js';
-import { CUP_BY_ID, TRIGGER_BY_ID, orderedPlaces, placeLabel } from '../domain.js';
+import { CUP_BY_ID, TRIGGER_BY_ID, orderedPlaces, placeLabel, personalize } from '../domain.js';
 import { SectionTitle } from '../ui.jsx';
 import { MealsSection, RemindersSection } from '../carnet.jsx';
 import { DecompBanner, HealthDueBanner } from './banners.jsx';
@@ -244,7 +244,10 @@ export function BaladeTab({
       <div className="card">
         <SectionTitle
           title="Comment s’est passée la sortie ? 🚶"
-          info="Tape le niveau du « verre » de Kori — 🟢 sous le seuil, 🟡 un ou deux déclencheurs, 🔴 débordée. Le lieu et les déclencheurs sont facultatifs. Puis enregistre."
+          info={personalize(
+            'Tape le niveau du « verre » de Kori — 🟢 sous le seuil, 🟡 un ou deux déclencheurs, 🔴 débordée. Le lieu et les déclencheurs sont facultatifs. Puis enregistre.',
+            state.dogName,
+          )}
         />
         <div className="cup-row">
           {CUP_LEVELS.map((c) => (

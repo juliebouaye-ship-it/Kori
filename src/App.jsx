@@ -5,12 +5,14 @@ import { signOut } from './auth.jsx';
 import { db } from './db.js';
 import { uuid } from './sync-core.js';
 import { Confetti, BottomSheet } from './ui.jsx';
+import { personalize } from './domain.js';
 import { TrainTab } from './tabs/TrainTab.jsx';
 import { BaladeTab } from './tabs/BaladeTab.jsx';
 import { TreeTab } from './tabs/TreeTab.jsx';
 import { StatsTab } from './tabs/StatsTab.jsx';
 import { HelpTab } from './tabs/HelpTab.jsx';
 import { OnboardingSheet } from './tabs/OnboardingSheet.jsx';
+import { SupportBanner } from './tabs/banners.jsx';
 
 // ============================================================
 // App — routeur : topbar + onglet actif + navigation + overlays.
@@ -99,7 +101,14 @@ function AddDogSheet({ user, onDone, onClose }) {
   );
 }
 
-export default function App({ carnet, carnets = [], user, onSwitchCarnet, onJoinCarnet }) {
+export default function App({
+  carnet,
+  carnets = [],
+  user,
+  onSwitchCarnet,
+  onJoinCarnet,
+  onDeleteCarnet,
+}) {
   const k = useKoriState(carnet);
   const [switching, setSwitching] = useState(false);
   const [addingDog, setAddingDog] = useState(false);
@@ -128,7 +137,7 @@ export default function App({ carnet, carnets = [], user, onSwitchCarnet, onJoin
         {/* Niveau et 🦴 relèvent de l'entraînement : un carnet « journal seul »
             n'affiche que le nom. */}
         {!k.journalOnly && (
-          <span className="topbar-tier" title={k.tier.name}>
+          <span className="topbar-tier" title={personalize(k.tier.name, carnet?.dogName)}>
             {k.tier.emoji}
           </span>
         )}
@@ -160,6 +169,8 @@ export default function App({ carnet, carnets = [], user, onSwitchCarnet, onJoin
           </span>
         )}
       </header>
+
+      <SupportBanner carnetCreatedAt={carnet?.createdAt} />
 
       {activeTab === 'train' && (
         <TrainTab
@@ -201,9 +212,11 @@ export default function App({ carnet, carnets = [], user, onSwitchCarnet, onJoin
           carnet={carnet}
           journalOnly={k.journalOnly}
           onSetMode={k.setCarnetMode}
+          onSetCoatType={k.setCoatType}
           onSignOut={signOut}
           onAddCarnet={() => setAddingDog(true)}
           onJoinCarnet={onJoinCarnet}
+          onDeleteCarnet={onDeleteCarnet}
         />
       )}
 

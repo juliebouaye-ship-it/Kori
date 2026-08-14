@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { SKILLS, CATEGORIES, GATES } from '../skills-data.js';
+import { SKILLS, CATEGORIES, GATES, SUBCATEGORIES } from '../skills-data.js';
 import {
   SKILL_BY_ID,
   CAT_BY_ID,
@@ -8,7 +8,9 @@ import {
   missingPrereqs,
   missingHardPrereqs,
   STATUS_LABELS,
+  personalize,
 } from '../domain.js';
+import { CollapsibleCategory } from '../ui.jsx';
 
 // ============================================================
 // Onglet ARBRE 🌱
@@ -19,6 +21,10 @@ function SkillCard({ state, skill, wallet, onUnlock }) {
   const cat = CAT_BY_ID[skill.category];
   const doneCount = skill.paliers.filter((p) => state.paliersDone[p.id]).length;
   const advised = missingPrereqs(state, skill);
+  const withDog = (text) => personalize(text, state.dogName);
+  // Conseil de brossage : seulement si le poil a été renseigné dans Réglages
+  // (jamais de valeur par défaut inventée — voir setCoatType).
+  const coatTip = skill.coatTips && state.coatType ? skill.coatTips[state.coatType] : null;
 
   return (
     <div className="skill-card" style={{ '--cat-color': cat.color }}>
@@ -77,12 +83,13 @@ function SkillCard({ state, skill, wallet, onUnlock }) {
 
       {open && (
         <div className="skill-details">
-          <p className="skill-desc">{skill.description}</p>
-          <p className="skill-purpose">{skill.purpose}</p>
-          {skill.note && <p className="skill-note">{skill.note}</p>}
+          <p className="skill-desc">{withDog(skill.description)}</p>
+          <p className="skill-purpose">{withDog(skill.purpose)}</p>
+          {skill.note && <p className="skill-note">{withDog(skill.note)}</p>}
+          {coatTip && <p className="skill-note">{coatTip}</p>}
           {skill.gate && GATES[skill.gate] && (
             <p className="skill-gate">
-              <strong>⚕️ {GATES[skill.gate].label}</strong> {GATES[skill.gate].detail}
+              <strong>⚕️ {GATES[skill.gate].label}</strong> {withDog(GATES[skill.gate].detail)}
             </p>
           )}
           <div className="skill-meta">
@@ -118,7 +125,7 @@ function SkillCard({ state, skill, wallet, onUnlock }) {
                   <li key={p.id}>
                     <span className="p-check">{done ? '✅' : '⬜'}</span>
                     <span className={done ? 'p-done' : ''}>
-                      <strong>{p.label}</strong> — {p.criterion}
+                      <strong>{p.label}</strong> — {withDog(p.criterion)}
                       {p.gate && GATES[p.gate] && (
                         <span className="p-gate"> ⚕️ {GATES[p.gate].label}</span>
                       )}
@@ -134,8 +141,34 @@ function SkillCard({ state, skill, wallet, onUnlock }) {
   );
 }
 
+function PictoTiles({ state, skills, onSelect }) {
+  return (
+    <div className="picto-grid">
+      {skills.map((skill) => {
+        const status = skillUiStatus(state, skill);
+        return (
+          <button
+            key={skill.id}
+            type="button"
+            className={`picto-tile status-${status}`}
+            onClick={() => onSelect(skill)}
+          >
+            <span className="picto-tile-icon">{skill.icon}</span>
+            <span className="picto-tile-name">{skill.name}</span>
+            {status === 'locked' && <span className="picto-tile-mark">🔒</span>}
+            {status === 'mastered' && <span className="picto-tile-mark">🏆</span>}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 // Grille de pictos par catégorie (remplace l'arbre visuel, jugé peu lisible).
 // On garde les jolies tuiles-pictos ; tap sur une tuile → détail (SkillCard).
+// Catégories repliables : avec 50+ compétences, tout déplié fait défiler très
+// long. Ouverte par défaut seulement si quelque chose s'y passe déjà (une
+// compétence en cours, acquise ou maîtrisée) — sinon repliée, à un tap près.
 function SkillPictoGrid({ state, onSelect }) {
   return (
     <>
@@ -143,35 +176,45 @@ function SkillPictoGrid({ state, onSelect }) {
         const catSkills = SKILLS.filter((s) => s.category === cat.id);
         if (!catSkills.length) return null;
         const acquired = catSkills.filter((s) => isAcquired(state, s.id)).length;
+        const defaultOpen = catSkills.some((s) =>
+          ['learning', 'known', 'mastered'].includes(skillUiStatus(state, s)),
+        );
+        // Sous-groupes (seul « Sport canin » en a pour l'instant) : dans l'ordre
+        // de SUBCATEGORIES, puis les compétences sans sous-catégorie à la fin.
+        const subIds = Object.keys(SUBCATEGORIES).filter((id) =>
+          catSkills.some((s) => s.subcategory === id),
+        );
+        const rest = catSkills.filter((s) => !s.subcategory);
+
         return (
-          <section key={cat.id} className="picto-cat">
-            <header className="picto-cat-head" style={{ '--cat-color': cat.color }}>
-              <span>
-                {cat.icon} {cat.name}
-              </span>
-              <span className="picto-cat-count">
-                {acquired}/{catSkills.length}
-              </span>
-            </header>
-            <div className="picto-grid">
-              {catSkills.map((skill) => {
-                const status = skillUiStatus(state, skill);
-                return (
-                  <button
-                    key={skill.id}
-                    type="button"
-                    className={`picto-tile status-${status}`}
-                    onClick={() => onSelect(skill)}
-                  >
-                    <span className="picto-tile-icon">{skill.icon}</span>
-                    <span className="picto-tile-name">{skill.name}</span>
-                    {status === 'locked' && <span className="picto-tile-mark">🔒</span>}
-                    {status === 'mastered' && <span className="picto-tile-mark">🏆</span>}
-                  </button>
-                );
-              })}
-            </div>
-          </section>
+          <CollapsibleCategory
+            key={cat.id}
+            icon={cat.icon}
+            name={cat.name}
+            color={cat.color}
+            summary={`${acquired}/${catSkills.length}`}
+            defaultOpen={defaultOpen}
+          >
+            {subIds.length > 0 ? (
+              <>
+                {subIds.map((subId) => (
+                  <div key={subId} className="picto-subgroup">
+                    <div className="picto-subgroup-label">
+                      {SUBCATEGORIES[subId].icon} {SUBCATEGORIES[subId].name}
+                    </div>
+                    <PictoTiles
+                      state={state}
+                      skills={catSkills.filter((s) => s.subcategory === subId)}
+                      onSelect={onSelect}
+                    />
+                  </div>
+                ))}
+                {rest.length > 0 && <PictoTiles state={state} skills={rest} onSelect={onSelect} />}
+              </>
+            ) : (
+              <PictoTiles state={state} skills={catSkills} onSelect={onSelect} />
+            )}
+          </CollapsibleCategory>
         );
       })}
     </>

@@ -27,7 +27,31 @@
       "Bash(node scripts/seed-cues-once.mjs)",
       "Bash(node scripts/seed-cues-once.mjs --apply)",
       "Bash(node .strip-cues.mjs)",
-      "Bash(node .clear-gestures.mjs)"
+      "Bash(node .clear-gestures.mjs)",
+      "Bash(cd \"c:\\\\Users\\\\Julie\\\\Documents\\\\Kori\" && sed -E 's/=.*/=.../' .env)",
+      "Bash(mv .env .env.sandbox-bak)",
+      "Bash(cp .env.sandbox-bak /tmp/env-bak-notused)",
+      "Bash(taskkill //PID 6472 //F)",
+      "Bash(node -e \"console.log\\(require\\('playwright/package.json'\\).version\\)\")",
+      "WebFetch(domain:help.buymeacoffee.com)",
+      "Bash(node \"C:\\\\Users\\\\Julie\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-Julie-Documents-Kori\\\\d6eb8789-e31b-4026-8457-5b49cb52ea38\\\\scratchpad\\\\verif.mjs\")",
+      "Bash(cp \"C:\\\\Users\\\\Julie\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-Julie-Documents-Kori\\\\d6eb8789-e31b-4026-8457-5b49cb52ea38\\\\scratchpad\\\\verif.mjs\" ./verif-kori-scratch.mjs)",
+      "Bash(node verif-kori-scratch.mjs)",
+      "Bash(node verif-kori-scratch2.mjs)",
+      "Bash(kill %1)",
+      "Bash(pkill -f \"vite.*5183\")",
+      "Bash(node verif-known.mjs)",
+      "Bash(pkill -f verif-known.mjs)",
+      "Bash(pkill -f \"node.*verif-known\")",
+      "Bash(timeout 30 node verif-known.mjs)",
+      "Bash(timeout 40 node verif-known.mjs)",
+      "Bash(pkill -f \"vite.*5184\")",
+      "Bash(rm -f verif-known.mjs)",
+      "Bash(mv .env.kori-verif-bak2 .env)",
+      "Bash(git status *)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\Julie\\Documents\\Kori"
     ]
   }
 }

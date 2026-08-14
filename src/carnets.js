@@ -39,6 +39,14 @@ export const MODES = [
   },
 ];
 
+// Poil : réglage optionnel, jamais demandé au bilan de départ (voir la
+// compétence Brossage, dont le conseil dépend de ce choix). Pas de valeur par
+// défaut : tant que rien n'est choisi, aucun conseil de poil ne s'affiche.
+export const COAT_TYPES = [
+  { id: 'court', label: 'Poil court' },
+  { id: 'long', label: 'Poil long' },
+];
+
 export const isJournalOnly = (carnet) => carnet?.mode === 'journal';
 
 // Onglets visibles selon le mode : un carnet « journal seul » n'affiche ni

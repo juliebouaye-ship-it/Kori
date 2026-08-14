@@ -27,7 +27,7 @@ function currentGreenRun(walks) {
  * @returns {Array<{id,tone,text}>}  tone: 'info' | 'warn' | 'win'
  */
 export function deriveInsights(state, deps, today = localDate()) {
-  const { walks = [], sessions = [], skillStatus = {} } = state;
+  const { walks = [], sessions = [], skillStatus = {}, dogName = 'Kori' } = state;
   const { SKILL_BY_ID = {}, LOC_BY_ID = {}, TRIGGER_BY_ID = {} } = deps || {};
   const out = [];
 
@@ -45,7 +45,7 @@ export function deriveInsights(state, deps, today = localDate()) {
       out.push({
         id: `loc-${loc}`,
         tone: 'warn',
-        text: `${name} : ${red} sortie${red > 1 ? 's' : ''} débordée${red > 1 ? 's' : ''} sur ${total} notées. Un autre créneau ou un autre itinéraire pourrait aider Kori à rester sous son seuil.`,
+        text: `${name} : ${red} sortie${red > 1 ? 's' : ''} débordée${red > 1 ? 's' : ''} sur ${total} notées. Un autre créneau ou un autre itinéraire pourrait aider ${dogName} à rester sous son seuil.`,
       });
     }
   }
@@ -76,7 +76,7 @@ export function deriveInsights(state, deps, today = localDate()) {
     out.push({
       id: 'green-run',
       tone: 'win',
-      text: `${greenRun} balades sereines 🟢 d'affilée — Kori se régule de mieux en mieux. Beau travail 🎉`,
+      text: `${greenRun} balades sereines 🟢 d'affilée — ${dogName} se régule de mieux en mieux. Beau travail 🎉`,
     });
   }
 

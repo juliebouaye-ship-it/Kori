@@ -42,6 +42,61 @@ export function DecompBanner({ decomp, compact, onDismiss }) {
   );
 }
 
+// Bandeau « offrir un café » — discret et rare par construction :
+// (1) n'apparaît qu'après un vrai temps d'usage du carnet (pas dès la création) ;
+// (2) une fois vu, ne revient pas avant plusieurs semaines, même sans clic ;
+// (3) fermable d'un tap. Le rythme d'apparition (device-only, cosmétique — pas
+// une donnée du carnet) vit dans localStorage : seule exception assumée à la
+// suppression du localStorage du 18/07, puisqu'il ne s'agit pas de données mais
+// d'une préférence d'affichage locale, sans conséquence si elle se perd.
+const SUPPORT_SEEN_KEY = 'kori-coffee-last-seen';
+const SUPPORT_MIN_USAGE_DAYS = 14;
+const SUPPORT_COOLDOWN_DAYS = 21;
+const DAY_MS = 86400000;
+
+function shouldShowSupportBanner(carnetCreatedAt) {
+  if (!carnetCreatedAt) return false;
+  const usageDays = (Date.now() - carnetCreatedAt) / DAY_MS;
+  if (usageDays < SUPPORT_MIN_USAGE_DAYS) return false;
+  const lastSeen = Number(window.localStorage.getItem(SUPPORT_SEEN_KEY) || 0);
+  return (Date.now() - lastSeen) / DAY_MS >= SUPPORT_COOLDOWN_DAYS;
+}
+
+export function SupportBanner({ carnetCreatedAt }) {
+  const bmcUser = import.meta.env.VITE_BMC_USERNAME;
+
+  // Décidé une seule fois par ouverture d'appli (initialiseur paresseux de
+  // useState), et on marque tout de suite « vu » : le compte à rebours démarre
+  // à l'affichage, pas seulement à la fermeture — sinon rouvrir l'appli
+  // plusieurs fois le même jour le remontrerait.
+  const [visible] = useState(() => {
+    const show = Boolean(bmcUser) && shouldShowSupportBanner(carnetCreatedAt);
+    if (show) window.localStorage.setItem(SUPPORT_SEEN_KEY, String(Date.now()));
+    return show;
+  });
+  const [dismissed, setDismissed] = useState(false);
+
+  if (!visible || dismissed) return null;
+  return (
+    <div className="nudge support-banner">
+      <span>☕ Le Carnet te sert ? Tu peux m’offrir un café si tu veux soutenir le projet.</span>
+      <div className="support-banner-row">
+        <a
+          className="back-link"
+          href={`https://www.buymeacoffee.com/${bmcUser}`}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Offrir un café →
+        </a>
+        <button type="button" className="support-dismiss" onClick={() => setDismissed(true)} aria-label="Fermer">
+          ✕
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // Bandeau des rappels santé dus (jamais affiché s'il n'y a rien de dû).
 export function HealthDueBanner({ state, goToWalk }) {
   const due = dueReminders(state.reminders);

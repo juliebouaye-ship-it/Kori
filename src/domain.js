@@ -195,6 +195,14 @@ export function tierFor(lifetime) {
   return { current, next };
 }
 
+// ---- Personnalisation par le nom du chien ----------------------------------
+// Le contenu statique (skills-data.js) écrit « Kori » en dur — c'était le seul
+// chien de l'appli à l'origine. Plutôt que de réécrire ~60 chaînes en gabarits,
+// on substitue le prénom à l'affichage : ça marche pour tout futur carnet
+// (l'éducatrice, un 2e chien) sans toucher au contenu ni risquer un diff géant.
+export const personalize = (text, dogName) =>
+  !text || !dogName || dogName === 'Kori' ? text : text.replaceAll('Kori', dogName);
+
 // ---- Statut d'une compétence ----------------------------------------------
 export const isAcquired = (state, skillId) =>
   state.skillStatus[skillId] === 'known' || state.skillStatus[skillId] === 'mastered';
