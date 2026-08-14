@@ -29,7 +29,7 @@ const Root = () =>
     <AuthGate>
       {(user) => (
         <CarnetGate user={user}>
-          {(carnet, { carnets, user: gateUser, switchTo, addCarnet, joinCarnet }) => (
+          {(carnet, { carnets, user: gateUser, switchTo, addCarnet, joinCarnet, deleteCarnet }) => (
             <App
               carnet={carnet}
               carnets={carnets}
@@ -37,6 +37,7 @@ const Root = () =>
               onSwitchCarnet={switchTo}
               onAddCarnet={addCarnet}
               onJoinCarnet={joinCarnet}
+              onDeleteCarnet={deleteCarnet}
             />
           )}
         </CarnetGate>
