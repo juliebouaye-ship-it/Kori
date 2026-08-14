@@ -48,7 +48,15 @@
       "Bash(pkill -f \"vite.*5184\")",
       "Bash(rm -f verif-known.mjs)",
       "Bash(mv .env.kori-verif-bak2 .env)",
-      "Bash(git status *)"
+      "Bash(git status *)",
+      "Bash(node \"C:\\\\Users\\\\Julie\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-Julie-Documents-Kori\\\\7dfc52f3-1edc-4ddf-b255-e9db8bbdcb81\\\\scratchpad\\\\check-support-banner.mjs\")",
+      "Bash(node scripts/tmp-check-banner.mjs)",
+      "Bash(curl -s http://localhost:5184/src/main.jsx)",
+      "Bash(curl -s http://localhost:5184/src/tabs/banners.jsx)",
+      "Bash(taskkill //PID 15020 //F)",
+      "Bash(node verif-coat.mjs)",
+      "Bash(pkill -f \"vite.*5185\")",
+      "Bash(rm -f verif-coat.mjs)"
     ],
     "additionalDirectories": [
       "c:\\Users\\Julie\\Documents\\Kori"

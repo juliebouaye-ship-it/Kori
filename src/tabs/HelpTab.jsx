@@ -149,6 +149,52 @@ function MethodsSection() {
   );
 }
 
+// Poil : une fois réglé, une ligne compacte plutôt que les deux boutons en
+// permanence — la section « Le carnet de X » est déjà longue.
+function CoatSetting({ carnet, onSetCoatType }) {
+  const [editing, setEditing] = useState(false);
+  const current = COAT_TYPES.find((c) => c.id === carnet.coatType);
+
+  if (current && !editing) {
+    return (
+      <p className="muted invite-hint" style={{ marginTop: 12 }}>
+        {carnet.dogName} {current.sentence}.{' '}
+        <button type="button" className="back-link" onClick={() => setEditing(true)}>
+          Modifier
+        </button>
+      </p>
+    );
+  }
+
+  return (
+    <>
+      <p className="muted invite-hint" style={{ marginTop: 12 }}>
+        Poil de {carnet.dogName} (optionnel, pour le conseil de brossage) :
+      </p>
+      <div className="mode-choice mode-choice-inline">
+        {COAT_TYPES.map((c) => (
+          <button
+            key={c.id}
+            type="button"
+            className={`mode-btn ${carnet.coatType === c.id ? 'on' : ''}`}
+            onClick={() => {
+              onSetCoatType?.(carnet.coatType === c.id ? null : c.id);
+              setEditing(false);
+            }}
+          >
+            <span className="mode-label">{c.label}</span>
+          </button>
+        ))}
+      </div>
+      {current && (
+        <button type="button" className="back-link" onClick={() => setEditing(false)}>
+          Annuler
+        </button>
+      )}
+    </>
+  );
+}
+
 // Suppression du carnet : irréversible et partagée (elle emporte les données
 // de tout le monde qui a rejoint avec le code), donc pas un simple bouton —
 // repliée par défaut, puis il faut retaper le nom du chien pour confirmer.
@@ -264,25 +310,7 @@ function CarnetSection({
         </p>
       )}
 
-      {!journalOnly && (
-        <>
-          <p className="muted invite-hint" style={{ marginTop: 12 }}>
-            Poil de {carnet.dogName} (optionnel, pour le conseil de brossage) :
-          </p>
-          <div className="mode-choice mode-choice-inline">
-            {COAT_TYPES.map((c) => (
-              <button
-                key={c.id}
-                type="button"
-                className={`mode-btn ${carnet.coatType === c.id ? 'on' : ''}`}
-                onClick={() => onSetCoatType?.(carnet.coatType === c.id ? null : c.id)}
-              >
-                <span className="mode-label">{c.label}</span>
-              </button>
-            ))}
-          </div>
-        </>
-      )}
+      {!journalOnly && <CoatSetting carnet={carnet} onSetCoatType={onSetCoatType} />}
 
       {/* Seule entrée vers un second chien quand on n'en a qu'un : la barre du
           haut ne devient un sélecteur qu'à partir de deux carnets. */}

@@ -43,8 +43,8 @@ export const MODES = [
 // compétence Brossage, dont le conseil dépend de ce choix). Pas de valeur par
 // défaut : tant que rien n'est choisi, aucun conseil de poil ne s'affiche.
 export const COAT_TYPES = [
-  { id: 'court', label: 'Poil court' },
-  { id: 'long', label: 'Poil long' },
+  { id: 'court', label: 'Poil court', sentence: 'a le poil court' },
+  { id: 'long', label: 'Poil long', sentence: 'a le poil long' },
 ];
 
 export const isJournalOnly = (carnet) => carnet?.mode === 'journal';
