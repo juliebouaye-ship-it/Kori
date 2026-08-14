@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { CALM_ACTIVITIES } from '../skills-data.js';
 import { REMINDER_TYPE_BY_ID } from '../health-data.js';
 import { dueReminders } from '../domain.js';
@@ -45,36 +45,58 @@ export function DecompBanner({ decomp, compact, onDismiss }) {
 // Bandeau « offrir un café » — discret et rare par construction :
 // (1) n'apparaît qu'après un vrai temps d'usage du carnet (pas dès la création) ;
 // (2) une fois vu, ne revient pas avant plusieurs semaines, même sans clic ;
-// (3) fermable d'un tap. Le rythme d'apparition (device-only, cosmétique — pas
-// une donnée du carnet) vit dans localStorage : seule exception assumée à la
-// suppression du localStorage du 18/07, puisqu'il ne s'agit pas de données mais
-// d'une préférence d'affichage locale, sans conséquence si elle se perd.
-const SUPPORT_SEEN_KEY = 'kori-coffee-last-seen';
+// (3) après un clic sur le lien, le prochain rappel est repoussé beaucoup plus
+//     loin (on suppose l'intérêt déjà exprimé) ;
+// (4) un bouton « déjà fait » l'éteint définitivement sur cet appareil — on ne
+//     PEUT PAS savoir si un don a réellement eu lieu (aucune intégration avec
+//     Buy Me a Coffee, ça demanderait un webhook + un backend), donc c'est un
+//     auto-déclaratif plutôt qu'une vraie détection ;
+// (5) jamais sur un déploiement preview (hostname `preview--…`) — seulement en
+//     prod, pour ne pas solliciter sur un lien de test.
+// Le rythme d'apparition (device-only, cosmétique — pas une donnée du carnet)
+// vit dans localStorage : seule exception assumée à la suppression du
+// localStorage du 18/07, puisqu'il ne s'agit pas de données mais d'une
+// préférence d'affichage locale, sans conséquence si elle se perd.
+const SUPPORT_NEXT_KEY = 'kori-coffee-next-at';
+const SUPPORT_DONE_KEY = 'kori-coffee-done';
 const SUPPORT_MIN_USAGE_DAYS = 14;
-const SUPPORT_COOLDOWN_DAYS = 21;
+const SUPPORT_SHOWN_COOLDOWN_DAYS = 21;
+const SUPPORT_CLICKED_COOLDOWN_DAYS = 90;
 const DAY_MS = 86400000;
 
+const isPreviewDeploy = () => window.location.hostname.includes('preview');
+
+const scheduleNextSupportPrompt = (days) =>
+  window.localStorage.setItem(SUPPORT_NEXT_KEY, String(Date.now() + days * DAY_MS));
+
 function shouldShowSupportBanner(carnetCreatedAt) {
+  if (isPreviewDeploy()) return false;
+  if (window.localStorage.getItem(SUPPORT_DONE_KEY)) return false;
   if (!carnetCreatedAt) return false;
   const usageDays = (Date.now() - carnetCreatedAt) / DAY_MS;
   if (usageDays < SUPPORT_MIN_USAGE_DAYS) return false;
-  const lastSeen = Number(window.localStorage.getItem(SUPPORT_SEEN_KEY) || 0);
-  return (Date.now() - lastSeen) / DAY_MS >= SUPPORT_COOLDOWN_DAYS;
+  const nextAt = Number(window.localStorage.getItem(SUPPORT_NEXT_KEY) || 0);
+  return Date.now() >= nextAt;
 }
 
 export function SupportBanner({ carnetCreatedAt }) {
   const bmcUser = import.meta.env.VITE_BMC_USERNAME;
 
   // Décidé une seule fois par ouverture d'appli (initialiseur paresseux de
-  // useState), et on marque tout de suite « vu » : le compte à rebours démarre
-  // à l'affichage, pas seulement à la fermeture — sinon rouvrir l'appli
-  // plusieurs fois le même jour le remontrerait.
-  const [visible] = useState(() => {
-    const show = Boolean(bmcUser) && shouldShowSupportBanner(carnetCreatedAt);
-    if (show) window.localStorage.setItem(SUPPORT_SEEN_KEY, String(Date.now()));
-    return show;
-  });
+  // useState — doit rester PUR : en StrictMode/dev, React l'appelle deux fois,
+  // et un 1er appel qui écrirait déjà « prochain rappel » ferait lire cette
+  // écriture par le 2e appel, qui se refermerait aussitôt — bug observé et
+  // corrigé en sortant l'écriture dans l'effet ci-dessous).
+  const [visible] = useState(() => Boolean(bmcUser) && shouldShowSupportBanner(carnetCreatedAt));
   const [dismissed, setDismissed] = useState(false);
+
+  // Programme le prochain rappel dès l'affichage (pas seulement à la
+  // fermeture) : rouvrir l'appli plusieurs fois le même jour ne doit pas le
+  // remontrer. Effet à monter une seule fois, séparé du calcul ci-dessus.
+  useEffect(() => {
+    if (visible) scheduleNextSupportPrompt(SUPPORT_SHOWN_COOLDOWN_DAYS);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (!visible || dismissed) return null;
   return (
@@ -86,9 +108,20 @@ export function SupportBanner({ carnetCreatedAt }) {
           href={`https://www.buymeacoffee.com/${bmcUser}`}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={() => scheduleNextSupportPrompt(SUPPORT_CLICKED_COOLDOWN_DAYS)}
         >
           Offrir un café →
         </a>
+        <button
+          type="button"
+          className="support-dismiss support-already"
+          onClick={() => {
+            window.localStorage.setItem(SUPPORT_DONE_KEY, '1');
+            setDismissed(true);
+          }}
+        >
+          Déjà fait 🙏
+        </button>
         <button type="button" className="support-dismiss" onClick={() => setDismissed(true)} aria-label="Fermer">
           ✕
         </button>
