@@ -59,7 +59,11 @@ export function deriveInsights(state, deps, today = localDate()) {
     for (const t of w.triggers || []) trigCount[t] = (trigCount[t] || 0) + 1;
   }
   if (redWalks >= 3) {
-    const top = Object.entries(trigCount).sort((a, b) => b[1] - a[1])[0];
+    // « Autre » est un fourre-tout (pas un vrai déclencheur identifié) : le
+    // signaler comme « à anticiper en priorité » ne veut rien dire de concret.
+    const top = Object.entries(trigCount)
+      .filter(([id]) => id !== 'autre')
+      .sort((a, b) => b[1] - a[1])[0];
     if (top && top[1] >= 2) {
       const name = TRIGGER_BY_ID[top[0]]?.label ?? top[0];
       out.push({

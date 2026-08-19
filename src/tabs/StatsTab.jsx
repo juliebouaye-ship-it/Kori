@@ -84,18 +84,22 @@ export function StatsTab({ state, onAddFirst }) {
   const walkStats = useMemo(() => {
     const today = localDate();
     const byDay = {};
+    const levelsByDay = {}; // date -> niveau de chaque sortie du jour (dans l'ordre), pour la case découpée
     for (const w of state.walks) {
       const diff = daysBetween(today, w.date);
       if (diff < 0 || diff > 13) continue;
       const rank = { vert: 1, jaune: 2, rouge: 3 };
       if (!byDay[w.date] || rank[w.level] > rank[byDay[w.date]]) byDay[w.date] = w.level;
+      (levelsByDay[w.date] ??= []).push(w.level);
     }
     const days = [];
     for (let i = 13; i >= 0; i--) {
       const d = new Date();
       d.setDate(d.getDate() - i);
       const date = localDate(d);
-      days.push({ date, level: byDay[date] ?? null });
+      // 4 sorties max représentées dans la case (au-delà, très rare, la couleur
+      // globale — pire sortie du jour — reste correcte même si la case n'en montre pas plus).
+      days.push({ date, level: byDay[date] ?? null, walks: (levelsByDay[date] ?? []).slice(0, 4) });
     }
     // Durées : on compte les SORTIES (pas les jours), et uniquement celles qui
     // portent une durée. La durée est facultative — afficher un total comme s'il
@@ -106,6 +110,10 @@ export function StatsTab({ state, onAddFirst }) {
     });
     const timed = inWindow.filter((w) => w.duration > 0);
     const minutes = timed.reduce((n, w) => n + w.duration, 0);
+    // Moyenne par JOUR (et pas par sortie) : deux sorties 30+20 min le même jour
+    // pèsent 50 min ce jour-là, pas deux sorties de 25 min — sinon plusieurs
+    // sorties courtes font paraître les journées plus courtes qu'elles ne le sont.
+    const timedDays = new Set(timed.map((w) => w.date));
 
     const noted = days.filter((d) => d.level);
     return {
@@ -116,8 +124,9 @@ export function StatsTab({ state, onAddFirst }) {
       rouge: noted.filter((d) => d.level === 'rouge').length,
       walksInWindow: inWindow.length,
       timedCount: timed.length,
-      minutes,
-      average: timed.length ? Math.round(minutes / timed.length) : 0,
+      timedDaysCount: timedDays.size,
+      averagePerWalk: timed.length ? Math.round(minutes / timed.length) : 0,
+      averagePerDay: timedDays.size ? Math.round(minutes / timedDays.size) : 0,
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.walks]);
@@ -194,8 +203,17 @@ export function StatsTab({ state, onAddFirst }) {
                 <span
                   key={d.date}
                   className={`walk-cell walk-cell-${d.level ?? 'none'}`}
-                  title={`${frDate(d.date)} · ${d.level ? CUP_BY_ID[d.level].short : 'non noté'}`}
-                />
+                  data-count={d.walks.length}
+                  title={`${frDate(d.date)} · ${
+                    d.walks.length
+                      ? d.walks.map((l) => CUP_BY_ID[l].emoji).join(' ')
+                      : 'non noté'
+                  }`}
+                >
+                  {d.walks.map((level, i) => (
+                    <span key={i} className={`walk-sub walk-sub-${level}`} />
+                  ))}
+                </span>
               ))}
             </div>
             <div className="walk-strip-legend">
@@ -215,14 +233,15 @@ export function StatsTab({ state, onAddFirst }) {
             {walkStats.timedCount > 0 && (
               <div className="walk-time">
                 <span className="wt-main">
-                  ⏱️ {formatMinutes(walkStats.minutes)} · {formatMinutes(walkStats.average)} en
-                  moyenne
+                  ⏱️ {formatMinutes(walkStats.averagePerDay)} par jour en moyenne
                 </span>
                 <span className="wt-sub">
-                  sur {walkStats.timedCount} sortie{walkStats.timedCount > 1 ? 's' : ''} minutée
-                  {walkStats.timedCount > 1 ? 's' : ''}
+                  {formatMinutes(walkStats.averagePerWalk)} en moyenne par sortie · sur{' '}
+                  {walkStats.timedCount} sortie{walkStats.timedCount > 1 ? 's' : ''} minutée
+                  {walkStats.timedCount > 1 ? 's' : ''} ({walkStats.timedDaysCount} jour
+                  {walkStats.timedDaysCount > 1 ? 's' : ''})
                   {walkStats.walksInWindow > walkStats.timedCount &&
-                    ` (${walkStats.walksInWindow - walkStats.timedCount} sans durée)`}
+                    ` · ${walkStats.walksInWindow - walkStats.timedCount} sans durée`}
                 </span>
               </div>
             )}

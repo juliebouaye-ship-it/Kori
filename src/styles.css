@@ -753,6 +753,25 @@ button {
 .pw-loc { color: var(--ink-soft); flex: 1; }
 .pw-dur { color: var(--ink-soft); font-size: 12px; flex-shrink: 0; }
 .pw-tags { font-size: 14px; letter-spacing: 2px; }
+.pw-del {
+  margin-left: auto;
+  color: var(--ink-soft);
+  font-size: 13px;
+  padding: 2px 6px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+.pw-del:hover { background: var(--terra-bg); color: var(--danger); }
+.journal-more {
+  display: block;
+  width: 100%;
+  text-align: center;
+  margin-top: 8px;
+  padding: 8px 0 2px;
+  font-weight: 700;
+  color: var(--terra-dark);
+  font-size: 13px;
+}
 
 /* Bande des 14 derniers jours : une case par jour, la plus ancienne à gauche.
    Case neutre = jour non noté (≠ « pas de balade »). */
@@ -763,10 +782,20 @@ button {
   border-radius: 5px;
   border: 1px solid var(--line);
   background: var(--cream);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 1px;
+  overflow: hidden;
 }
-.walk-cell-vert { background: var(--sage); border-color: var(--sage); }
-.walk-cell-jaune { background: var(--gold); border-color: var(--gold); }
-.walk-cell-rouge { background: var(--danger); border-color: var(--danger); }
+/* Une case = un jour, mais peut contenir jusqu'à 4 sorties : chacune garde sa
+   propre couleur au lieu d'écraser la journée en un seul niveau (pire sortie). */
+.walk-cell[data-count='1'] { grid-template-columns: 1fr; grid-template-rows: 1fr; }
+.walk-cell[data-count='2'] { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr; }
+.walk-cell[data-count='3'] .walk-sub:nth-child(3) { grid-column: 1 / span 2; }
+.walk-sub-vert { background: var(--sage); }
+.walk-sub-jaune { background: var(--gold); }
+.walk-sub-rouge { background: var(--danger); }
 .walk-strip-legend {
   display: flex;
   gap: 12px;

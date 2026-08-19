@@ -164,7 +164,7 @@ function WalkCard({ state, walk, onUpdate, onDelete, onCreatePlace }) {
   );
 }
 
-function PastWalkRow({ state, walk, today }) {
+function PastWalkRow({ state, walk, today, onDelete }) {
   const cup = CUP_BY_ID[walk.level];
   const note = (walk.note || '').trim();
   return (
@@ -179,6 +179,9 @@ function PastWalkRow({ state, walk, today }) {
         <span className="pw-tags">
           {walk.triggers.map((t) => TRIGGER_BY_ID[t]?.icon).filter(Boolean).join(' ')}
         </span>
+        <button className="pw-del" onClick={() => onDelete(walk.id)} aria-label="Supprimer la sortie">
+          ✕
+        </button>
       </div>
       {/* La note s'affiche ici : c'est ce qui rend le tag « Autre » relisible. */}
       {note && <div className="pw-note">{note}</div>}
@@ -204,9 +207,11 @@ export function BaladeTab({
   // d'enregistrer doit apparaître tout de suite dans le journal (avant, le
   // filtre `date !== today` l'en excluait : elle n'y entrait que le lendemain).
   // La carte « Sortie du jour » reste au-dessus : c'est la surface d'édition.
-  const journalWalks = [...state.walks]
-    .sort((a, b) => b.date.localeCompare(a.date) || (b.ts || 0) - (a.ts || 0))
-    .slice(0, 14);
+  const allJournalWalks = [...state.walks].sort(
+    (a, b) => b.date.localeCompare(a.date) || (b.ts || 0) - (a.ts || 0)
+  );
+  const [journalCount, setJournalCount] = useState(10);
+  const journalWalks = allJournalWalks.slice(0, journalCount);
 
   // brouillon de balade : rien n'est enregistré tant qu'on ne valide pas.
   const [draft, setDraft] = useState({
@@ -345,8 +350,13 @@ export function BaladeTab({
         <div className="card">
           <h2>Journal des balades</h2>
           {journalWalks.map((w) => (
-            <PastWalkRow key={w.id} state={state} walk={w} today={today} />
+            <PastWalkRow key={w.id} state={state} walk={w} today={today} onDelete={onDeleteWalk} />
           ))}
+          {allJournalWalks.length > journalWalks.length && (
+            <button className="journal-more" onClick={() => setJournalCount((n) => n + 10)}>
+              Charger les sorties précédentes
+            </button>
+          )}
         </div>
       )}
 
