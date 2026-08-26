@@ -178,6 +178,7 @@ export function useKoriState(carnet) {
     setState((prev) => ({ ...prev, walks: prev.walks.filter((w) => w.id !== id) }));
 
   // ---- Carnet (identité : nom, mode, code d'invitation) ----
+  const setDogName = (dogName) => updateCarnet(carnet?.id, { dogName });
   const setCarnetMode = (mode) => updateCarnet(carnet?.id, { mode });
   // Poil : réglage optionnel, jamais demandé au bilan de départ. `null` tant
   // que personne n'a choisi → aucun conseil de brossage affiché (voir
@@ -413,6 +414,7 @@ export function useKoriState(carnet) {
     updateWalk,
     createPlace,
     removePlace,
+    setDogName,
     setCarnetMode,
     setCoatType,
     deleteWalk,

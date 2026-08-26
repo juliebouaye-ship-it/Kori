@@ -219,6 +219,7 @@ export default function App({
           journalOnly={k.journalOnly}
           onSetMode={k.setCarnetMode}
           onSetCoatType={k.setCoatType}
+          onSetDogName={k.setDogName}
           onSignOut={signOut}
           onAddCarnet={() => setAddingDog(true)}
           onJoinCarnet={onJoinCarnet}

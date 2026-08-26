@@ -360,12 +360,66 @@ function LegalScreen({ onBack }) {
   );
 }
 
+// Renommer le chien : un simple bouton ✏️ parmi les autres actions du carnet
+// (pas une ligne à part qui répète un nom déjà visible dans le titre de la
+// carte — retour Julie du 26/08 : « pas très propre à cet endroit »). Un tap
+// bascule ce même emplacement vers le champ d'édition.
+function DogNameSetting({ carnet, onSetDogName }) {
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState(carnet.dogName);
+  if (!onSetDogName) return null;
+
+  if (!editing) {
+    return (
+      <button
+        type="button"
+        className="back-link"
+        onClick={() => {
+          setValue(carnet.dogName);
+          setEditing(true);
+        }}
+      >
+        ✏️ Renommer {carnet.dogName}
+      </button>
+    );
+  }
+
+  const save = (e) => {
+    e.preventDefault();
+    const name = value.trim();
+    if (!name) return;
+    onSetDogName(name);
+    setEditing(false);
+  };
+
+  return (
+    <form onSubmit={save}>
+      <input
+        className="auth-input"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        maxLength={30}
+        autoFocus
+      />
+      <div className="carnet-actions">
+        <button className="btn btn-primary" disabled={!value.trim()}>
+          Enregistrer
+        </button>
+        <button type="button" className="back-link" onClick={() => setEditing(false)}>
+          Annuler
+        </button>
+      </div>
+    </form>
+  );
+}
+
 // Le carnet : qui y a accès, sous quelle forme, et comment en sortir.
 function CarnetSection({
   carnet,
   journalOnly,
   onSetMode,
   onSetCoatType,
+  onSetDogName,
   onSignOut,
   onAddCarnet,
   onJoinCarnet,
@@ -424,6 +478,7 @@ function CarnetSection({
       {/* Seule entrée vers un second chien quand on n'en a qu'un : la barre du
           haut ne devient un sélecteur qu'à partir de deux carnets. */}
       <div className="carnet-actions">
+        <DogNameSetting carnet={carnet} onSetDogName={onSetDogName} />
         <button type="button" className="back-link" onClick={onAddCarnet}>
           ＋ Ajouter un chien
         </button>
@@ -446,6 +501,7 @@ export function HelpTab({
   journalOnly,
   onSetMode,
   onSetCoatType,
+  onSetDogName,
   onSignOut,
   onAddCarnet,
   onJoinCarnet,
@@ -476,6 +532,7 @@ export function HelpTab({
           journalOnly={journalOnly}
           onSetMode={onSetMode}
           onSetCoatType={onSetCoatType}
+          onSetDogName={onSetDogName}
           onSignOut={onSignOut}
           onAddCarnet={onAddCarnet}
           onJoinCarnet={onJoinCarnet}
