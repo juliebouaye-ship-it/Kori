@@ -109,6 +109,22 @@ const _schema = i.schema({
       word: i.string().optional(),
       gesture: i.string().optional(),
     }),
+
+    // Mesure d'usage minimale (jamais lue côté client — voir instant.perms.ts) :
+    // une ligne par événement d'activation (carnet créé, première balade,
+    // première séance...). Pas de déduplication serveur : signal approximatif,
+    // pas une métrique facturée.
+    events: i.entity({
+      type: i.string(),
+      createdAt: i.number(),
+    }),
+
+    // Retour libre envoyé depuis les réglages (jamais lu côté client, voir
+    // instant.perms.ts).
+    feedback: i.entity({
+      text: i.string(),
+      createdAt: i.number(),
+    }),
   },
 
   links: {
@@ -152,6 +168,14 @@ const _schema = i.schema({
     cueCarnet: {
       forward: { on: 'cues', has: 'one', label: 'carnet', onDelete: 'cascade' },
       reverse: { on: 'carnets', has: 'many', label: 'cues' },
+    },
+    eventCarnet: {
+      forward: { on: 'events', has: 'one', label: 'carnet', onDelete: 'cascade' },
+      reverse: { on: 'carnets', has: 'many', label: 'events' },
+    },
+    feedbackCarnet: {
+      forward: { on: 'feedback', has: 'one', label: 'carnet', onDelete: 'cascade' },
+      reverse: { on: 'carnets', has: 'many', label: 'feedback' },
     },
   },
 });

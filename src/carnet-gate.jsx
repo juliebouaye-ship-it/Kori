@@ -36,7 +36,7 @@ function CreateCarnet({ user, onDone, onJoinInstead, canCancel, onCancel }) {
     setError(null);
     const id = uuid();
     try {
-      await db.transact(
+      await db.transact([
         db.tx.carnets[id]
           .update({
             dogName,
@@ -54,7 +54,12 @@ function CreateCarnet({ user, onDone, onJoinInstead, canCancel, onCancel }) {
           // carnet naîtrait sans propriétaire et deviendrait inaccessible dès
           // que les règles de permissions sont en place.
           .link({ members: user.id }),
-      );
+        // Mesure d'usage : dans la même transaction, purement informatif (voir
+        // instant.schema.ts) — son échec ne doit jamais empêcher la création.
+        db.tx.events[uuid()]
+          .update({ type: 'carnet_created', createdAt: Date.now() })
+          .link({ carnet: id }),
+      ]);
       onDone?.(id);
     } catch (err) {
       console.error(err);

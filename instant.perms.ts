@@ -61,9 +61,13 @@ const rules = {
     ],
     allow: {
       view: 'isMember || knowsInviteCode',
-      // N'importe quel compte connecté peut créer SON carnet ; il s'y rattache
-      // comme membre dans la même transaction.
-      create: 'auth.id != null',
+      // N'importe quel compte connecté avec un e-mail peut créer SON carnet ; il
+      // s'y rattache comme membre dans la même transaction. `auth.email != null`
+      // (et pas seulement `auth.id != null`) ferme la création via un compte
+      // invité (`signInAsGuest`, atteignable en contournant l'UI puisque l'App ID
+      // est public) — sans effet sur le parcours normal, qui passe déjà par
+      // l'e-mail (voir auth.jsx).
+      create: 'auth.id != null && auth.email != null',
       update: 'isMember',
       delete: 'isMember',
       // Rejoindre un carnet : autorisé avec le code. Se retirer : réservé aux
@@ -81,6 +85,18 @@ const rules = {
   skillProgress: memberOfOwningCarnet,
   palierDone: memberOfOwningCarnet,
   cues: memberOfOwningCarnet,
+
+  // Écriture seule depuis le client : ni l'auteur ni les autres membres du
+  // carnet ne relisent ces lignes depuis l'appli — seule Julie les consulte,
+  // via un script admin (voir scripts/events.mjs, scripts/feedback.mjs).
+  events: {
+    bind: memberOfOwningCarnet.bind,
+    allow: { view: 'false', create: 'isMember', update: 'false', delete: 'false' },
+  },
+  feedback: {
+    bind: memberOfOwningCarnet.bind,
+    allow: { view: 'false', create: 'isMember', update: 'false', delete: 'false' },
+  },
 
   // Le schéma est figé côté serveur : le client ne crée pas d'attributs.
   attrs: {

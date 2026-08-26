@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
 import { AuthGate } from './auth.jsx';
 import { CarnetGate } from './carnet-gate.jsx';
+import { ErrorBoundary } from './error-boundary.jsx';
 import { syncEnabled } from './db.js';
 import './styles.css';
 
@@ -49,6 +50,8 @@ const Root = () =>
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <Root />
+    <ErrorBoundary>
+      <Root />
+    </ErrorBoundary>
   </React.StrictMode>
 );

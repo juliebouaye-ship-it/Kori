@@ -251,6 +251,115 @@ function DeleteCarnetZone({ carnet, onDeleteCarnet }) {
   );
 }
 
+// Retour libre envoyé depuis les réglages. Confirmation locale (même patron
+// que le bouton « Copié ✓ » de CarnetSection), pas le toast global de l'app.
+function FeedbackSection({ onSendFeedback }) {
+  const [text, setText] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [error, setError] = useState(null);
+  if (!onSendFeedback) return null;
+
+  const send = async (e) => {
+    e.preventDefault();
+    const value = text.trim();
+    if (!value) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await onSendFeedback(value);
+      setText('');
+      setSent(true);
+      setTimeout(() => setSent(false), 3000);
+    } catch (err) {
+      console.error(err);
+      setError("L'envoi a échoué. Réessaie dans un instant.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <CollapsibleCard title="Un avis, un bug à signaler ? 💬">
+      <p className="muted card-intro">
+        Écrit directement à Julie, qui développe l’appli. Pas de réponse automatique, mais c’est
+        lu.
+      </p>
+      <form onSubmit={send}>
+        <textarea
+          className="auth-input"
+          rows={3}
+          placeholder="Ce qui marche, ce qui coince, une idée…"
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          maxLength={2000}
+        />
+        {error && <p className="auth-error">{error}</p>}
+        <button className="btn btn-primary btn-block" disabled={busy || !text.trim()}>
+          {busy ? 'Envoi…' : sent ? 'Envoyé ✓ Merci' : 'Envoyer'}
+        </button>
+      </form>
+    </CollapsibleCard>
+  );
+}
+
+// Mentions légales & confidentialité — seul écran de l'appli au vouvoiement/
+// neutre (le reste garde le tutoiement établi ; voir mémoire kori-registre-legal
+// pour la raison).
+function LegalScreen({ onBack }) {
+  return (
+    <div className="card">
+      <button type="button" className="back-link" onClick={onBack}>
+        ← Toute l’aide
+      </button>
+      <h2>Mentions légales &amp; confidentialité</h2>
+
+      <h3>Éditrice</h3>
+      <p>
+        Le Carnet est édité par Julie Jeltsch, à titre personnel. L’usage de l’application est
+        gratuit ; un soutien libre et sans contrepartie reste possible (Buy Me a Coffee, lien dans
+        les réglages). Contact : julie.bouaye@gmail.com.
+      </p>
+
+      <h3>Hébergement</h3>
+      <p>Le site est hébergé par Netlify. Les données du carnet sont hébergées par InstantDB.</p>
+
+      <h3>Données collectées</h3>
+      <ul>
+        <li>L’adresse e-mail, utilisée uniquement pour la connexion par code à usage unique.</li>
+        <li>
+          Les données saisies dans le carnet (nom du chien, balades, séances d’entraînement, soins,
+          rappels, signaux d’entraînement), entrées volontairement par les membres du carnet.
+        </li>
+        <li>
+          Quelques événements techniques minimaux (par exemple : création d’un carnet, première
+          balade enregistrée), pour savoir si l’application est utile — jamais partagés ni vendus.
+        </li>
+        <li>Un message de retour, en cas d’envoi depuis les réglages.</li>
+      </ul>
+
+      <h3>Ce qui n’est pas fait</h3>
+      <ul>
+        <li>Aucune donnée vendue ni partagée avec un tiers.</li>
+        <li>Aucune publicité, aucun traqueur publicitaire ou analytique tiers.</li>
+        <li>
+          Le stockage local de l’appareil (localStorage) ne contient qu’une préférence d’affichage
+          cosmétique (le rappel du bandeau de soutien) — jamais de donnée du carnet.
+        </li>
+      </ul>
+
+      <h3>Conservation</h3>
+      <p>Les données sont conservées tant que le compte ou le carnet existe.</p>
+
+      <h3>Accès, correction, suppression</h3>
+      <p>
+        Pour consulter, corriger ou supprimer les données d’un compte ou d’un carnet :
+        julie.bouaye@gmail.com.
+      </p>
+    </div>
+  );
+}
+
 // Le carnet : qui y a accès, sous quelle forme, et comment en sortir.
 function CarnetSection({
   carnet,
@@ -341,9 +450,15 @@ export function HelpTab({
   onAddCarnet,
   onJoinCarnet,
   onDeleteCarnet,
+  onSendFeedback,
 }) {
   const [activeDiag, setActiveDiag] = useState(null);
   const [choice, setChoice] = useState(null);
+  const [legalOpen, setLegalOpen] = useState(false);
+
+  if (legalOpen) {
+    return <LegalScreen onBack={() => setLegalOpen(false)} />;
+  }
 
   if (!activeDiag) {
     return (
@@ -368,6 +483,7 @@ export function HelpTab({
         />
         {!journalOnly && <AntisecheSection state={state} onSetCue={onSetCue} />}
         {!journalOnly && <MethodsSection />}
+        <FeedbackSection onSendFeedback={onSendFeedback} />
 
         <CollapsibleCard title="Quand ça coince 🧭" summary={`${DIAGS.length}`}>
           <p className="muted card-intro">
@@ -391,6 +507,10 @@ export function HelpTab({
             </button>
           ))}
         </CollapsibleCard>
+
+        <button type="button" className="back-link" onClick={() => setLegalOpen(true)}>
+          Mentions légales &amp; confidentialité
+        </button>
       </>
     );
   }

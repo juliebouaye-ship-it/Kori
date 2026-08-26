@@ -6,7 +6,7 @@
 
 import { useEffect, useState } from 'react';
 import { SKILLS, QUICK_XP, validateDag } from '../skills-data.js';
-import { useKoriSync, updateCarnet } from '../store.js';
+import { useKoriSync, updateCarnet, logEvent } from '../store.js';
 import { defaultTabForMode } from '../carnets.js';
 import { localDate, frDate } from '../date-utils.js';
 import {
@@ -67,6 +67,7 @@ export function useKoriState(carnet) {
 
   const logSession = (skill, palier, rating) => {
     const gestion = isBaladeSkill(skill.id) && dayHasRedWalk(state.walks, localDate());
+    if (state.sessions.length === 0) logEvent(carnet?.id, 'first_session_logged');
     setState((prev) => ({
       ...prev,
       wallet: prev.wallet + rating.xp,
@@ -96,6 +97,7 @@ export function useKoriState(carnet) {
   const logQuickRound = (skillIds) => {
     const ids = [...new Set(skillIds)].filter((id) => SKILLS.some((s) => s.id === id));
     if (ids.length === 0) return;
+    if (state.sessions.length === 0) logEvent(carnet?.id, 'first_session_logged');
     const gain = ids.length * QUICK_XP;
     const date = localDate();
     setState((prev) => ({
@@ -134,6 +136,7 @@ export function useKoriState(carnet) {
   const logWalk = (draft) => {
     const level = draft.level;
     if (!level) return;
+    if (state.walks.length === 0) logEvent(carnet?.id, 'first_walk_logged');
     const today = localDate();
     // Une date passée choisie explicitement (jamais dans le futur, jamais
     // automatique) : sinon la balade tombe sur aujourd'hui comme d'habitude.

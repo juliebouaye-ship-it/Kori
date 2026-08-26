@@ -11,7 +11,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { db, syncEnabled } from './db.js';
-import { COLLECTIONS, assemble, canonical, diffPlan } from './sync-core.js';
+import { COLLECTIONS, assemble, canonical, diffPlan, uuid } from './sync-core.js';
 
 const PUSH_DEBOUNCE_MS = 800;
 
@@ -115,6 +115,22 @@ export function useKoriSync(carnetId, state, setState, normalize = (s) => s) {
 export function updateCarnet(carnetId, patch) {
   if (!carnetId) return;
   db.transact(db.tx.carnets[carnetId].update({ ...patch, updatedAt: Date.now() }));
+}
+
+// Événement d'usage minimal (voir instant.schema.ts) : écriture directe, hors
+// du diff d'état — ces lignes ne participent jamais au carnet local.
+export function logEvent(carnetId, type) {
+  if (!carnetId) return;
+  db.transact(db.tx.events[uuid()].update({ type, createdAt: Date.now() }).link({ carnet: carnetId }));
+}
+
+// Retour libre envoyé depuis les réglages. Renvoie la promesse InstantDB pour
+// que l'appelant puisse afficher une confirmation ou une erreur.
+export function sendFeedback(carnetId, text) {
+  if (!carnetId) return Promise.reject(new Error('Aucun carnet actif.'));
+  return db.transact(
+    db.tx.feedback[uuid()].update({ text, createdAt: Date.now() }).link({ carnet: carnetId }),
+  );
 }
 
 // Réexporté pour les écrans de création/rattachement de carnet.

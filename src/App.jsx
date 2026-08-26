@@ -3,6 +3,7 @@ import { useKoriState } from './state/useKoriState.js';
 import { tabsForMode, defaultTabForMode, MODES, makeInviteCode } from './carnets.js';
 import { signOut } from './auth.jsx';
 import { db } from './db.js';
+import { sendFeedback } from './store.js';
 import { uuid } from './sync-core.js';
 import { Confetti, BottomSheet } from './ui.jsx';
 import { personalize } from './domain.js';
@@ -43,7 +44,7 @@ function AddDogSheet({ user, onDone, onClose }) {
     setError(null);
     const id = uuid();
     try {
-      await db.transact(
+      await db.transact([
         db.tx.carnets[id]
           .update({
             dogName,
@@ -58,7 +59,12 @@ function AddDogSheet({ user, onDone, onClose }) {
             updatedAt: Date.now(),
           })
           .link({ members: user.id }),
-      );
+        // Mesure d'usage : dans la même transaction, purement informatif (voir
+        // instant.schema.ts) — son échec ne doit jamais empêcher la création.
+        db.tx.events[uuid()]
+          .update({ type: 'carnet_created', createdAt: Date.now() })
+          .link({ carnet: id }),
+      ]);
       onDone(id);
     } catch (err) {
       console.error(err);
@@ -217,6 +223,7 @@ export default function App({
           onAddCarnet={() => setAddingDog(true)}
           onJoinCarnet={onJoinCarnet}
           onDeleteCarnet={onDeleteCarnet}
+          onSendFeedback={(text) => sendFeedback(carnet?.id, text)}
         />
       )}
 
