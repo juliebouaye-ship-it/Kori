@@ -1231,6 +1231,25 @@ button {
   word-break: break-word;
 }
 
+/* ---------- Page d'accueil (avant connexion) ---------- */
+.landing-screen { padding-top: 40px; }
+.landing-hero { text-align: center; margin-bottom: 22px; }
+.landing-hero h1 { font-size: 26px; margin: 4px 0 8px; }
+.landing-tagline { max-width: 320px; margin: 0 auto; font-size: 14.5px; }
+.landing-features { display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; }
+.landing-feature { display: flex; gap: 12px; align-items: flex-start; }
+.landing-feature-icon { font-size: 24px; line-height: 1; flex-shrink: 0; margin-top: 2px; }
+.landing-feature h2 { font-size: 15px; margin-bottom: 3px; }
+.landing-principle {
+  text-align: center;
+  font-size: 12.5px;
+  font-style: italic;
+  max-width: 300px;
+  margin: 0 auto 14px;
+}
+.landing-cta { max-width: 340px; margin: 0 auto; }
+.landing-footer { text-align: center; margin-top: 10px; }
+
 /* ---------- Cartes repliables (Aide) ---------- */
 /* Tout est replié par défaut : l'Aide se parcourt du regard avant de choisir
    où entrer. L'en-tête seul doit dire ce qu'il y a dedans. */

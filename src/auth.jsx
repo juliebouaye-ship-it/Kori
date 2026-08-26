@@ -12,6 +12,7 @@
 
 import { useState } from 'react';
 import { db } from './db.js';
+import { LandingScreen } from './landing.jsx';
 
 // Message d'erreur : notre phrase, plus le détail brut du serveur. Masquer ce
 // détail rend un échec de connexion impossible à diagnostiquer à distance.
@@ -36,7 +37,7 @@ function Screen({ children }) {
   );
 }
 
-function SignIn() {
+function SignIn({ onBack }) {
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
   const [sentTo, setSentTo] = useState(null); // adresse à laquelle le code est parti
@@ -99,7 +100,7 @@ function SignIn() {
   if (!sentTo) {
     return (
       <Screen>
-        <h1>Le carnet</h1>
+        <h1>Le carnet de Kori</h1>
         <p className="auth-sub">Entre ton adresse, on t’envoie un code.</p>
         <form onSubmit={send}>
           <input
@@ -117,6 +118,13 @@ function SignIn() {
             {busy ? 'Envoi…' : 'Recevoir un code'}
           </button>
         </form>
+        {onBack && (
+          <div className="auth-actions">
+            <button className="back-link" onClick={onBack}>
+              ← Retour
+            </button>
+          </div>
+        )}
       </Screen>
     );
   }
@@ -167,6 +175,10 @@ function SignIn() {
  */
 export function AuthGate({ children }) {
   const { isLoading, user, error } = db.useAuth();
+  // Tant qu'on n'a pas cliqué « Démarrer », on montre la page d'accueil au
+  // lieu du formulaire d'e-mail — ça retarde la connexion, ça ne la remplace
+  // pas (voir landing.jsx).
+  const [started, setStarted] = useState(false);
 
   if (isLoading) {
     return (
@@ -186,7 +198,10 @@ export function AuthGate({ children }) {
     );
   }
 
-  if (!user) return <SignIn />;
+  if (!user) {
+    if (!started) return <LandingScreen onStart={() => setStarted(true)} />;
+    return <SignIn onBack={() => setStarted(false)} />;
+  }
   return children(user);
 }
 
